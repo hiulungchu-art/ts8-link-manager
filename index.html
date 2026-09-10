@@ -155,7 +155,7 @@ textarea{min-height:70px;resize:vertical}
     <div class="content" id="content">
       <div class="empty">左側選擇主項目。一單工程可有多個 Part A；每個 Part A 有自己的 E-Form ID，Part B（B1/B2）跟住該 ID。</div>
     </div>
-    <div class="foot-note">本機 localStorage + 雲端 data.json；PDF 以拖曳上傳至 Google Drive，網站只存檔案資料。JotForm PDF 可由管家從 Outlook 網頁匯入。</div>
+    <div class="foot-note">「＋ 網址」＝貼 JotForm／網頁連結。「＋ PDF」＝拖檔上傳到 Google Drive（TS8 PDFs）。本機 localStorage + 可選 data.json。</div>
   </section>
 </div>
 
@@ -428,7 +428,7 @@ function renderMain(){
         <div class="actions">
           <button class="btn btn-ghost btn-sm" data-act="edit-pa" data-paid="${esc(pa.id)}">編輯 Part A</button>
           <button class="btn btn-primary btn-sm" data-act="add-day" data-paid="${esc(pa.id)}">＋ 隔離日</button>
-          <button class="btn btn-ghost btn-sm" data-act="add-pa-link" data-paid="${esc(pa.id)}">＋ Part A Link</button>
+          <button class="btn btn-ghost btn-sm" data-act="add-pa-link" data-paid="${esc(pa.id)}">＋ Part A 網址</button>
           <button class="btn btn-ghost btn-sm" data-act="add-pa-pdf" data-paid="${esc(pa.id)}">＋ PDF</button>
         </div>
       </div>
@@ -445,7 +445,7 @@ function renderMain(){
               <span class="sub">${esc(d.label||'隔離日')}${d.partBSubmissionId?` · Part B ID：<code>${esc(d.partBSubmissionId)}</code>`:''} · ${(d.links||[]).length} links</span>
               <div class="actions">
                 <button class="btn btn-ghost btn-sm" data-act="edit-day" data-paid="${esc(pa.id)}" data-did="${esc(d.id)}">編輯日</button>
-                <button class="btn btn-primary btn-sm" data-act="add-day-link" data-paid="${esc(pa.id)}" data-did="${esc(d.id)}">＋ Link</button>
+                <button class="btn btn-primary btn-sm" data-act="add-day-link" data-paid="${esc(pa.id)}" data-did="${esc(d.id)}">＋ 網址</button>
                 <button class="btn btn-ghost btn-sm" data-act="add-day-pdf" data-paid="${esc(pa.id)}" data-did="${esc(d.id)}">＋ PDF</button>
               </div>
             </div>
