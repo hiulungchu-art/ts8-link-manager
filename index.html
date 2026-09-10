@@ -106,6 +106,23 @@ textarea{min-height:70px;resize:vertical}
 .logic{background:var(--red-l);border-left:4px solid var(--red);padding:10px 12px;border-radius:0 6px 6px 0;font-size:.8rem;margin-bottom:12px}
 .logic ol{margin:6px 0 0 18px}
 .foot-note{font-size:.72rem;color:var(--mute);padding:0 18px 18px}
+
+.dropzone{border:2px dashed #C8C8C8;border-radius:8px;padding:28px 16px;text-align:center;background:var(--gl);cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;user-select:none}
+.dropzone:hover{border-color:var(--red);background:var(--red-l)}
+.dropzone.dragover{border-color:var(--red);background:var(--red-l);box-shadow:0 0 0 3px rgba(162,3,55,.15)}
+.dropzone .dz-icon{font-size:1.6rem;margin-bottom:6px}
+.dropzone .dz-title{font-weight:700;font-size:.92rem;color:var(--text)}
+.dropzone .dz-sub{font-size:.78rem;color:var(--mute);margin-top:4px}
+.upload-status{font-size:.82rem;padding:8px 10px;border-radius:4px;background:var(--gl);color:var(--mute);margin-top:10px;min-height:1.4em}
+.upload-status.ok{background:var(--okb);color:var(--ok)}
+.upload-status.err{background:#FEE2E2;color:#991B1B}
+.upload-status.busy{background:var(--infob);color:var(--info)}
+.upload-status.warn{background:var(--warnb);color:var(--warn)}
+.adv-toggle{margin-top:14px;border-top:1px solid var(--gm);padding-top:10px}
+.adv-toggle summary{cursor:pointer;font-size:.82rem;font-weight:700;color:var(--mute);list-style:none}
+.adv-toggle summary::-webkit-details-marker{display:none}
+.adv-toggle[open] summary{color:var(--red);margin-bottom:10px}
+.setup-hint{background:var(--warnb);border-left:4px solid var(--warn);padding:10px 12px;border-radius:0 6px 6px 0;font-size:.8rem;margin-bottom:12px;color:var(--warn)}
 </style>
 </head>
 <body>
@@ -138,16 +155,21 @@ textarea{min-height:70px;resize:vertical}
     <div class="content" id="content">
       <div class="empty">左側選擇主項目。一單工程可有多個 Part A；每個 Part A 有自己的 E-Form ID，Part B（B1/B2）跟住該 ID。</div>
     </div>
-    <div class="foot-note">本機 localStorage + 雲端 data.json；PDF 存 Google Drive 連結。JotForm PDF 可由管家從 Outlook 網頁匯入。</div>
+    <div class="foot-note">本機 localStorage + 雲端 data.json；PDF 以拖曳上傳至 Google Drive，網站只存檔案資料。JotForm PDF 可由管家從 Outlook 網頁匯入。</div>
   </section>
 </div>
 
 <div class="modal-bg" id="modal"></div>
 <div class="toast" id="toast"></div>
 
+<script src="./config.js"></script>
 <script>
 (function(){
 const KEY='ts8_project_link_manager_v5';
+const CFG=(typeof window!=='undefined'&&window.TS8_CONFIG)||{};
+const DRIVE_FOLDER_ID=CFG.DRIVE_FOLDER_ID||'1FRJX-pH2gV_6bkv2HM9dt5S00Lmv_o2u';
+const UPLOAD_WEBAPP_URL=CFG.UPLOAD_WEBAPP_URL||'';
+const UPLOAD_SECRET=CFG.UPLOAD_SECRET||'ts8-upload-2026';
 const LINK_TYPES=[
   {v:'partA_share',l:'Part A 專屬連結',c:'t-parta'},
   {v:'partA_edit',l:'Part A Edit',c:'t-parta'},
@@ -407,6 +429,7 @@ function renderMain(){
           <button class="btn btn-ghost btn-sm" data-act="edit-pa" data-paid="${esc(pa.id)}">編輯 Part A</button>
           <button class="btn btn-primary btn-sm" data-act="add-day" data-paid="${esc(pa.id)}">＋ 隔離日</button>
           <button class="btn btn-ghost btn-sm" data-act="add-pa-link" data-paid="${esc(pa.id)}">＋ Part A Link</button>
+          <button class="btn btn-ghost btn-sm" data-act="add-pa-pdf" data-paid="${esc(pa.id)}">＋ PDF</button>
         </div>
       </div>
       <div class="part-body">
@@ -525,13 +548,185 @@ function openModal(cfg){
     if(existing) danger=`<button class="btn btn-danger" id="m_del" style="margin-right:auto">刪除連結</button>`;
   }
 
+
+  if(cfg.kind==='pdf-upload'){
+    const defType=cfg.defaultType||'pdf_b1';
+    const pdfTypes=LINK_TYPES.filter(t=>t.v.startsWith('pdf'));
+    title='上傳 PDF 至 Google Drive';
+    const setupHint=!UPLOAD_WEBAPP_URL
+      ? `<div class="setup-hint">上傳服務端點尚未接上（Apps Script Web App）。請稍後填入 <code>UPLOAD_WEBAPP_URL</code>；以下拖曳介面可先預覽，接上後即可上傳至「TS8 PDFs」資料夾。</div>`
+      : '';
+    body=`${setupHint}<div class="grid">
+      <div class="field"><label>PDF 類型</label><select id="m_type">${pdfTypes.map(t=>`<option value="${t.v}" ${t.v===defType?'selected':''}>${t.l}</option>`).join('')}</select></div>
+      <div class="field"><label>名稱（可選）</label><input id="m_label" value="" placeholder="可留空，用檔名／類型"></div>
+      <div class="field span2">
+        <label>拖曳或選擇 PDF</label>
+        <div class="dropzone" id="m_dropzone" tabindex="0" role="button" aria-label="拖曳 PDF 至此">
+          <div class="dz-icon">📄</div>
+          <div class="dz-title">將 PDF 拖曳到這裡</div>
+          <div class="dz-sub">或按下方按鈕選擇檔案（可多選）</div>
+        </div>
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button type="button" class="btn btn-primary btn-sm" id="m_pick">選擇 PDF 檔案</button>
+          <input type="file" id="m_file" accept="application/pdf,.pdf" multiple hidden>
+        </div>
+        <div class="upload-status ${UPLOAD_WEBAPP_URL?'':'warn'}" id="m_status">${UPLOAD_WEBAPP_URL?'準備就緒 — 拖曳或選擇 PDF':'端點未設定 — 可預覽介面，暫未能上傳'}</div>
+      </div>
+      <div class="field span2">
+        <details class="adv-toggle" id="m_adv">
+          <summary>▸ 改為貼上已有 Drive 連結（進階）</summary>
+          <div class="grid" style="margin-top:8px">
+            <div class="field span2"><label>URL / Google Drive 連結</label><input id="m_url" value="" placeholder="https://drive.google.com/file/d/…/view"></div>
+            <div class="field"><label>Drive File ID</label><input id="m_driveId" value="" placeholder="可選"></div>
+            <div class="field"><label>備註</label><input id="m_notes" value="" placeholder="可選"></div>
+          </div>
+        </details>
+      </div>
+    </div>`;
+  }
+
+  const saveLabel = cfg.kind==='pdf-upload' ? '儲存連結' : '儲存';
+  const saveHidden = cfg.kind==='pdf-upload' ? ' style="display:none"' : '';
   bg.innerHTML=`<div class="modal"><header><h3>${title}</h3></header><div class="body">${body}</div>
-    <div class="foot">${danger}<button class="btn btn-ghost" id="m_cancel">取消</button><button class="btn btn-primary" id="m_save">儲存</button></div></div>`;
+    <div class="foot">${danger}<button class="btn btn-ghost" id="m_cancel">取消</button><button class="btn btn-primary" id="m_save"${saveHidden}>${saveLabel}</button></div></div>`;
   bg.classList.add('show');
   $('m_cancel').onclick=closeModal;
   bg.onclick=e=>{if(e.target===bg) closeModal()};
   $('m_save').onclick=saveModal;
   const del=$('m_del'); if(del) del.onclick=deleteModal;
+  if(cfg.kind==='pdf-upload') wirePdfUploadModal(cfg);
+}
+
+
+function setUploadStatus(msg, cls){
+  const el=$('m_status'); if(!el) return;
+  el.className='upload-status'+(cls?' '+cls:'');
+  el.textContent=msg;
+}
+
+function fileToBase64(file){
+  return new Promise((resolve,reject)=>{
+    const r=new FileReader();
+    r.onload=()=>{
+      const s=String(r.result||'');
+      const i=s.indexOf(',');
+      resolve(i>=0?s.slice(i+1):s);
+    };
+    r.onerror=()=>reject(r.error||new Error('讀取失敗'));
+    r.readAsDataURL(file);
+  });
+}
+
+async function uploadPdfToDrive(file){
+  if(!UPLOAD_WEBAPP_URL){
+    throw new Error('上傳端點尚未設定（UPLOAD_WEBAPP_URL）');
+  }
+  const base64=await fileToBase64(file);
+  const res=await fetch(UPLOAD_WEBAPP_URL,{
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({
+      secret:UPLOAD_SECRET,
+      filename:file.name,
+      mimeType:file.type||'application/pdf',
+      base64,
+      folderId:DRIVE_FOLDER_ID
+    })
+  });
+  const text=await res.text();
+  let data;
+  try{ data=JSON.parse(text); }catch{ throw new Error('伺服器回應無效'); }
+  if(!res.ok || !data || !data.ok){
+    throw new Error((data&&(data.error||data.message))||('上傳失敗 HTTP '+res.status));
+  }
+  const id=data.id||data.fileId||'';
+  const url=data.url||data.webViewLink||(id?('https://drive.google.com/file/d/'+id+'/view'):'');
+  if(!url) throw new Error('回應缺少檔案連結');
+  return {id,url,name:data.name||file.name};
+}
+
+function appendPdfLink(scope, type, label, url, driveFileId, notes){
+  const sc=findScope(scope);
+  if(!sc.links){ toast('找不到位置'); return false; }
+  sc.links.push({
+    id:uid('l'),
+    type:type||'pdf',
+    label:label||'',
+    url,
+    notes:notes||'',
+    driveFileId:driveFileId||''
+  });
+  if(sc.paid) openPartAs.add(sc.paid);
+  if(sc.did) openDays.add(sc.did);
+  save();
+  return true;
+}
+
+async function handlePdfFiles(files, cfg){
+  const list=[...files].filter(f=>{
+    const n=(f.name||'').toLowerCase();
+    return f.type==='application/pdf' || n.endsWith('.pdf');
+  });
+  if(!list.length){ setUploadStatus('請選擇 PDF 檔案','err'); toast('請選擇 PDF'); return; }
+  if(!UPLOAD_WEBAPP_URL){
+    setUploadStatus('上傳端點尚未接上，無法上傳。請稍後設定 UPLOAD_WEBAPP_URL。','warn');
+    toast('上傳端點尚未接上');
+    return;
+  }
+  const type=$('m_type').value;
+  const labelBase=$('m_label').value.trim();
+  let ok=0, fail=0;
+  for(let i=0;i<list.length;i++){
+    const file=list[i];
+    setUploadStatus(`上傳中（${i+1}/${list.length}）：${file.name}`,'busy');
+    try{
+      const result=await uploadPdfToDrive(file);
+      const label=labelBase || result.name || file.name;
+      if(appendPdfLink(cfg.scope, type, label, result.url, result.id, '')) ok++;
+      else fail++;
+    }catch(err){
+      console.warn(err);
+      fail++;
+      setUploadStatus('錯誤：'+(err&&err.message?err.message:String(err)),'err');
+    }
+  }
+  if(ok){
+    setUploadStatus(fail?`完成 ${ok} 個，失敗 ${fail} 個`:`完成 — 已上傳 ${ok} 個 PDF`,'ok');
+    toast(ok===1?'PDF 已上傳':'已上傳 '+ok+' 個 PDF');
+    render();
+    if(!fail) setTimeout(()=>closeModal(), 700);
+  }else if(fail){
+    toast('上傳失敗');
+  }
+}
+
+function wirePdfUploadModal(cfg){
+  const dz=$('m_dropzone'), pick=$('m_pick'), input=$('m_file'), adv=$('m_adv'), saveBtn=$('m_save');
+  if(!dz||!input) return;
+  const openPicker=()=>input.click();
+  pick&&(pick.onclick=e=>{e.preventDefault();e.stopPropagation();openPicker()});
+  dz.onclick=e=>{ if(e.target.closest('button')) return; openPicker(); };
+  dz.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openPicker(); }});
+  ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{
+    e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover');
+  }));
+  ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{
+    e.preventDefault(); e.stopPropagation();
+    if(ev==='dragleave') dz.classList.remove('dragover');
+  }));
+  dz.addEventListener('drop',e=>{
+    dz.classList.remove('dragover');
+    const files=e.dataTransfer&&e.dataTransfer.files;
+    if(files&&files.length) handlePdfFiles(files, cfg);
+  });
+  input.onchange=()=>{
+    if(input.files&&input.files.length) handlePdfFiles(input.files, cfg);
+    input.value='';
+  };
+  if(adv&&saveBtn){
+    const sync=()=>{ saveBtn.style.display=adv.open?'inline-flex':'none'; };
+    adv.addEventListener('toggle',sync); sync();
+  }
 }
 
 function closeModal(){$('modal').classList.remove('show');modalMode=null}
@@ -571,9 +766,12 @@ function saveModal(){
     }
     toast('已儲存隔離日');
   }
-  if(cfg.kind==='link'){
-    const url=$('m_url').value.trim(); if(!url){toast('請填 URL');return}
-    const data={type:$('m_type').value,label:$('m_label').value.trim(),url,notes:$('m_notes').value.trim(),driveFileId:($('m_driveId')&&$('m_driveId').value.trim())||'',sourceEmailId:($('m_emailId')&&$('m_emailId').value.trim())||''};
+  if(cfg.kind==='link' || cfg.kind==='pdf-upload'){
+    const url=$('m_url')?$('m_url').value.trim():'';
+    if(cfg.kind==='pdf-upload' && !url){toast('請先上傳 PDF，或在進階選項貼上 Drive 連結');return}
+    if(!url){toast('請填 URL');return}
+    const notesEl=$('m_notes');
+    const data={type:$('m_type').value,label:$('m_label').value.trim(),url,notes:notesEl?notesEl.value.trim():'',driveFileId:($('m_driveId')&&$('m_driveId').value.trim())||'',sourceEmailId:($('m_emailId')&&$('m_emailId').value.trim())||''};
     const sc=findScope(cfg.scope);
     if(!sc.links){toast('找不到位置');return}
     if(!Array.isArray(sc.links)) return;
@@ -688,7 +886,14 @@ $('content').addEventListener('click',e=>{
     const day=pa?(pa.days||[]).find(d=>d.id===did):null;
     if(day && !Array.isArray(day.links)) day.links=[];
     openPartAs.add(paid); openDays.add(did);
-    openModal({kind:'link',scope:'day:'+paid+':'+did,defaultType:'pdf_b1'}); return;
+    openModal({kind:'pdf-upload',scope:'day:'+paid+':'+did,defaultType:'pdf_b1'}); return;
+  }
+  if(act==='add-pa-pdf'){
+    const paid=t.getAttribute('data-paid');
+    const pa=(proj().partAs||[]).find(x=>x.id===paid);
+    if(pa && !Array.isArray(pa.links)) pa.links=[];
+    openPartAs.add(paid);
+    openModal({kind:'pdf-upload',scope:'pa:'+paid,defaultType:'pdf_parta'}); return;
   }
   if(act==='copy'){
     copyText(t.getAttribute('data-url')||'', '已複製');
