@@ -426,16 +426,21 @@ function renderMain(){
           ${pa.notes?`<div class="hint" style="margin-top:4px">${esc(pa.notes)}</div>`:''}
         </div>
         <div class="actions">
-          <button class="btn btn-ghost btn-sm" data-act="edit-pa" data-paid="${esc(pa.id)}">編輯 Part A</button>
-          <button class="btn btn-primary btn-sm" data-act="add-day" data-paid="${esc(pa.id)}">＋ 隔離日</button>
+          <button class="btn btn-primary btn-sm" data-act="add-pa-pdf" data-paid="${esc(pa.id)}">＋ Part A PDF</button>
           <button class="btn btn-ghost btn-sm" data-act="add-pa-link" data-paid="${esc(pa.id)}">＋ Part A 網址</button>
-          <button class="btn btn-ghost btn-sm" data-act="add-pa-pdf" data-paid="${esc(pa.id)}">＋ PDF</button>
+          <button class="btn btn-ghost btn-sm" data-act="add-day" data-paid="${esc(pa.id)}">＋ 隔離日</button>
+          <button class="btn btn-ghost btn-sm" data-act="edit-pa" data-paid="${esc(pa.id)}">編輯</button>
         </div>
       </div>
       <div class="part-body">
-        ${(pa.links&&pa.links.length)?`<div style="margin-bottom:12px"><div class="hint" style="margin-bottom:6px">Part A 層級連結（專屬連結／Edit 等）</div>
+        <div class="day-tools" style="margin-bottom:10px">
+          <button class="btn btn-primary btn-sm" data-act="add-pa-pdf" data-paid="${esc(pa.id)}">＋ 上傳 Part A PDF</button>
+          <button class="btn btn-ghost btn-sm" data-act="add-pa-link" data-paid="${esc(pa.id)}">＋ Part A 網址</button>
+          <span class="hint">Part A 表格／附件 PDF 放呢度（存 Google Drive）</span>
+        </div>
+        <div style="margin-bottom:12px"><div class="hint" style="margin-bottom:6px">Part A 檔案／連結</div>
           <table class="links"><thead><tr><th>類型</th><th>名稱</th><th>URL</th><th>備註</th><th></th></tr></thead>
-          <tbody>${linkRows(pa.links,'pa:'+pa.id)}</tbody></table></div>`:''}
+          <tbody>${(pa.links&&pa.links.length)?linkRows(pa.links,'pa:'+pa.id):'<tr><td colspan="5" class="hint">未有 Part A PDF／連結 — 撳上面「＋ 上傳 Part A PDF」</td></tr>'}</tbody></table></div>
         ${days.length?days.map(d=>{
           const dOpen=openDays.has(d.id)||!!searchQ.trim();
           return `<div class="day-row ${dOpen?'open':''}" data-did="${esc(d.id)}">
