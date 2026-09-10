@@ -155,7 +155,7 @@ textarea{min-height:70px;resize:vertical}
     <div class="content" id="content">
       <div class="empty">左側選擇主項目。一單工程可有多個 Part A；每個 Part A 有自己的 E-Form ID，Part B（B1/B2）跟住該 ID。</div>
     </div>
-    <div class="foot-note">「＋ 網址」＝貼 JotForm／網頁連結。「＋ PDF」＝拖檔上傳到 Google Drive（TS8 PDFs）。本機 localStorage + 可選 data.json。</div>
+    <div class="foot-note">「＋ 網址」貼 JotForm／網頁連結；「＋ PDF」拖檔上傳到 Google Drive（訪客唔使登入你嘅 Google）。本機 localStorage + 可選 data.json。</div>
   </section>
 </div>
 
@@ -169,7 +169,7 @@ const KEY='ts8_project_link_manager_v5';
 const CFG=(typeof window!=='undefined'&&window.TS8_CONFIG)||{};
 const DRIVE_FOLDER_ID=CFG.DRIVE_FOLDER_ID||'1FRJX-pH2gV_6bkv2HM9dt5S00Lmv_o2u';
 const UPLOAD_WEBAPP_URL=CFG.UPLOAD_WEBAPP_URL||'';
-const UPLOAD_SECRET=CFG.UPLOAD_SECRET||'ts8-upload-2026';
+const UPLOAD_SECRET=CFG.UPLOAD_SECRET||'';
 const LINK_TYPES=[
   {v:'partA_share',l:'Part A 專屬連結',c:'t-parta'},
   {v:'partA_edit',l:'Part A Edit',c:'t-parta'},

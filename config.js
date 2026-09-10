@@ -1,6 +1,5 @@
-/* TS8 Link Manager — PDF upload via Apps Script → Google Drive
- * Fill UPLOAD_WEBAPP_URL with the deployed Apps Script web app URL when ready.
- * Folder: TS8 PDFs (1FRJX-pH2gV_6bkv2HM9dt5S00Lmv_o2u)
+/* TS8 Link Manager public config
+ * Uploads use Apps Script execute-as-owner (visitors never Google-OAuth as you).
  */
 window.TS8_CONFIG = {
   DRIVE_FOLDER_ID: '1FRJX-pH2gV_6bkv2HM9dt5S00Lmv_o2u',
