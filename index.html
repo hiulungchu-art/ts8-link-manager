@@ -156,7 +156,7 @@ textarea{min-height:70px;resize:vertical}
     <div class="content" id="content">
       <div class="empty">左側選擇主項目。一單工程可有多個 Part A；每個 Part A 有自己的 E-Form ID，Part B（B1/B2）跟住該 ID。</div>
     </div>
-    <div class="foot-note">「＋ 網址」貼 JotForm／網頁連結；「＋ PDF」拖檔上傳到 Google Drive（訪客唔使登入你嘅 Google）。資料自動同步到共用雲端；任何人重新整理可見。</div>
+    <div class="foot-note">改動會自動同步到共用雲端；開住頁面約每 5 秒背景更新（分頁唔喺前景會暫停）。「發布到雲端」只係後備。</div>
   </section>
 </div>
 
@@ -388,22 +388,36 @@ async function fetchSharedDb(){
     throw errors[0]||err;
   }
 }
+let _pullBusy=false;
+let _lastCloudUpdatedAt='';
 async function pullShared(silent){
+  if(_pullBusy) return null;
+  _pullBusy=true;
   try{
     const shared=await fetchSharedDb();
+    const cloudUpdated=(shared.meta&&shared.meta.updatedAt)||'';
+    // Quiet poll: skip merge/render when cloud stamp unchanged
+    if(silent && cloudUpdated && cloudUpdated===_lastCloudUpdatedAt){
+      return {shared, skipped:true};
+    }
     const beforeIds=collectLinkIds(db);
+    const before=JSON.stringify(db);
     const result=smartMergeDb(db, shared);
     db=result.db;
     saveLocalOnly();
     const afterN=countAllLinks(db);
-    if(!silent) toast(result.changed?'已拉取雲端資料':'雲端無較新資料');
+    const after=JSON.stringify(db);
+    const reallyChanged = before!==after;
+    if(cloudUpdated) _lastCloudUpdatedAt=cloudUpdated;
+    if(!silent) toast(reallyChanged?'已拉取雲端資料':'雲端無較新資料');
     if(!selectedProjectId || !db.projects.find(p=>p.id===selectedProjectId)){
       selectedProjectId=db.projects[0]?db.projects[0].id:null;
     }
     if(selectedProjectId){ const p=proj(); if(p) (p.partAs||[]).forEach(pa=>{openPartAs.add(pa.id);(pa.days||[]).forEach(d=>openDays.add(d.id))}); }
-    render();
-    return {shared, beforeIds, afterN, result};
+    if(!silent || reallyChanged) render();
+    return {shared, beforeIds, afterN, result, reallyChanged};
   }catch(err){ if(!silent) toast('拉取失敗（可稍後再試）'); console.warn(err); return null; }
+  finally{ _pullBusy=false; }
 }
 async function pushShared(silent){
   if(!SYNC_URL){ if(!silent) toast('尚未設定雲端同步'); return false; }
@@ -1092,11 +1106,21 @@ const btnPush=$('btnPushShared'); if(btnPush) btnPush.onclick=()=>pushShared(fal
   const localSnapshot=JSON.parse(JSON.stringify(db));
   const localIds=collectLinkIds(localSnapshot);
   const pulled=await pullShared(true);
-  if(!pulled) return;
-  // pullShared already union-merged; if local still had links cloud lacked, publish once
-  const cloudIds=collectLinkIds(pulled.shared||{projects:[]});
-  const localHasExtra=[...localIds].some(id=>!cloudIds.has(id));
-  if(localHasExtra) await pushShared(true);
+  if(pulled && pulled.shared){
+    const cloudIds=collectLinkIds(pulled.shared||{projects:[]});
+    const localHasExtra=[...localIds].some(id=>!cloudIds.has(id));
+    if(localHasExtra) await pushShared(true);
+  }
+  // Near-real-time: quiet poll while tab visible; pause in background
+  const POLL_MS=5000;
+  setInterval(()=>{
+    if(document.hidden) return;
+    if($('modal') && $('modal').classList.contains('show')) return;
+    pullShared(true);
+  }, POLL_MS);
+  document.addEventListener('visibilitychange', ()=>{
+    if(!document.hidden) pullShared(true);
+  });
 })();
 })();
 </script>
