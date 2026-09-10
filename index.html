@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TS8 Project Link Manager</title>
+<style>
+:root {
+  --red:#A20337; --red-d:#7A0229; --red-l:#FDF2F5;
+  --grey:#4A4A4A; --gl:#F5F5F5; --gm:#E8E8E8;
+  --text:#333; --mute:#666; --white:#fff;
+  --shadow:0 2px 10px rgba(0,0,0,.08);
+  --ok:#1B7A4E; --okb:#E8F7EF; --warn:#975A16; --warnb:#FFFBEB;
+  --info:#1A5F9E; --infob:#EAF3FB; --pur:#6B21A8; --purb:#F3E8FF;
+  --side:280px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Microsoft JhengHei","微軟正黑體","Noto Sans TC","PingFang TC",sans-serif;background:#ECECEC;color:var(--text);min-height:100vh}
+.app{display:grid;grid-template-columns:var(--side) 1fr;min-height:100vh}
+@media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{position:sticky;top:0;z-index:5;max-height:42vh;overflow:auto}}
+.sidebar{background:#fff;border-right:1px solid var(--gm);display:flex;flex-direction:column}
+.side-head{padding:16px 16px 12px;border-bottom:4px solid var(--red)}
+.side-head h1{font-size:1.05rem;color:var(--red);font-weight:700}
+.side-head p{font-size:.75rem;color:var(--mute);margin-top:2px}
+.side-tools{padding:10px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--gm)}
+.side-tools input{width:100%;border:1px solid #C8C8C8;border-radius:4px;padding:8px 10px;font:inherit;font-size:.85rem}
+.proj-list{flex:1;overflow:auto;padding:8px}
+.proj-item{width:100%;text-align:left;border:1px solid transparent;background:transparent;border-radius:6px;padding:10px 12px;cursor:pointer;font:inherit;margin-bottom:4px}
+.proj-item:hover{background:var(--gl)}
+.proj-item.active{background:var(--red-l);border-color:var(--red)}
+.proj-item .name{font-weight:700;font-size:.9rem;display:block}
+.proj-item .meta{font-size:.72rem;color:var(--mute);margin-top:2px}
+.main{display:flex;flex-direction:column;min-width:0}
+.topbar{background:#fff;border-bottom:1px solid var(--gm);padding:12px 18px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;position:relative;z-index:3}
+.crumb{font-size:.85rem;color:var(--mute);flex:1;min-width:180px}
+.crumb strong{color:var(--text)}
+.btn{border:none;border-radius:4px;padding:8px 12px;font:inherit;font-size:.84rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn-primary{background:var(--red);color:#fff}.btn-primary:hover{background:var(--red-d)}
+.btn-ghost{background:#fff;border:1px solid #C8C8C8;color:var(--text)}.btn-ghost:hover{border-color:var(--red);color:var(--red)}
+.btn-danger{background:#B42318;color:#fff}
+.btn-sm{padding:4px 8px;font-size:.75rem;font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:12px 18px 0}
+@media(max-width:800px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:#fff;border-radius:6px;padding:10px 12px;border-left:4px solid var(--red);box-shadow:var(--shadow)}
+.stat .n{font-size:1.25rem;font-weight:700;color:var(--red)}.stat .l{font-size:.72rem;color:var(--mute)}
+.content{padding:14px 18px 28px;overflow:auto}
+.empty{background:#fff;border:1px dashed var(--gm);border-radius:8px;padding:36px 20px;text-align:center;color:var(--mute)}
+.part-card{background:#fff;border:1px solid var(--gm);border-radius:8px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow)}
+.part-head{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;padding:14px 16px;background:linear-gradient(180deg,#fff,var(--gl));border-bottom:1px solid var(--gm);cursor:pointer}
+.part-head .title{flex:1;min-width:200px}
+.part-head h2{font-size:1rem;color:var(--red);font-weight:700}
+.part-head .ids{font-size:.8rem;color:var(--mute);margin-top:4px;display:flex;flex-wrap:wrap;gap:8px}
+.part-head .ids code{background:var(--gl);padding:1px 6px;border-radius:3px;color:var(--text);font-size:.78rem}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.72rem;font-weight:700}
+.b-progress{background:var(--infob);color:var(--info)}
+.b-b1{background:var(--warnb);color:var(--warn)}
+.b-b2{background:var(--purb);color:var(--pur)}
+.b-done{background:var(--okb);color:var(--ok)}
+.b-idle{background:var(--gl);color:var(--mute)}
+.part-body{padding:12px 14px 16px;display:none}
+.part-card.open .part-body{display:block}
+.part-card.open .chev{transform:rotate(90deg)}
+.chev{display:inline-block;transition:transform .15s;color:var(--mute);margin-right:4px}
+.day-row{border:1px solid var(--gm);border-radius:6px;margin-bottom:10px;overflow:hidden}
+.day-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;background:var(--gl);cursor:pointer}
+.day-head .date{font-weight:700;font-size:.92rem;min-width:100px}
+.day-head .sub{font-size:.78rem;color:var(--mute);flex:1}
+.day-body{display:none;padding:10px 12px 12px;background:#fff}
+.day-row.open .day-body{display:block}
+.day-tools{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+table.links{width:100%;border-collapse:collapse;font-size:.82rem}
+table.links th,table.links td{padding:8px 8px;border-bottom:1px solid var(--gm);text-align:left;vertical-align:middle}
+table.links th{background:var(--gl);font-size:.75rem;color:var(--grey)}
+table.links tr:hover td{background:#FAFAFA}
+.type-pill{display:inline-block;padding:2px 7px;border-radius:4px;font-size:.7rem;font-weight:700;background:var(--gl)}
+.t-parta{background:#FFE4E8;color:var(--red)}
+.t-b1d,.t-b1e,.t-b1c{background:var(--warnb);color:var(--warn)}
+.t-b2{background:var(--purb);color:var(--pur)}
+.t-other{background:var(--infob);color:var(--info)}
+.url-cell{max-width:340px}
+.url-cell a{color:var(--red);text-decoration:none;word-break:break-all;font-size:.78rem}
+.url-cell a:hover{text-decoration:underline}
+.actions{display:flex;flex-wrap:wrap;gap:4px;position:relative;z-index:2}
+.actions .btn{pointer-events:auto;cursor:pointer}
+.part-head .actions,.day-head .actions{flex-shrink:0}
+.hint{font-size:.75rem;color:var(--mute)}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.42);display:none;align-items:flex-start;justify-content:center;padding:36px 14px;z-index:50;overflow:auto}
+.modal-bg.show{display:flex}
+.modal{background:#fff;width:100%;max-width:620px;border-radius:8px;border-top:4px solid var(--red);box-shadow:0 14px 40px rgba(0,0,0,.2)}
+.modal header{padding:14px 18px;border-bottom:1px solid var(--gm)}
+.modal header h3{font-size:1rem;color:var(--red)}
+.modal .body{padding:16px 18px}
+.modal .foot{padding:12px 18px 16px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--gm);flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.span2{grid-column:span 2}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.span2{grid-column:span 1}}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:.82rem;font-weight:700}
+.req{color:var(--red)}
+input,select,textarea{width:100%;border:1px solid #C8C8C8;border-radius:4px;padding:8px 10px;font:inherit;font-size:.88rem}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(162,3,55,.12)}
+textarea{min-height:70px;resize:vertical}
+.toast{position:fixed;bottom:22px;right:22px;background:#222;color:#fff;padding:10px 14px;border-radius:6px;font-size:.85rem;opacity:0;transition:opacity .2s;z-index:80;pointer-events:none}
+.toast.show{opacity:1}
+.logic{background:var(--red-l);border-left:4px solid var(--red);padding:10px 12px;border-radius:0 6px 6px 0;font-size:.8rem;margin-bottom:12px}
+.logic ol{margin:6px 0 0 18px}
+.foot-note{font-size:.72rem;color:var(--mute);padding:0 18px 18px}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="side-head">
+      <h1>TS8 Link Manager</h1>
+      <p>主項目 → Part A → 隔離日 → Links</p>
+    </div>
+    <div class="side-tools">
+      <input type="search" id="globalSearch" placeholder="搜尋項目 / Part A ID / 連結…">
+      <button class="btn btn-primary" id="btnNewProject">＋ 新主項目</button>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-ghost" id="btnExport" style="flex:1">匯出 JSON</button>
+        <button class="btn btn-ghost" id="btnImport" style="flex:1">匯入</button>
+      </div>
+      <input type="file" id="importFile" accept=".json,application/json" hidden>
+    </div>
+    <div class="proj-list" id="projList"></div>
+  </aside>
+
+  <section class="main">
+    <div class="topbar">
+      <div class="crumb" id="crumb">請選擇或建立主項目</div>
+      <button class="btn btn-ghost" id="btnEditProject" style="display:none">編輯項目</button>
+      <button class="btn btn-primary" id="btnNewPartA" style="display:none">＋ 新增 Part A</button>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="content" id="content">
+      <div class="empty">左側選擇主項目。一單工程可有多個 Part A；每個 Part A 有自己的 E-Form ID，Part B（B1/B2）跟住該 ID。</div>
+    </div>
+    <div class="foot-note">資料存於本機瀏覽器。可匯出 JSON 備份。</div>
+  </section>
+</div>
+
+<div class="modal-bg" id="modal"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+const KEY='ts8_project_link_manager_v4';
+const LINK_TYPES=[
+  {v:'partA_share',l:'Part A 專屬連結',c:'t-parta'},
+  {v:'partA_edit',l:'Part A Edit',c:'t-parta'},
+  {v:'b1_create',l:'建立新 B1（可重用）',c:'t-b1c'},
+  {v:'b1_draft',l:'B1 Draft',c:'t-b1d'},
+  {v:'b1_edit',l:'B1 Edit',c:'t-b1e'},
+  {v:'b2_edit',l:'B2 Edit',c:'t-b2'},
+  {v:'email',l:'電郵／通知連結',c:'t-other'},
+  {v:'file',l:'檔案／圖紙',c:'t-other'},
+  {v:'other',l:'其他',c:'t-other'}
+];
+const DAY_STATUS=['未開始','B1進行中','B1已提交','B2進行中','已完結'];
+const PART_STATUS=['草稿','審核中','已完成','擱置'];
+
+const SEED={
+  projects:[{
+    id:'p-blk-a-podium',
+    name:'Multi-function Area at Blk A Podium',
+    code:'',
+    jobNo:'',
+    pm:'',
+    notes:'Blk A Podium 多用途場地 · TS8 消防工程',
+    createdAt:'2026-09-09',
+    partAs:[{
+      id:'pa-1',
+      label:'Part A #1',
+      eformId:'',
+      docNo:'',
+      status:'草稿',
+      notes:'',
+      links:[],
+      days:[
+        {
+          id:'d-20260909',
+          date:'2026-09-09',
+          label:'隔離日',
+          partBSubmissionId:'',
+          status:'未開始',
+          notes:'',
+          links:[
+            {id:'l1',type:'b1_draft',label:'B1',url:'https://www.jotform.com/draft/01a0895170b870008b9179eb9c8073f82b6c',notes:''}
+          ]
+        },
+        {
+          id:'d-20260910',
+          date:'2026-09-10',
+          label:'隔離日',
+          partBSubmissionId:'',
+          status:'未開始',
+          notes:'',
+          links:[
+            {id:'l2',type:'b1_draft',label:'B1',url:'https://www.jotform.com/draft/01a0895335d8700088bb4d006d7a18d0210a',notes:''}
+          ]
+        },
+        {
+          id:'d-20260911',
+          date:'2026-09-11',
+          label:'隔離日',
+          partBSubmissionId:'',
+          status:'未開始',
+          notes:'',
+          links:[
+            {id:'l3',type:'b1_draft',label:'B1',url:'https://www.jotform.com/draft/01a0893349f8700083cff7c5ddbdf42aac49',notes:''},
+            {id:'l4',type:'b2_edit',label:'B2',url:'https://www.jotform.com/edit/6648191196608964059',notes:''}
+          ]
+        }
+      ]
+    }]
+  }]
+};
+
+let db={projects:[]};
+let selectedProjectId=null;
+let openPartAs=new Set();
+let openDays=new Set();
+let searchQ='';
+let modalMode=null; // {kind, ...}
+
+const $=id=>document.getElementById(id);
+const toastEl=$('toast');
+
+function uid(p){return (p||'x')+'-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function toast(m){toastEl.textContent=m;toastEl.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>toastEl.classList.remove('show'),1800)}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function typeMeta(v){return LINK_TYPES.find(t=>t.v===v)||LINK_TYPES[LINK_TYPES.length-1]}
+function badgeStatus(s){
+  const map={'草稿':'b-idle','審核中':'b-progress','已完成':'b-done','擱置':'b-idle','未開始':'b-idle','B1進行中':'b-b1','B1已提交':'b-b1','B2進行中':'b-b2','已完結':'b-done'};
+  return `<span class="badge ${map[s]||'b-idle'}">${esc(s)}</span>`;
+}
+function shortUrl(u){
+  if(!u) return '';
+  try{const x=new URL(u);const p=x.pathname+x.search;return x.hostname.replace(/^www\./,'')+(p.length>36?p.slice(0,36)+'…':p)}
+  catch{return u.length>42?u.slice(0,42)+'…':u}
+}
+function today(){const d=new Date();const z=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`}
+
+function load(){
+  try{
+    const raw=localStorage.getItem(KEY);
+    if(!raw){db=JSON.parse(JSON.stringify(SEED));save();return}
+    db=JSON.parse(raw);
+    if(!db.projects) db={projects:[]};
+  }catch{db=JSON.parse(JSON.stringify(SEED))}
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(db))}
+function proj(){return db.projects.find(p=>p.id===selectedProjectId)||null}
+
+function countLinks(p){
+  let n=0;
+  (p.partAs||[]).forEach(pa=>{n+=(pa.links||[]).length;(pa.days||[]).forEach(d=>n+=(d.links||[]).length)});
+  return n;
+}
+function countDays(p){return (p.partAs||[]).reduce((a,pa)=>a+(pa.days||[]).length,0)}
+
+function matchQ(text){if(!searchQ.trim()) return true;return String(text).toLowerCase().includes(searchQ.trim().toLowerCase())}
+
+function projectMatches(p){
+  if(!searchQ.trim()) return true;
+  const bag=[p.name,p.code,p.jobNo,p.pm,p.notes];
+  (p.partAs||[]).forEach(pa=>{
+    bag.push(pa.label,pa.eformId,pa.docNo,pa.notes,pa.status);
+    (pa.links||[]).forEach(l=>bag.push(l.label,l.url,l.type,l.notes));
+    (pa.days||[]).forEach(d=>{
+      bag.push(d.date,d.label,d.partBSubmissionId,d.status,d.notes);
+      (d.links||[]).forEach(l=>bag.push(l.label,l.url,l.type,l.notes));
+    });
+  });
+  return matchQ(bag.join(' '));
+}
+
+function renderSidebar(){
+  const list=$('projList');
+  const items=db.projects.filter(projectMatches);
+  if(!items.length){list.innerHTML=`<div class="hint" style="padding:12px">沒有項目</div>`;return}
+  list.innerHTML=items.map(p=>`
+    <button class="proj-item ${p.id===selectedProjectId?'active':''}" data-pid="${esc(p.id)}">
+      <span class="name">${esc(p.name)}</span>
+      <span class="meta">${(p.partAs||[]).length} 個 Part A · ${countDays(p)} 隔離日 · ${countLinks(p)} links</span>
+    </button>`).join('');
+}
+
+function renderStats(p){
+  if(!p){$('stats').innerHTML='';return}
+  const pas=p.partAs||[];
+  const days=countDays(p);
+  const links=countLinks(p);
+  const withId=pas.filter(x=>x.eformId).length;
+  const doneDays=pas.reduce((a,pa)=>a+(pa.days||[]).filter(d=>d.status==='已完結').length,0);
+  $('stats').innerHTML=`
+    <div class="stat"><div class="n">${pas.length}</div><div class="l">Part A</div></div>
+    <div class="stat"><div class="n">${withId}</div><div class="l">已有 E-Form ID</div></div>
+    <div class="stat"><div class="n">${days}</div><div class="l">隔離日</div></div>
+    <div class="stat"><div class="n">${links}</div><div class="l">連結總數</div></div>
+    <div class="stat"><div class="n">${doneDays}</div><div class="l">已完結日子</div></div>`;
+}
+
+function filteredPartAs(p){
+  if(!searchQ.trim()) return p.partAs||[];
+  return (p.partAs||[]).filter(pa=>{
+    const bag=[pa.label,pa.eformId,pa.docNo,pa.notes,pa.status];
+    (pa.links||[]).forEach(l=>bag.push(l.label,l.url,l.notes,l.type));
+    (pa.days||[]).forEach(d=>{
+      bag.push(d.date,d.label,d.partBSubmissionId,d.status,d.notes);
+      (d.links||[]).forEach(l=>bag.push(l.label,l.url,l.notes,l.type));
+    });
+    return matchQ(bag.join(' '));
+  });
+}
+
+function linkRows(links, scope){
+  if(!links||!links.length) return `<tr><td colspan="5" class="hint">尚未有連結 — 按「加 Link」</td></tr>`;
+  return links.map(l=>{
+    const t=typeMeta(l.type);
+    return `<tr>
+      <td><span class="type-pill ${t.c}">${esc(t.l)}</span></td>
+      <td>${esc(l.label||t.l)}</td>
+      <td class="url-cell">${l.url?`<a href="${esc(l.url)}" target="_blank" rel="noopener" title="${esc(l.url)}">${esc(shortUrl(l.url))}</a>`:'—'}</td>
+      <td class="hint">${esc(l.notes||'')}</td>
+      <td class="actions">
+        <button class="btn btn-ghost btn-sm" data-act="copy" data-url="${esc(l.url||'')}">複製</button>
+        <button class="btn btn-ghost btn-sm" data-act="edit-link" data-scope="${esc(scope)}" data-lid="${esc(l.id)}">編輯</button>
+        <button class="btn btn-ghost btn-sm" data-act="del-link" data-scope="${esc(scope)}" data-lid="${esc(l.id)}">刪</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderMain(){
+  const p=proj();
+  $('btnEditProject').style.display=p?'inline-flex':'none';
+  $('btnNewPartA').style.display=p?'inline-flex':'none';
+  renderStats(p);
+  if(!p){
+    $('crumb').textContent='請選擇或建立主項目';
+    $('content').innerHTML=`<div class="empty">左側選擇主項目。一單工程可有多個 Part A；每個 Part A 有自己的 E-Form ID，Part B（B1/B2）跟住該 ID。</div>`;
+    return;
+  }
+  $('crumb').innerHTML=`主項目：<strong>${esc(p.name)}</strong>${p.code?` · ${esc(p.code)}`:''}${p.jobNo?` · 工程號碼 <code>${esc(p.jobNo)}</code>`:''}${p.pm?` · PM ${esc(p.pm)}`:''}`;
+  const pas=filteredPartAs(p);
+  if(!pas.length){
+    $('content').innerHTML=`<div class="empty">尚未有 Part A。<br><button class="btn btn-primary" style="margin-top:12px" id="btnNewPartA2">＋ 新增 Part A</button></div>`;
+    const b=$('btnNewPartA2'); if(b) b.onclick=()=>openModal({kind:'parta'});
+    return;
+  }
+
+  let html='';
+  html+=pas.map(pa=>{
+    const open=openPartAs.has(pa.id)||!!searchQ.trim();
+    const dayCount=(pa.days||[]).length;
+    const linkCount=(pa.links||[]).length+(pa.days||[]).reduce((a,d)=>a+(d.links||[]).length,0);
+    const days=[...(pa.days||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    return `<article class="part-card ${open?'open':''}" data-paid="${esc(pa.id)}">
+      <div class="part-head" data-act="toggle-pa" data-paid="${esc(pa.id)}">
+        <div class="title">
+          <h2><span class="chev">▶</span>${esc(pa.label||'Part A')}</h2>
+          <div class="ids">
+            ${pa.eformId?`<span>E-Form ID：<code>${esc(pa.eformId)}</code></span>`:''}
+            ${pa.docNo?`<span>檔案編號：<code>${esc(pa.docNo)}</code></span>`:''}
+            ${badgeStatus(pa.status||'草稿')}
+            <span class="hint">${dayCount} 隔離日 · ${linkCount} links</span>
+          </div>
+          ${pa.notes?`<div class="hint" style="margin-top:4px">${esc(pa.notes)}</div>`:''}
+        </div>
+        <div class="actions">
+          <button class="btn btn-ghost btn-sm" data-act="edit-pa" data-paid="${esc(pa.id)}">編輯 Part A</button>
+          <button class="btn btn-primary btn-sm" data-act="add-day" data-paid="${esc(pa.id)}">＋ 隔離日</button>
+          <button class="btn btn-ghost btn-sm" data-act="add-pa-link" data-paid="${esc(pa.id)}">＋ Part A Link</button>
+        </div>
+      </div>
+      <div class="part-body">
+        ${(pa.links&&pa.links.length)?`<div style="margin-bottom:12px"><div class="hint" style="margin-bottom:6px">Part A 層級連結（專屬連結／Edit 等）</div>
+          <table class="links"><thead><tr><th>類型</th><th>名稱</th><th>URL</th><th>備註</th><th></th></tr></thead>
+          <tbody>${linkRows(pa.links,'pa:'+pa.id)}</tbody></table></div>`:''}
+        ${days.length?days.map(d=>{
+          const dOpen=openDays.has(d.id)||!!searchQ.trim();
+          return `<div class="day-row ${dOpen?'open':''}" data-did="${esc(d.id)}">
+            <div class="day-head" data-act="toggle-day" data-did="${esc(d.id)}">
+              <span class="date">${esc(d.date||'—')}</span>
+              ${badgeStatus(d.status||'未開始')}
+              <span class="sub">${esc(d.label||'隔離日')}${d.partBSubmissionId?` · Part B ID：<code>${esc(d.partBSubmissionId)}</code>`:''} · ${(d.links||[]).length} links</span>
+              <div class="actions">
+                <button class="btn btn-ghost btn-sm" data-act="edit-day" data-paid="${esc(pa.id)}" data-did="${esc(d.id)}">編輯日</button>
+                <button class="btn btn-primary btn-sm" data-act="add-day-link" data-paid="${esc(pa.id)}" data-did="${esc(d.id)}">＋ Link</button>
+              </div>
+            </div>
+            <div class="day-body">
+              ${d.notes?`<div class="hint" style="margin-bottom:8px">${esc(d.notes)}</div>`:''}
+              <div class="day-tools">
+                <button class="btn btn-ghost btn-sm" data-act="copy-all" data-paid="${esc(pa.id)}" data-did="${esc(d.id)}">複製本日全部 URL</button>
+              </div>
+              <table class="links">
+                <thead><tr><th>類型</th><th>名稱</th><th>URL</th><th>備註</th><th></th></tr></thead>
+                <tbody>${linkRows(d.links||[],'day:'+pa.id+':'+d.id)}</tbody>
+              </table>
+            </div>
+          </div>`;
+        }).join(''):`<div class="hint">此 Part A 尚未有隔離日。按「＋ 隔離日」開始（多日工程可重用 B1 建立連結）。</div>`}
+      </div>
+    </article>`;
+  }).join('');
+  $('content').innerHTML=html;
+}
+
+function render(){renderSidebar();renderMain()}
+
+function findScope(scope){
+  // pa:ID | day:PAID:DID
+  if(scope.startsWith('pa:')){
+    const paid=scope.slice(3);
+    const pa=(proj().partAs||[]).find(x=>x.id===paid);
+    if(pa && !Array.isArray(pa.links)) pa.links=[];
+    return {pa, day:null, links:pa?pa.links:null, paid, did:null};
+  }
+  if(scope.startsWith('day:')){
+    const parts=scope.split(':');
+    const paid=parts[1];
+    const did=parts.slice(2).join(':');
+    const pa=(proj().partAs||[]).find(x=>x.id===paid);
+    const day=pa?(pa.days||[]).find(d=>d.id===did):null;
+    if(day && !Array.isArray(day.links)) day.links=[];
+    return {pa, day, links:day?day.links:null, paid, did};
+  }
+  return {};
+}
+
+function openModal(cfg){
+  modalMode=cfg;
+  const bg=$('modal');
+  let title='', body='', danger='';
+  if(cfg.kind==='project'){
+    const p=cfg.id?db.projects.find(x=>x.id===cfg.id):null;
+    title=p?'編輯主項目':'新主項目';
+    body=`<div class="grid">
+      <div class="field span2"><label>項目名稱 <span class="req">*</span></label><input id="m_name" value="${esc(p?p.name:'')}" placeholder="例如：Multi-function Area at Blk A Podium" required></div>
+      <div class="field"><label>簡稱／代號</label><input id="m_code" value="${esc(p?p.code||'':'')}" placeholder="Blk A Podium MFA"></div>
+      <div class="field"><label>工程號碼</label><input id="m_job" value="${esc(p?p.jobNo||'':'')}" placeholder="J26159"></div>
+      <div class="field"><label>項目經理</label><input id="m_pm" value="${esc(p?p.pm||'':'')}" placeholder="姓名 / 部門"></div>
+      <div class="field"><label>建立日期</label><input type="date" id="m_created" value="${esc(p?p.createdAt||today():today())}"></div>
+      <div class="field span2"><label>備註</label><textarea id="m_notes">${esc(p?p.notes||'':'')}</textarea></div>
+    </div>`;
+    if(p) danger=`<button class="btn btn-danger" id="m_del" style="margin-right:auto">刪除項目</button>`;
+  }
+  if(cfg.kind==='parta'){
+    const p=proj();
+    const pa=cfg.paid?(p.partAs||[]).find(x=>x.id===cfg.paid):null;
+    title=pa?'編輯 Part A':'新增 Part A';
+    body=`<div class="grid">
+      <div class="field span2"><label>顯示名稱 <span class="req">*</span></label><input id="m_label" value="${esc(pa?pa.label:'Part A #'+((p.partAs||[]).length+1))}" ></div>
+      <div class="field"><label>TS8 E-Form ID</label><input id="m_eform" value="${esc(pa?pa.eformId||'':'')}" placeholder="Part A 提交後填入"></div>
+      <div class="field"><label>檔案編號</label><input id="m_doc" value="${esc(pa?pa.docNo||'':'')}" placeholder="消防處／內部檔案編號"></div>
+      <div class="field"><label>狀態</label><select id="m_status">${PART_STATUS.map(s=>`<option ${pa&&pa.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="field span2"><label>備註</label><textarea id="m_notes">${esc(pa?pa.notes||'':'')}</textarea></div>
+    </div>`;
+    if(pa) danger=`<button class="btn btn-danger" id="m_del" style="margin-right:auto">刪除 Part A</button>`;
+  }
+  if(cfg.kind==='day'){
+    const p=proj();
+    const pa=(p.partAs||[]).find(x=>x.id===cfg.paid);
+    const d=cfg.did?(pa.days||[]).find(x=>x.id===cfg.did):null;
+    title=d?'編輯隔離日':'新增隔離日';
+    body=`<div class="grid">
+      <div class="field"><label>日期 <span class="req">*</span></label><input type="date" id="m_date" value="${esc(d?d.date:today())}"></div>
+      <div class="field"><label>狀態</label><select id="m_status">${DAY_STATUS.map(s=>`<option ${d&&d.status===s?'selected':(!d&&s==='未開始'?'selected':'')}>${s}</option>`).join('')}</select></div>
+      <div class="field span2"><label>標籤</label><input id="m_label" value="${esc(d?d.label||'隔離日':'隔離日')}" placeholder="隔離日 / 放水日…"></div>
+      <div class="field span2"><label>Part B Submission ID</label><input id="m_pbid" value="${esc(d?d.partBSubmissionId||'':'')}" placeholder="B1 提交後電郵提供"></div>
+      <div class="field span2"><label>備註</label><textarea id="m_notes">${esc(d?d.notes||'':'')}</textarea></div>
+    </div>`;
+    if(d) danger=`<button class="btn btn-danger" id="m_del" style="margin-right:auto">刪除隔離日</button>`;
+  }
+  if(cfg.kind==='link'){
+    const existing=cfg.link||null;
+    title=existing?'編輯連結':'新增連結';
+    const defType=existing?existing.type:(cfg.defaultType||'b1_draft');
+    body=`<div class="grid">
+      <div class="field"><label>類型</label><select id="m_type">${LINK_TYPES.map(t=>`<option value="${t.v}" ${t.v===defType?'selected':''}>${t.l}</option>`).join('')}</select></div>
+      <div class="field"><label>名稱</label><input id="m_label" value="${esc(existing?existing.label||'':'')}" placeholder="可留空，用類型名稱"></div>
+      <div class="field span2"><label>URL <span class="req">*</span></label><input id="m_url" value="${esc(existing?existing.url||'':'')}" placeholder="https://…"></div>
+      <div class="field span2"><label>備註</label><textarea id="m_notes">${esc(existing?existing.notes||'':'')}</textarea></div>
+    </div>`;
+    if(existing) danger=`<button class="btn btn-danger" id="m_del" style="margin-right:auto">刪除連結</button>`;
+  }
+
+  bg.innerHTML=`<div class="modal"><header><h3>${title}</h3></header><div class="body">${body}</div>
+    <div class="foot">${danger}<button class="btn btn-ghost" id="m_cancel">取消</button><button class="btn btn-primary" id="m_save">儲存</button></div></div>`;
+  bg.classList.add('show');
+  $('m_cancel').onclick=closeModal;
+  bg.onclick=e=>{if(e.target===bg) closeModal()};
+  $('m_save').onclick=saveModal;
+  const del=$('m_del'); if(del) del.onclick=deleteModal;
+}
+
+function closeModal(){$('modal').classList.remove('show');modalMode=null}
+
+function saveModal(){
+  const cfg=modalMode; if(!cfg) return;
+  if(cfg.kind==='project'){
+    const name=$('m_name').value.trim(); if(!name){toast('請填項目名稱');return}
+    if(cfg.id){
+      const p=db.projects.find(x=>x.id===cfg.id);
+      Object.assign(p,{name,code:$('m_code').value.trim(),jobNo:$('m_job').value.trim(),pm:$('m_pm').value.trim(),createdAt:$('m_created').value,notes:$('m_notes').value.trim()});
+    }else{
+      const p={id:uid('p'),name,code:$('m_code').value.trim(),jobNo:$('m_job').value.trim(),pm:$('m_pm').value.trim(),createdAt:$('m_created').value||today(),notes:$('m_notes').value.trim(),partAs:[]};
+      db.projects.push(p); selectedProjectId=p.id;
+    }
+    toast('已儲存項目');
+  }
+  if(cfg.kind==='parta'){
+    const p=proj(); if(!p) return;
+    const label=$('m_label').value.trim(); if(!label){toast('請填名稱');return}
+    const data={label,eformId:$('m_eform').value.trim(),docNo:$('m_doc').value.trim(),status:$('m_status').value,notes:$('m_notes').value.trim()};
+    if(cfg.paid){
+      const pa=p.partAs.find(x=>x.id===cfg.paid); Object.assign(pa,data);
+    }else{
+      const pa={id:uid('pa'),...data,links:[],days:[]}; p.partAs.push(pa); openPartAs.add(pa.id);
+    }
+    toast('已儲存 Part A');
+  }
+  if(cfg.kind==='day'){
+    const p=proj(); const pa=p.partAs.find(x=>x.id===cfg.paid); if(!pa) return;
+    const date=$('m_date').value; if(!date){toast('請填日期');return}
+    const data={date,label:$('m_label').value.trim()||'隔離日',partBSubmissionId:$('m_pbid').value.trim(),status:$('m_status').value,notes:$('m_notes').value.trim()};
+    if(cfg.did){
+      const d=pa.days.find(x=>x.id===cfg.did); Object.assign(d,data);
+    }else{
+      const d={id:uid('d'),...data,links:[]}; pa.days.push(d); openPartAs.add(pa.id); openDays.add(d.id);
+    }
+    toast('已儲存隔離日');
+  }
+  if(cfg.kind==='link'){
+    const url=$('m_url').value.trim(); if(!url){toast('請填 URL');return}
+    const data={type:$('m_type').value,label:$('m_label').value.trim(),url,notes:$('m_notes').value.trim()};
+    const sc=findScope(cfg.scope);
+    if(!sc.links){toast('找不到位置');return}
+    if(!Array.isArray(sc.links)) return;
+    if(cfg.lid){
+      const L=sc.links.find(x=>x.id===cfg.lid); Object.assign(L,data);
+    }else{
+      sc.links.push({id:uid('l'),...data});
+    }
+    if(sc.paid) openPartAs.add(sc.paid);
+    if(sc.did) openDays.add(sc.did);
+    toast('已儲存連結');
+  }
+  save(); closeModal(); render();
+}
+
+function deleteModal(){
+  const cfg=modalMode; if(!cfg) return;
+  if(cfg.kind==='project'&&cfg.id){
+    if(!confirm('刪除整個主項目及其所有 Part A／隔離日／連結？')) return;
+    db.projects=db.projects.filter(x=>x.id!==cfg.id);
+    if(selectedProjectId===cfg.id) selectedProjectId=db.projects[0]?db.projects[0].id:null;
+  }
+  if(cfg.kind==='parta'&&cfg.paid){
+    if(!confirm('刪除此 Part A 及底下所有隔離日／連結？')) return;
+    const p=proj(); p.partAs=p.partAs.filter(x=>x.id!==cfg.paid);
+  }
+  if(cfg.kind==='day'&&cfg.paid&&cfg.did){
+    if(!confirm('刪除此隔離日及底下所有連結？')) return;
+    const pa=proj().partAs.find(x=>x.id===cfg.paid); pa.days=pa.days.filter(x=>x.id!==cfg.did);
+  }
+  if(cfg.kind==='link'&&cfg.scope&&cfg.lid){
+    if(!confirm('刪除此連結？')) return;
+    const sc=findScope(cfg.scope);
+    if(sc.day) sc.day.links=sc.day.links.filter(x=>x.id!==cfg.lid);
+    else if(sc.pa) sc.pa.links=sc.pa.links.filter(x=>x.id!==cfg.lid);
+  }
+  save(); closeModal(); render(); toast('已刪除');
+}
+
+// events
+$('projList').addEventListener('click',e=>{
+  const b=e.target.closest('[data-pid]'); if(!b) return;
+  selectedProjectId=b.getAttribute('data-pid'); render();
+});
+$('btnNewProject').onclick=()=>openModal({kind:'project'});
+$('btnEditProject').onclick=()=>{if(selectedProjectId) openModal({kind:'project',id:selectedProjectId})};
+$('btnNewPartA').onclick=()=>openModal({kind:'parta'});
+$('globalSearch').addEventListener('input',e=>{searchQ=e.target.value;render()});
+
+function copyText(text, okMsg){
+  if(!text){toast('無內容');return}
+  const done=()=>toast(okMsg||'已複製');
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text, done));
+  } else fallbackCopy(text, done);
+}
+function fallbackCopy(text, done){
+  const ta=document.createElement('textarea');
+  ta.value=text; ta.setAttribute('readonly','');
+  ta.style.position='fixed'; ta.style.left='-9999px';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); done(); }
+  catch(err){ prompt('複製：', text); }
+  document.body.removeChild(ta);
+}
+
+$('content').addEventListener('click',e=>{
+  const t=e.target.closest('[data-act]'); if(!t) return;
+  const act=t.getAttribute('data-act');
+  // Header toggles: ignore when the real click is on an action button inside
+  if(act==='toggle-pa'){
+    if(e.target.closest('.actions, button, a, input, select, textarea, label')) return;
+    const id=t.getAttribute('data-paid');
+    if(openPartAs.has(id)) openPartAs.delete(id); else openPartAs.add(id);
+    render(); return;
+  }
+  if(act==='toggle-day'){
+    if(e.target.closest('.actions, button, a, input, select, textarea, label')) return;
+    const id=t.getAttribute('data-did');
+    if(openDays.has(id)) openDays.delete(id); else openDays.add(id);
+    render(); return;
+  }
+  e.preventDefault();
+  e.stopPropagation();
+  if(act==='edit-pa'){openModal({kind:'parta',paid:t.getAttribute('data-paid')});return}
+  if(act==='add-day'){
+    const paid=t.getAttribute('data-paid');
+    openPartAs.add(paid);
+    openModal({kind:'day',paid}); return;
+  }
+  if(act==='edit-day'){
+    openModal({kind:'day',paid:t.getAttribute('data-paid'),did:t.getAttribute('data-did')}); return;
+  }
+  if(act==='add-pa-link'){
+    const paid=t.getAttribute('data-paid');
+    const pa=(proj().partAs||[]).find(x=>x.id===paid);
+    if(pa && !Array.isArray(pa.links)) pa.links=[];
+    openPartAs.add(paid);
+    openModal({kind:'link',scope:'pa:'+paid,defaultType:'partA_share'}); return;
+  }
+  if(act==='add-day-link'){
+    const paid=t.getAttribute('data-paid'), did=t.getAttribute('data-did');
+    const pa=(proj().partAs||[]).find(x=>x.id===paid);
+    const day=pa?(pa.days||[]).find(d=>d.id===did):null;
+    if(day && !Array.isArray(day.links)) day.links=[];
+    openPartAs.add(paid); openDays.add(did);
+    openModal({kind:'link',scope:'day:'+paid+':'+did,defaultType:'b1_draft'}); return;
+  }
+  if(act==='copy'){
+    copyText(t.getAttribute('data-url')||'', '已複製');
+    return;
+  }
+  if(act==='copy-all'){
+    const paid=t.getAttribute('data-paid'), did=t.getAttribute('data-did');
+    const pa=(proj().partAs||[]).find(x=>x.id===paid);
+    const d=pa?(pa.days||[]).find(x=>x.id===did):null;
+    if(!d){toast('找不到記錄');return}
+    const urls=(d.links||[]).map(l=>l.url).filter(Boolean).join('\n');
+    copyText(urls, '已複製本日全部 URL');
+    return;
+  }
+  if(act==='edit-link'){
+    const scope=t.getAttribute('data-scope'), lid=t.getAttribute('data-lid');
+    const sc=findScope(scope); const link=(sc.links||[]).find(x=>x.id===lid);
+    if(!link){toast('找不到連結');return}
+    openModal({kind:'link',scope,lid,link}); return;
+  }
+  if(act==='del-link'){
+    const scope=t.getAttribute('data-scope'), lid=t.getAttribute('data-lid');
+    if(!confirm('刪除此連結？')) return;
+    const sc=findScope(scope);
+    if(sc.day) sc.day.links=(sc.day.links||[]).filter(x=>x.id!==lid);
+    else if(sc.pa) sc.pa.links=(sc.pa.links||[]).filter(x=>x.id!==lid);
+    else {toast('找不到連結');return}
+    save(); render(); toast('已刪除'); return;
+  }
+});
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('modal').classList.contains('show')) closeModal()});
+
+$('btnExport').onclick=()=>{
+  const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`TS8_links_${today()}.json`;
+  a.click(); URL.revokeObjectURL(a.href); toast('已匯出 JSON');
+};
+$('btnImport').onclick=()=>$('importFile').click();
+$('importFile').onchange=e=>{
+  const f=e.target.files&&e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const data=JSON.parse(r.result);
+      if(!data.projects) throw new Error('格式不對');
+      if(!confirm('匯入會取代目前本機資料，繼續？')) return;
+      db=data; selectedProjectId=db.projects[0]?db.projects[0].id:null;
+      save(); render(); toast('已匯入');
+    }catch(err){toast('匯入失敗：'+err.message)}
+  };
+  r.readAsText(f,'UTF-8'); e.target.value='';
+};
+
+load();
+selectedProjectId=db.projects[0]?db.projects[0].id:null;
+if(selectedProjectId){
+  const p=proj();
+  (p.partAs||[]).forEach(pa=>{openPartAs.add(pa.id);(pa.days||[]).forEach(d=>openDays.add(d.id))});
+}
+render();
+})();
+</script>
+</body>
+</html>
