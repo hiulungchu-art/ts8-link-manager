@@ -4,8 +4,8 @@
       "id": "p-blk-a-podium",
       "name": "Multi-function Area at Blk A Podium",
       "code": "",
-      "jobNo": "",
-      "pm": "",
+      "jobNo": "J26159",
+      "pm": "Regina Chan",
       "notes": "Blk A Podium 多用途場地 · TS8 消防工程",
       "createdAt": "2026-09-09",
       "partAs": [
@@ -13,10 +13,20 @@
           "id": "pa-1",
           "label": "Part A #1",
           "eformId": "",
-          "docNo": "",
+          "docNo": "CFSO-TS8-2026-0011",
           "status": "草稿",
           "notes": "",
-          "links": [],
+          "links": [
+            {
+              "id": "l-parta-pdf-001",
+              "type": "pdf_parta",
+              "label": "CFSO-TS8-2026-0011 Part A",
+              "url": "https://drive.google.com/file/d/17d5bAVWCNG9pMkEKw4G8pz-Zoz07gRHC/view",
+              "notes": "",
+              "driveFileId": "17d5bAVWCNG9pMkEKw4G8pz-Zoz07gRHC",
+              "sourceEmailId": ""
+            }
+          ],
           "days": [
             {
               "id": "d-20260909",
@@ -90,7 +100,8 @@
     }
   ],
   "meta": {
-    "updatedAt": "2026-09-10T14:10:00+08:00",
-    "driveFolderName": "TS8 PDFs"
+    "updatedAt": "2026-09-10T17:01:27+08:00",
+    "driveFolderName": "TS8 PDFs",
+    "driveFolderId": "1FRJX-pH2gV_6bkv2HM9dt5S00Lmv_o2u"
   }
 }
