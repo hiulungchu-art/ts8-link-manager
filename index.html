@@ -77,6 +77,7 @@ table.links tr:hover td{background:#FAFAFA}
 .t-b1d,.t-b1e,.t-b1c{background:var(--warnb);color:var(--warn)}
 .t-b2{background:var(--purb);color:var(--pur)}
 .t-other{background:var(--infob);color:var(--info)}
+.t-pdf{background:#FEE2E2;color:#991B1B}
 .url-cell{max-width:340px}
 .url-cell a{color:var(--red);text-decoration:none;word-break:break-all;font-size:.78rem}
 .url-cell a:hover{text-decoration:underline}
@@ -115,12 +116,13 @@ textarea{min-height:70px;resize:vertical}
       <p>主項目 → Part A → 隔離日 → Links</p>
     </div>
     <div class="side-tools">
-      <input type="search" id="globalSearch" placeholder="搜尋項目 / Part A ID / 連結…">
+      <input type="search" id="globalSearch" placeholder="搜尋項目 / Part A ID / 連結 / PDF…">
       <button class="btn btn-primary" id="btnNewProject">＋ 新主項目</button>
       <div style="display:flex;gap:6px">
         <button class="btn btn-ghost" id="btnExport" style="flex:1">匯出 JSON</button>
         <button class="btn btn-ghost" id="btnImport" style="flex:1">匯入</button>
       </div>
+      <button class="btn btn-ghost" id="btnPullShared">拉取雲端資料（data.json）</button>
       <input type="file" id="importFile" accept=".json,application/json" hidden>
     </div>
     <div class="proj-list" id="projList"></div>
@@ -136,7 +138,7 @@ textarea{min-height:70px;resize:vertical}
     <div class="content" id="content">
       <div class="empty">左側選擇主項目。一單工程可有多個 Part A；每個 Part A 有自己的 E-Form ID，Part B（B1/B2）跟住該 ID。</div>
     </div>
-    <div class="foot-note">資料存於本機瀏覽器。可匯出 JSON 備份。</div>
+    <div class="foot-note">本機 localStorage + 雲端 data.json；PDF 存 Google Drive 連結。JotForm PDF 可由管家從 Outlook 網頁匯入。</div>
   </section>
 </div>
 
@@ -145,7 +147,7 @@ textarea{min-height:70px;resize:vertical}
 
 <script>
 (function(){
-const KEY='ts8_project_link_manager_v4';
+const KEY='ts8_project_link_manager_v5';
 const LINK_TYPES=[
   {v:'partA_share',l:'Part A 專屬連結',c:'t-parta'},
   {v:'partA_edit',l:'Part A Edit',c:'t-parta'},
@@ -153,10 +155,15 @@ const LINK_TYPES=[
   {v:'b1_draft',l:'B1 Draft',c:'t-b1d'},
   {v:'b1_edit',l:'B1 Edit',c:'t-b1e'},
   {v:'b2_edit',l:'B2 Edit',c:'t-b2'},
+  {v:'pdf_b1',l:'PDF · B1',c:'t-pdf'},
+  {v:'pdf_b2',l:'PDF · B2',c:'t-pdf'},
+  {v:'pdf_parta',l:'PDF · Part A',c:'t-pdf'},
+  {v:'pdf',l:'PDF · 其他',c:'t-pdf'},
   {v:'email',l:'電郵／通知連結',c:'t-other'},
   {v:'file',l:'檔案／圖紙',c:'t-other'},
   {v:'other',l:'其他',c:'t-other'}
 ];
+const SHARED_DATA_URL='./data.json';
 const DAY_STATUS=['未開始','B1進行中','B1已提交','B2進行中','已完結'];
 const PART_STATUS=['草稿','審核中','已完成','擱置'];
 
@@ -251,6 +258,33 @@ function load(){
   }catch{db=JSON.parse(JSON.stringify(SEED))}
 }
 function save(){localStorage.setItem(KEY,JSON.stringify(db))}
+function countAllLinks(data){
+  let n=0;
+  (data.projects||[]).forEach(p=>{(p.partAs||[]).forEach(pa=>{n+=(pa.links||[]).length;(pa.days||[]).forEach(d=>n+=(d.links||[]).length)})});
+  return n;
+}
+function mergeShared(shared){
+  if(!shared||!Array.isArray(shared.projects)) return false;
+  const localN=countAllLinks(db), sharedN=countAllLinks(shared);
+  if(sharedN>=localN){ db=shared; save(); return true; }
+  const map=new Map((db.projects||[]).map(p=>[p.id,p]));
+  let changed=false;
+  (shared.projects||[]).forEach(sp=>{ if(!map.has(sp.id)){ db.projects.push(sp); changed=true; } });
+  if(changed) save();
+  return changed || sharedN>0;
+}
+async function pullShared(silent){
+  try{
+    const res=await fetch(SHARED_DATA_URL+'?t='+Date.now(),{cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const shared=await res.json();
+    const ok=mergeShared(shared);
+    if(!silent) toast(ok?'已拉取雲端資料':'雲端無較新資料');
+    selectedProjectId=db.projects[0]?db.projects[0].id:selectedProjectId;
+    if(selectedProjectId){ const p=proj(); (p.partAs||[]).forEach(pa=>{openPartAs.add(pa.id);(pa.days||[]).forEach(d=>openDays.add(d.id))}); }
+    render();
+  }catch(err){ if(!silent) toast('拉取失敗（可稍後再試）'); console.warn(err); }
+}
 function proj(){return db.projects.find(p=>p.id===selectedProjectId)||null}
 
 function countLinks(p){
@@ -389,6 +423,7 @@ function renderMain(){
               <div class="actions">
                 <button class="btn btn-ghost btn-sm" data-act="edit-day" data-paid="${esc(pa.id)}" data-did="${esc(d.id)}">編輯日</button>
                 <button class="btn btn-primary btn-sm" data-act="add-day-link" data-paid="${esc(pa.id)}" data-did="${esc(d.id)}">＋ Link</button>
+                <button class="btn btn-ghost btn-sm" data-act="add-day-pdf" data-paid="${esc(pa.id)}" data-did="${esc(d.id)}">＋ PDF</button>
               </div>
             </div>
             <div class="day-body">
@@ -482,7 +517,9 @@ function openModal(cfg){
     body=`<div class="grid">
       <div class="field"><label>類型</label><select id="m_type">${LINK_TYPES.map(t=>`<option value="${t.v}" ${t.v===defType?'selected':''}>${t.l}</option>`).join('')}</select></div>
       <div class="field"><label>名稱</label><input id="m_label" value="${esc(existing?existing.label||'':'')}" placeholder="可留空，用類型名稱"></div>
-      <div class="field span2"><label>URL <span class="req">*</span></label><input id="m_url" value="${esc(existing?existing.url||'':'')}" placeholder="https://…"></div>
+      <div class="field span2"><label>URL / Google Drive 連結 <span class="req">*</span></label><input id="m_url" value="${esc(existing?existing.url||'':'')}" placeholder="https://drive.google.com/… 或其它連結"></div>
+      <div class="field"><label>Drive File ID</label><input id="m_driveId" value="${esc(existing?existing.driveFileId||'':'')}" placeholder="自動／可選"></div>
+      <div class="field"><label>來源電郵 ID</label><input id="m_emailId" value="${esc(existing?existing.sourceEmailId||'':'')}" placeholder="Outlook message id（bot 用）"></div>
       <div class="field span2"><label>備註</label><textarea id="m_notes">${esc(existing?existing.notes||'':'')}</textarea></div>
     </div>`;
     if(existing) danger=`<button class="btn btn-danger" id="m_del" style="margin-right:auto">刪除連結</button>`;
@@ -536,7 +573,7 @@ function saveModal(){
   }
   if(cfg.kind==='link'){
     const url=$('m_url').value.trim(); if(!url){toast('請填 URL');return}
-    const data={type:$('m_type').value,label:$('m_label').value.trim(),url,notes:$('m_notes').value.trim()};
+    const data={type:$('m_type').value,label:$('m_label').value.trim(),url,notes:$('m_notes').value.trim(),driveFileId:($('m_driveId')&&$('m_driveId').value.trim())||'',sourceEmailId:($('m_emailId')&&$('m_emailId').value.trim())||''};
     const sc=findScope(cfg.scope);
     if(!sc.links){toast('找不到位置');return}
     if(!Array.isArray(sc.links)) return;
@@ -645,6 +682,14 @@ $('content').addEventListener('click',e=>{
     openPartAs.add(paid); openDays.add(did);
     openModal({kind:'link',scope:'day:'+paid+':'+did,defaultType:'b1_draft'}); return;
   }
+  if(act==='add-day-pdf'){
+    const paid=t.getAttribute('data-paid'), did=t.getAttribute('data-did');
+    const pa=(proj().partAs||[]).find(x=>x.id===paid);
+    const day=pa?(pa.days||[]).find(d=>d.id===did):null;
+    if(day && !Array.isArray(day.links)) day.links=[];
+    openPartAs.add(paid); openDays.add(did);
+    openModal({kind:'link',scope:'day:'+paid+':'+did,defaultType:'pdf_b1'}); return;
+  }
   if(act==='copy'){
     copyText(t.getAttribute('data-url')||'', '已複製');
     return;
@@ -707,6 +752,8 @@ if(selectedProjectId){
   (p.partAs||[]).forEach(pa=>{openPartAs.add(pa.id);(pa.days||[]).forEach(d=>openDays.add(d.id))});
 }
 render();
+const btnPull=$('btnPullShared'); if(btnPull) btnPull.onclick=()=>pullShared(false);
+pullShared(true);
 })();
 </script>
 </body>
