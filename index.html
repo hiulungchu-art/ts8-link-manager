@@ -139,7 +139,8 @@ textarea{min-height:70px;resize:vertical}
         <button class="btn btn-ghost" id="btnExport" style="flex:1">匯出 JSON</button>
         <button class="btn btn-ghost" id="btnImport" style="flex:1">匯入</button>
       </div>
-      <button class="btn btn-ghost" id="btnPullShared">拉取雲端資料（data.json）</button>
+      <button class="btn btn-ghost" id="btnPullShared">拉取雲端資料</button>
+      <button class="btn btn-ghost" id="btnPushShared">發布到雲端</button>
       <input type="file" id="importFile" accept=".json,application/json" hidden>
     </div>
     <div class="proj-list" id="projList"></div>
@@ -155,7 +156,7 @@ textarea{min-height:70px;resize:vertical}
     <div class="content" id="content">
       <div class="empty">左側選擇主項目。一單工程可有多個 Part A；每個 Part A 有自己的 E-Form ID，Part B（B1/B2）跟住該 ID。</div>
     </div>
-    <div class="foot-note">「＋ 網址」貼 JotForm／網頁連結；「＋ PDF」拖檔上傳到 Google Drive（訪客唔使登入你嘅 Google）。本機 localStorage + 可選 data.json。</div>
+    <div class="foot-note">「＋ 網址」貼 JotForm／網頁連結；「＋ PDF」拖檔上傳到 Google Drive（訪客唔使登入你嘅 Google）。資料自動同步到共用雲端；任何人重新整理可見。</div>
   </section>
 </div>
 
@@ -170,6 +171,7 @@ const CFG=(typeof window!=='undefined'&&window.TS8_CONFIG)||{};
 const DRIVE_FOLDER_ID=CFG.DRIVE_FOLDER_ID||'1FRJX-pH2gV_6bkv2HM9dt5S00Lmv_o2u';
 const UPLOAD_WEBAPP_URL=CFG.UPLOAD_WEBAPP_URL||'';
 const UPLOAD_SECRET=CFG.UPLOAD_SECRET||'';
+const SYNC_URL=UPLOAD_WEBAPP_URL;
 const LINK_TYPES=[
   {v:'partA_share',l:'Part A 專屬連結',c:'t-parta'},
   {v:'partA_edit',l:'Part A Edit',c:'t-parta'},
@@ -274,38 +276,159 @@ function today(){const d=new Date();const z=n=>String(n).padStart(2,'0');return 
 function load(){
   try{
     const raw=localStorage.getItem(KEY);
-    if(!raw){db=JSON.parse(JSON.stringify(SEED));save();return}
+    if(!raw){db=JSON.parse(JSON.stringify(SEED));saveLocalOnly();return}
     db=JSON.parse(raw);
     if(!db.projects) db={projects:[]};
   }catch{db=JSON.parse(JSON.stringify(SEED))}
 }
-function save(){localStorage.setItem(KEY,JSON.stringify(db))}
+function saveLocalOnly(){localStorage.setItem(KEY,JSON.stringify(db))}
+let _pushTimer=null;
+function save(){
+  saveLocalOnly();
+  if(!UPLOAD_WEBAPP_URL) return;
+  clearTimeout(_pushTimer);
+  _pushTimer=setTimeout(()=>{ pushShared(true); },800);
+}
 function countAllLinks(data){
   let n=0;
   (data.projects||[]).forEach(p=>{(p.partAs||[]).forEach(pa=>{n+=(pa.links||[]).length;(pa.days||[]).forEach(d=>n+=(d.links||[]).length)})});
   return n;
 }
-function mergeShared(shared){
-  if(!shared||!Array.isArray(shared.projects)) return false;
-  const localN=countAllLinks(db), sharedN=countAllLinks(shared);
-  if(sharedN>=localN){ db=shared; save(); return true; }
-  const map=new Map((db.projects||[]).map(p=>[p.id,p]));
-  let changed=false;
-  (shared.projects||[]).forEach(sp=>{ if(!map.has(sp.id)){ db.projects.push(sp); changed=true; } });
-  if(changed) save();
-  return changed || sharedN>0;
+function collectLinkIds(data){
+  const ids=new Set();
+  (data.projects||[]).forEach(p=>{(p.partAs||[]).forEach(pa=>{
+    (pa.links||[]).forEach(l=>{ if(l&&l.id) ids.add(l.id); });
+    (pa.days||[]).forEach(d=>{(d.links||[]).forEach(l=>{ if(l&&l.id) ids.add(l.id); });});
+  })});
+  return ids;
 }
-async function pullShared(silent){
+function unionLinkArrays(a,b){
+  const map=new Map();
+  (a||[]).forEach(l=>{ if(l&&l.id) map.set(l.id,l); });
+  (b||[]).forEach(l=>{ if(l&&l.id&&!map.has(l.id)) map.set(l.id,l); });
+  return [...map.values()];
+}
+function smartMergeDb(local, shared){
+  if(!shared||!Array.isArray(shared.projects)) return {db:local, changed:false, cloudPreferred:false};
+  const localAt=(local.meta&&local.meta.updatedAt)||'';
+  const sharedAt=(shared.meta&&shared.meta.updatedAt)||'';
+  const localN=countAllLinks(local), sharedN=countAllLinks(shared);
+  const cloudNewer=!!(sharedAt && (!localAt || sharedAt>localAt));
+  const cloudMore=!sharedAt && !localAt && sharedN>=localN;
+  const cloudPreferred=cloudNewer || cloudMore || (sharedAt && sharedAt===localAt && sharedN>=localN) || (!localAt && sharedAt);
+
+  function mergeDay(ld, sd){
+    const base=cloudPreferred?Object.assign({},ld||{},sd):Object.assign({},sd||{},ld||{});
+    base.links=unionLinkArrays((ld&&ld.links)||[], (sd&&sd.links)||[]);
+    return base;
+  }
+  function mergePartA(lpa, spa){
+    const base=cloudPreferred?Object.assign({},lpa||{},spa):Object.assign({},spa||{},lpa||{});
+    base.links=unionLinkArrays((lpa&&lpa.links)||[], (spa&&spa.links)||[]);
+    const dayMap=new Map();
+    ((lpa&&lpa.days)||[]).forEach(d=>{ if(d&&d.id) dayMap.set(d.id,{local:d}); });
+    ((spa&&spa.days)||[]).forEach(d=>{
+      if(!d||!d.id) return;
+      const cur=dayMap.get(d.id)||{};
+      cur.shared=d;
+      dayMap.set(d.id,cur);
+    });
+    base.days=[...dayMap.values()].map(({local:ld,shared:sd})=>mergeDay(ld,sd));
+    return base;
+  }
+  function mergeProject(lp, sp){
+    const base=cloudPreferred?Object.assign({},lp||{},sp):Object.assign({},sp||{},lp||{});
+    const paMap=new Map();
+    ((lp&&lp.partAs)||[]).forEach(pa=>{ if(pa&&pa.id) paMap.set(pa.id,{local:pa}); });
+    ((sp&&sp.partAs)||[]).forEach(pa=>{
+      if(!pa||!pa.id) return;
+      const cur=paMap.get(pa.id)||{};
+      cur.shared=pa;
+      paMap.set(pa.id,cur);
+    });
+    base.partAs=[...paMap.values()].map(({local:lpa,shared:spa})=>mergePartA(lpa,spa));
+    return base;
+  }
+  const projMap=new Map();
+  (local.projects||[]).forEach(p=>{ if(p&&p.id) projMap.set(p.id,{local:p}); });
+  (shared.projects||[]).forEach(p=>{
+    if(!p||!p.id) return;
+    const cur=projMap.get(p.id)||{};
+    cur.shared=p;
+    projMap.set(p.id,cur);
+  });
+  const projects=[...projMap.values()].map(({local:lp,shared:sp})=>mergeProject(lp,sp));
+  let meta;
+  if(cloudPreferred) meta=Object.assign({}, local.meta||{}, shared.meta||{});
+  else meta=Object.assign({}, shared.meta||{}, local.meta||{});
+  const merged={projects, meta};
+  return {db:merged, changed:true, cloudPreferred, localN, sharedN};
+}
+async function fetchSharedDb(){
+  const errors=[];
+  if(SYNC_URL){
+    try{
+      const res=await fetch(SYNC_URL+'?op=db&t='+Date.now(),{cache:'no-store'});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const data=await res.json();
+      // Apps Script may wrap as {ok:true, db:{...}} or return db directly
+      if(data && data.db && Array.isArray(data.db.projects)) return data.db;
+      if(data && Array.isArray(data.projects)) return data;
+      throw new Error('invalid sync payload');
+    }catch(err){ errors.push(err); console.warn('SYNC_URL pull failed', err); }
+  }
   try{
     const res=await fetch(SHARED_DATA_URL+'?t='+Date.now(),{cache:'no-store'});
     if(!res.ok) throw new Error('HTTP '+res.status);
     const shared=await res.json();
-    const ok=mergeShared(shared);
-    if(!silent) toast(ok?'已拉取雲端資料':'雲端無較新資料');
-    selectedProjectId=db.projects[0]?db.projects[0].id:selectedProjectId;
-    if(selectedProjectId){ const p=proj(); (p.partAs||[]).forEach(pa=>{openPartAs.add(pa.id);(pa.days||[]).forEach(d=>openDays.add(d.id))}); }
+    if(!shared||!Array.isArray(shared.projects)) throw new Error('invalid data.json');
+    return shared;
+  }catch(err){
+    errors.push(err);
+    throw errors[0]||err;
+  }
+}
+async function pullShared(silent){
+  try{
+    const shared=await fetchSharedDb();
+    const beforeIds=collectLinkIds(db);
+    const result=smartMergeDb(db, shared);
+    db=result.db;
+    saveLocalOnly();
+    const afterN=countAllLinks(db);
+    if(!silent) toast(result.changed?'已拉取雲端資料':'雲端無較新資料');
+    if(!selectedProjectId || !db.projects.find(p=>p.id===selectedProjectId)){
+      selectedProjectId=db.projects[0]?db.projects[0].id:null;
+    }
+    if(selectedProjectId){ const p=proj(); if(p) (p.partAs||[]).forEach(pa=>{openPartAs.add(pa.id);(pa.days||[]).forEach(d=>openDays.add(d.id))}); }
     render();
-  }catch(err){ if(!silent) toast('拉取失敗（可稍後再試）'); console.warn(err); }
+    return {shared, beforeIds, afterN, result};
+  }catch(err){ if(!silent) toast('拉取失敗（可稍後再試）'); console.warn(err); return null; }
+}
+async function pushShared(silent){
+  if(!SYNC_URL){ if(!silent) toast('尚未設定雲端同步'); return false; }
+  try{
+    db.meta=db.meta||{};
+    db.meta.updatedAt=new Date().toISOString();
+    saveLocalOnly();
+    const res=await fetch(SYNC_URL,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({ secret:UPLOAD_SECRET, op:'saveDb', db })
+    });
+    const text=await res.text();
+    let data=null;
+    try{ data=JSON.parse(text); }catch(_){}
+    if(!res.ok || (data && data.ok===false)){
+      throw new Error((data&&(data.error||data.message))||('HTTP '+res.status));
+    }
+    if(!silent) toast('已發布到雲端');
+    return true;
+  }catch(err){
+    console.warn(err);
+    if(!silent) toast('發布失敗（可稍後再試）');
+    return false;
+  }
 }
 function proj(){return db.projects.find(p=>p.id===selectedProjectId)||null}
 
@@ -963,7 +1086,18 @@ if(selectedProjectId){
 }
 render();
 const btnPull=$('btnPullShared'); if(btnPull) btnPull.onclick=()=>pullShared(false);
-pullShared(true);
+const btnPush=$('btnPushShared'); if(btnPush) btnPush.onclick=()=>pushShared(false);
+(async function bootSync(){
+  // Anyone can edit: pull shared DB first, then migrate local-only links once.
+  const localSnapshot=JSON.parse(JSON.stringify(db));
+  const localIds=collectLinkIds(localSnapshot);
+  const pulled=await pullShared(true);
+  if(!pulled) return;
+  // pullShared already union-merged; if local still had links cloud lacked, publish once
+  const cloudIds=collectLinkIds(pulled.shared||{projects:[]});
+  const localHasExtra=[...localIds].some(id=>!cloudIds.has(id));
+  if(localHasExtra) await pushShared(true);
+})();
 })();
 </script>
 </body>
