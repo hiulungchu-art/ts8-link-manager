@@ -53,6 +53,15 @@
                   "notes": "從 Drive 救回",
                   "driveFileId": "1uEWUJ59E3NwuCo00M62oVlfR00BmBE9R",
                   "sourceEmailId": ""
+                },
+                {
+                  "id": "l-b2-20260909",
+                  "type": "b2",
+                  "label": "B2",
+                  "url": "https://www.jotform.com/edit/6648348568818281709",
+                  "notes": "",
+                  "driveFileId": "",
+                  "sourceEmailId": ""
                 }
               ]
             },
@@ -80,6 +89,15 @@
                   "url": "https://drive.google.com/file/d/1PObiasIiwUBJJCneUdoF44HxXPIWo6fj/view",
                   "notes": "從 Drive 救回",
                   "driveFileId": "1PObiasIiwUBJJCneUdoF44HxXPIWo6fj",
+                  "sourceEmailId": ""
+                },
+                {
+                  "id": "l-b2-20260910",
+                  "type": "b2",
+                  "label": "B2",
+                  "url": "https://www.jotform.com/edit/6648349458812451003",
+                  "notes": "",
+                  "driveFileId": "",
                   "sourceEmailId": ""
                 }
               ]
@@ -118,7 +136,7 @@
     }
   ],
   "meta": {
-    "updatedAt": "2026-09-11T04:14:33.634025Z",
+    "updatedAt": "2026-09-11T04:16:08.579790Z",
     "driveFolderName": "TS8 PDFs",
     "driveFolderId": "1FRJX-pH2gV_6bkv2HM9dt5S00Lmv_o2u",
     "note": "restored Part B PDFs from Drive after accidental overwrite"
