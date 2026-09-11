@@ -6,8 +6,6 @@ const MAX_B64 = 12000000;
 const MAX_AUDIT = 2500;
 /** Only this Google account may open the admin console (case-insensitive). */
 const ADMIN_EMAILS = ['hlung.chu@connect.polyu.hk', 'hiulungchu@gmail.com'];
-/** Private admin unlock (URL ?k=...). Do not publish in site UI. */
-const ADMIN_KEY = 'UBoSZm_ZKN6_2i9pC7QHyrVc_JuseZDf';
 
 function json_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
@@ -120,6 +118,15 @@ function requireAdminFromPost_(data) {
   return null;
 }
 
+
+function adminKey_() {
+  try {
+    return PropertiesService.getScriptProperties().getProperty('ADMIN_KEY') || '';
+  } catch (e) {
+    return '';
+  }
+}
+
 function escapeHtml_(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;')
@@ -189,7 +196,7 @@ function serveAdmin_(e) {
   var key = '';
   try { key = String((e && e.parameter && e.parameter.k) || ''); } catch (err) {}
   var email = normalizeEmail_(activeUserEmail_());
-  var keyOk = ADMIN_KEY && key && key === ADMIN_KEY;
+  var expected = adminKey_(); var keyOk = expected && key && key === expected;
   var emailOk = isAdminEmail_(email);
   if (!keyOk && !emailOk) {
     return HtmlService.createHtmlOutput(adminForbiddenHtml_(email))
