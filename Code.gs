@@ -78,11 +78,16 @@ function isAdminEmail_(email) {
 }
 
 function activeUserEmail_() {
+  // Prefer active user; fall back to effective user (needed on some user-access web apps).
   try {
-    return Session.getActiveUser().getEmail() || '';
-  } catch (e) {
-    return '';
-  }
+    var a = Session.getActiveUser().getEmail();
+    if (a) return a;
+  } catch (e) {}
+  try {
+    var ef = Session.getEffectiveUser().getEmail();
+    if (ef) return ef;
+  } catch (e2) {}
+  return '';
 }
 
 function verifyGoogleIdToken_(idToken) {
