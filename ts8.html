@@ -770,6 +770,7 @@ textarea{min-height:72px;resize:vertical}
 <div class="toast" id="toast"></div>
 
 <script src="./config.js"></script>
+<script src="./js/t.js"></script>
 <script>
 (function(){
 const KEY='ts8_project_link_manager_v6';
@@ -779,6 +780,15 @@ const DRIVE_FOLDER_ID=CFG.DRIVE_FOLDER_ID||'1FRJX-pH2gV_6bkv2HM9dt5S00Lmv_o2u';
 const UPLOAD_WEBAPP_URL=CFG.UPLOAD_WEBAPP_URL||'';
 const UPLOAD_SECRET=CFG.UPLOAD_SECRET||'';
 const SYNC_URL=UPLOAD_WEBAPP_URL;
+function clientMeta(){
+  try{
+    var k='ts8_cid';
+    var cid=localStorage.getItem(k);
+    if(!cid){ cid='c'+Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem(k,cid); }
+    return { cid:cid, ua:(navigator.userAgent||'').slice(0,180), page:location.pathname+location.search };
+  }catch(e){ return { cid:'', ua:'', page:'' }; }
+}
+
 const SHARED_DATA_URL='./data.json';
 
 const LINK_LABELS={
@@ -1086,7 +1096,7 @@ async function pushShared(silent){
     const res=await fetch(SYNC_URL,{
       method:'POST',
       headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify({ secret:UPLOAD_SECRET, op:'saveDb', db, baseUpdatedAt:_lastCloudUpdatedAt||'' })
+      body:JSON.stringify(Object.assign({ secret:UPLOAD_SECRET, op:'saveDb', db, baseUpdatedAt:_lastCloudUpdatedAt||'', note:'saveDb' }, clientMeta()))
     });
     const text=await res.text();
     let data=null;
@@ -1526,7 +1536,7 @@ async function uploadPdfToDrive(file){
   const res=await fetch(UPLOAD_WEBAPP_URL,{
     method:'POST',
     headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body:JSON.stringify({ secret:UPLOAD_SECRET, filename:file.name, mimeType:file.type||'application/pdf', base64, folderId:DRIVE_FOLDER_ID })
+    body:JSON.stringify(Object.assign({ secret:UPLOAD_SECRET, filename:file.name, mimeType:file.type||'application/pdf', base64, folderId:DRIVE_FOLDER_ID }, clientMeta()))
   });
   const text=await res.text();
   let data;
