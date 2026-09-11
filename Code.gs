@@ -199,15 +199,18 @@ function serveAdmin_(e) {
   var expected = adminKey_();
   var keyOk = expected && key && key === expected;
   var emailOk = isAdminEmail_(email);
-  // ContentService HTML is more reliable than HtmlService iframe (avoids blank pages).
+  // Plain server-rendered HtmlService (no client JS) — ContentService HTML shows as source text.
+  var html;
   if (!keyOk && !emailOk) {
-    return ContentService.createTextOutput(adminForbiddenHtml_(email))
-      .setMimeType(ContentService.MimeType.HTML);
+    html = adminForbiddenHtml_(email);
+  } else {
+    var who = emailOk ? email : ('key:' + (email || 'private'));
+    var audit = readAudit_();
+    html = adminPageHtml_(who, audit.events || []);
   }
-  var who = emailOk ? email : ('key:' + (email || 'private'));
-  var audit = readAudit_();
-  return ContentService.createTextOutput(adminPageHtml_(who, audit.events || []))
-    .setMimeType(ContentService.MimeType.HTML);
+  return HtmlService.createHtmlOutput(html)
+    .setTitle('Console')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
 function doGet(e) {
