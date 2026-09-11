@@ -470,38 +470,80 @@ body{
   padding-top:6px;
 }
 
-/* —— Day cards —— */
+/* —— Day filter + cards —— */
+.day-toolbar{
+  display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;
+  margin-bottom:14px;padding:14px 16px;
+  background:var(--cream-2);border:1px solid var(--line-soft);border-radius:14px;
+}
+.day-toolbar .field{margin:0;min-width:120px;flex:1}
+.day-toolbar .field label{display:block;font-size:.68rem;color:var(--mute);margin-bottom:4px;font-weight:600;letter-spacing:.02em}
+.day-toolbar input,.day-toolbar select{
+  width:100%;padding:8px 10px;border:1px solid var(--line-soft);border-radius:10px;
+  background:var(--paper);font:inherit;font-size:.85rem;color:var(--ink);
+}
+.day-toolbar .day-toolbar-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.day-count{font-size:.78rem;color:var(--mute);margin:0 0 12px}
 .day-card{
   background:var(--paper);
   border:1px solid var(--line-soft);
   border-radius:var(--radius);
-  padding:22px 22px 20px;
+  padding:0;
   box-shadow:var(--shadow);
-  margin-bottom:16px;
+  margin-bottom:12px;
   border-left:3px solid var(--accent);
   transition:box-shadow .18s, border-color .18s;
+  overflow:hidden;
 }
 .day-card:hover{box-shadow:var(--shadow-lg)}
+.day-card.is-hidden{display:none}
 .day-card .day-head{
   display:flex;
   flex-wrap:wrap;
   gap:10px;
   align-items:center;
-  margin-bottom:16px;
+  padding:14px 18px;
+  cursor:pointer;
+  user-select:none;
+}
+.day-card.is-open .day-head{
+  margin-bottom:0;
   padding-bottom:14px;
   border-bottom:1px solid var(--line-soft);
 }
+.day-card .day-chevron{
+  width:22px;height:22px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;
+  color:var(--mute);font-size:.85rem;transition:transform .18s;flex-shrink:0;
+}
+.day-card.is-open .day-chevron{transform:rotate(90deg);color:var(--accent)}
 .day-card .day-date{
   font-family:var(--font-display);
   font-weight:600;
-  font-size:1.22rem;
+  font-size:1.1rem;
   letter-spacing:-.015em;
   color:var(--ink);
 }
-.day-card .day-sub{font-size:.8rem;color:var(--mute);flex:1}
+.day-card .day-sub{font-size:.78rem;color:var(--mute);flex:1;min-width:120px}
+.day-card .day-dots{display:flex;gap:6px;flex-wrap:wrap}
+.day-dot{
+  font-size:.68rem;font-weight:700;letter-spacing:.02em;
+  padding:3px 8px;border-radius:999px;background:var(--cream-2);color:var(--mute);
+}
+.day-dot.on{background:var(--okb);color:var(--ok)}
+.day-card .day-body{display:none;padding:4px 18px 18px}
+.day-card.is-open .day-body{display:block}
 .day-slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 @media(max-width:900px){.day-slots{grid-template-columns:1fr}}
 .day-slots .tile{min-height:136px;padding:18px 16px}
+.section-collapsible .section-head{
+  display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;margin-bottom:10px;
+}
+.section-collapsible .section-head .section-title{margin:0;flex:1}
+.section-collapsible:not(.is-open) .section-body{display:none}
+.section-collapsible .sec-chevron{
+  color:var(--mute);font-size:.85rem;transition:transform .18s;
+}
+.section-collapsible.is-open .sec-chevron{transform:rotate(90deg);color:var(--accent)}
 
 .badge{
   display:inline-block;
@@ -804,6 +846,20 @@ let selectedProjectId=null;
 let selectedPartAId=null;
 let searchQ='';
 let modalMode=null;
+let dayFilterQ='';
+let dayFilterStatus='';
+let dayFilterFrom='';
+let dayFilterTo='';
+const OPEN_DAYS_KEY='ts8_open_days_v1';
+const OPEN_SECTIONS_KEY='ts8_open_sections_v1';
+function loadOpenSet(key){
+  try{ return new Set(JSON.parse(sessionStorage.getItem(key)||'[]')); }catch{ return new Set(); }
+}
+function saveOpenSet(key, set){
+  try{ sessionStorage.setItem(key, JSON.stringify([...set])); }catch{}
+}
+let openDayIds=loadOpenSet(OPEN_DAYS_KEY);
+let openSectionIds=loadOpenSet(OPEN_SECTIONS_KEY);
 
 const $=id=>document.getElementById(id);
 const toastEl=$('toast');
@@ -1214,38 +1270,124 @@ function renderMain(){
     </div>
   </div></div>`;
 
-  html+=`<div class="section"><div class="section-title">Part A 文件</div>
-    <div class="tile-grid">
-      ${renderTile('Part A 連結','parta',findPrimary(pa.links,'parta'),scopePa)}
-      ${renderTile('Part A PDF','pdf_parta',findPrimary(pa.links,'pdf_parta'),scopePa)}
-    </div></div>`;
+  const paDocsKey='pa-docs:'+pa.id;
+  // Part A docs: default open on first visit, then remember
+  if(!sessionStorage.getItem(OPEN_SECTIONS_KEY) && !openSectionIds.has(paDocsKey)){
+    openSectionIds.add(paDocsKey);
+  }
+  html+=`<div class="section section-collapsible ${openSectionIds.has(paDocsKey)?'is-open':''}" data-section="${esc(paDocsKey)}">
+    <div class="section-head" data-act="toggle-section" data-section="${esc(paDocsKey)}">
+      <span class="sec-chevron">▸</span>
+      <div class="section-title">Part A 文件</div>
+    </div>
+    <div class="section-body">
+      <div class="tile-grid">
+        ${renderTile('Part A 連結','parta',findPrimary(pa.links,'parta'),scopePa)}
+        ${renderTile('Part A PDF','pdf_parta',findPrimary(pa.links,'pdf_parta'),scopePa)}
+      </div>
+    </div>
+  </div>`;
 
   const days=[...(pa.days||[])].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  // Default: if many days and none opened yet for this Part A, keep all collapsed
+  const dayKeys=days.map(d=>'day:'+pa.id+':'+d.id);
+  const anyOpenForPa=dayKeys.some(k=>openDayIds.has(k));
+  if(days.length && !anyOpenForPa && days.length<=3){
+    // few days: open the latest by default once
+    const latest=dayKeys[dayKeys.length-1];
+    if(!sessionStorage.getItem(OPEN_DAYS_KEY)) openDayIds.add(latest);
+  }
+
   html+=`<div class="section"><div class="section-title">隔離日</div>`;
   if(!days.length){
     html+=`<div class="empty" style="padding:36px"><div class="hint-lg">尚未新增隔離日。</div>
       <button class="btn btn-primary" data-act="add-day" data-paid="${esc(pa.id)}">＋ 新增隔離日</button></div>`;
   }else{
+    html+=`<div class="day-toolbar">
+      <div class="field" style="flex:1.4"><label>搜尋</label>
+        <input id="dayFilterQ" type="search" placeholder="日期、標籤、Part B ID…" value="${esc(dayFilterQ)}"></div>
+      <div class="field"><label>狀態</label>
+        <select id="dayFilterStatus">
+          <option value="">全部狀態</option>
+          ${DAY_STATUS.map(s=>`<option value="${esc(s)}" ${dayFilterStatus===s?'selected':''}>${esc(s)}</option>`).join('')}
+        </select></div>
+      <div class="field"><label>由</label><input id="dayFilterFrom" type="date" value="${esc(dayFilterFrom)}"></div>
+      <div class="field"><label>至</label><input id="dayFilterTo" type="date" value="${esc(dayFilterTo)}"></div>
+      <div class="day-toolbar-actions">
+        <button type="button" class="btn btn-ghost btn-sm" data-act="expand-days" data-paid="${esc(pa.id)}">全部展開</button>
+        <button type="button" class="btn btn-ghost btn-sm" data-act="collapse-days" data-paid="${esc(pa.id)}">全部收合</button>
+      </div>
+    </div>
+    <div class="day-count" id="dayFilterCount"></div>
+    <div id="dayList">`;
     html+=days.map(d=>{
       const scope='day:'+pa.id+':'+d.id;
-      return `<div class="day-card">
-        <div class="day-head">
+      const open=openDayIds.has(scope);
+      const b1=!!findPrimary(d.links,'b1');
+      const b2=!!findPrimary(d.links,'b2');
+      const pdf=!!findPrimary(d.links,'pdf_b2');
+      const hay=[d.date,d.label,d.partBSubmissionId,d.status,d.notes].filter(Boolean).join(' ').toLowerCase();
+      return `<div class="day-card ${open?'is-open':''}" data-day-id="${esc(scope)}" data-date="${esc(d.date||'')}" data-status="${esc(d.status||'未開始')}" data-hay="${esc(hay)}">
+        <div class="day-head" data-act="toggle-day" data-day-id="${esc(scope)}">
+          <span class="day-chevron">▸</span>
           <span class="day-date">${esc(d.date||'—')}</span>
           ${badgeStatus(d.status||'未開始')}
           <span class="day-sub">${esc(d.label||'隔離日')}${d.partBSubmissionId?` · Part B：<code>${esc(d.partBSubmissionId)}</code>`:''}</span>
+          <span class="day-dots">
+            <span class="day-dot ${b1?'on':''}">B1</span>
+            <span class="day-dot ${b2?'on':''}">B2</span>
+            <span class="day-dot ${pdf?'on':''}">PDF</span>
+          </span>
           <button class="btn btn-ghost btn-sm" data-act="edit-day" data-paid="${esc(pa.id)}" data-did="${esc(d.id)}">編輯</button>
         </div>
-        ${d.notes?`<div class="hint" style="margin-bottom:14px">${esc(d.notes)}</div>`:''}
-        <div class="day-slots">
-          ${renderTile('B1 連結','b1',findPrimary(d.links,'b1'),scope)}
-          ${renderTile('B2 連結','b2',findPrimary(d.links,'b2'),scope)}
-          ${renderTile('完整 PDF（B2 完成後）','pdf_b2',findPrimary(d.links,'pdf_b2'),scope,{hint:'做完 B2 先有'})}
+        <div class="day-body">
+          ${d.notes?`<div class="hint" style="margin:10px 0 14px">${esc(d.notes)}</div>`:''}
+          <div class="day-slots">
+            ${renderTile('B1 連結','b1',findPrimary(d.links,'b1'),scope)}
+            ${renderTile('B2 連結','b2',findPrimary(d.links,'b2'),scope)}
+            ${renderTile('完整 PDF（B2 完成後）','pdf_b2',findPrimary(d.links,'pdf_b2'),scope,{hint:'做完 B2 先有'})}
+          </div>
         </div>
       </div>`;
     }).join('');
+    html+=`</div>`;
   }
   html+=`</div>`;
   $('content').innerHTML=html;
+  applyDayFilter();
+  // restore filter focus if needed
+  const activeFilter=document.activeElement && document.activeElement.id;
+  if(activeFilter && ['dayFilterQ','dayFilterStatus','dayFilterFrom','dayFilterTo'].includes(activeFilter)){
+    const el=$(activeFilter); if(el){ el.focus(); if(el.setSelectionRange && el.value) el.setSelectionRange(el.value.length, el.value.length); }
+  }
+}
+
+function applyDayFilter(){
+  const q=(dayFilterQ||'').trim().toLowerCase();
+  const st=dayFilterStatus||'';
+  const from=dayFilterFrom||'';
+  const to=dayFilterTo||'';
+  const cards=[...document.querySelectorAll('#dayList .day-card')];
+  let shown=0;
+  cards.forEach(card=>{
+    const date=card.getAttribute('data-date')||'';
+    const status=card.getAttribute('data-status')||'';
+    const hay=card.getAttribute('data-hay')||'';
+    let ok=true;
+    if(q && !hay.includes(q)) ok=false;
+    if(st && status!==st) ok=false;
+    if(from && date && date<from) ok=false;
+    if(to && date && date>to) ok=false;
+    card.classList.toggle('is-hidden', !ok);
+    if(ok) shown++;
+  });
+  const count=$('dayFilterCount');
+  if(count){
+    const total=cards.length;
+    count.textContent = shown===total
+      ? `共 ${total} 個隔離日（點列即可展開）`
+      : `顯示 ${shown}／${total} 個隔離日`;
+  }
 }
 
 function render(){
@@ -1549,11 +1691,66 @@ $('btnNewProject').onclick=()=>openModal({kind:'project'});
 $('btnEditProject').onclick=()=>{if(selectedProjectId) openModal({kind:'project',id:selectedProjectId})};
 $('globalSearch').addEventListener('input',e=>{searchQ=e.target.value;render()});
 
+$('content').addEventListener('input',e=>{
+  const id=e.target && e.target.id;
+  if(id==='dayFilterQ'){ dayFilterQ=e.target.value; applyDayFilter(); return; }
+  if(id==='dayFilterStatus'){ dayFilterStatus=e.target.value; applyDayFilter(); return; }
+  if(id==='dayFilterFrom'){ dayFilterFrom=e.target.value; applyDayFilter(); return; }
+  if(id==='dayFilterTo'){ dayFilterTo=e.target.value; applyDayFilter(); return; }
+});
+$('content').addEventListener('change',e=>{
+  const id=e.target && e.target.id;
+  if(id==='dayFilterStatus'||id==='dayFilterFrom'||id==='dayFilterTo'){
+    if(id==='dayFilterStatus') dayFilterStatus=e.target.value;
+    if(id==='dayFilterFrom') dayFilterFrom=e.target.value;
+    if(id==='dayFilterTo') dayFilterTo=e.target.value;
+    applyDayFilter();
+  }
+});
+
 $('content').addEventListener('click',e=>{
   const t=e.target.closest('[data-act]'); if(!t) return;
   const act=t.getAttribute('data-act');
+  if(act==='toggle-day'){
+    // ignore if clicking nested button with another act (edit)
+    if(e.target.closest('button[data-act="edit-day"]')) return;
+    const id=t.getAttribute('data-day-id');
+    const card=document.querySelector('.day-card[data-day-id="'+CSS.escape(id)+'"]');
+    if(!card) return;
+    const open=card.classList.toggle('is-open');
+    if(open) openDayIds.add(id); else openDayIds.delete(id);
+    saveOpenSet(OPEN_DAYS_KEY, openDayIds);
+    return;
+  }
+  if(act==='toggle-section'){
+    const id=t.getAttribute('data-section');
+    const sec=document.querySelector('.section-collapsible[data-section="'+CSS.escape(id)+'"]');
+    if(!sec) return;
+    const open=sec.classList.toggle('is-open');
+    if(open) openSectionIds.add(id); else openSectionIds.delete(id);
+    saveOpenSet(OPEN_SECTIONS_KEY, openSectionIds);
+    return;
+  }
+  if(act==='expand-days'){
+    const paid=t.getAttribute('data-paid');
+    document.querySelectorAll('#dayList .day-card').forEach(card=>{
+      card.classList.add('is-open');
+      openDayIds.add(card.getAttribute('data-day-id'));
+    });
+    saveOpenSet(OPEN_DAYS_KEY, openDayIds);
+    return;
+  }
+  if(act==='collapse-days'){
+    document.querySelectorAll('#dayList .day-card').forEach(card=>{
+      card.classList.remove('is-open');
+      openDayIds.delete(card.getAttribute('data-day-id'));
+    });
+    saveOpenSet(OPEN_DAYS_KEY, openDayIds);
+    return;
+  }
   if(act==='select-pa'){
     selectedPartAId=t.getAttribute('data-paid');
+    dayFilterQ=''; dayFilterStatus=''; dayFilterFrom=''; dayFilterTo='';
     render(); return;
   }
   if(act==='add-pa'){ openModal({kind:'parta'}); return; }
