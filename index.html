@@ -3,126 +3,135 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TS8 Project Link Manager</title>
+<title>TS8 Link Manager</title>
 <style>
 :root {
   --red:#A20337; --red-d:#7A0229; --red-l:#FDF2F5;
-  --grey:#4A4A4A; --gl:#F5F5F5; --gm:#E8E8E8;
-  --text:#333; --mute:#666; --white:#fff;
-  --shadow:0 2px 10px rgba(0,0,0,.08);
+  --grey:#4A4A4A; --gl:#F7F7F7; --gm:#E8E8E8;
+  --text:#2A2A2A; --mute:#6B6B6B; --white:#fff;
+  --shadow:0 2px 12px rgba(0,0,0,.07);
+  --shadow-lg:0 8px 28px rgba(0,0,0,.12);
   --ok:#1B7A4E; --okb:#E8F7EF; --warn:#975A16; --warnb:#FFFBEB;
   --info:#1A5F9E; --infob:#EAF3FB; --pur:#6B21A8; --purb:#F3E8FF;
-  --side:280px;
+  --side:260px; --radius:12px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:"Microsoft JhengHei","微軟正黑體","Noto Sans TC","PingFang TC",sans-serif;background:#ECECEC;color:var(--text);min-height:100vh}
+body{font-family:"Microsoft JhengHei","微軟正黑體","Noto Sans TC","PingFang TC",sans-serif;background:#F0F0F0;color:var(--text);min-height:100vh}
 .app{display:grid;grid-template-columns:var(--side) 1fr;min-height:100vh}
-@media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{position:sticky;top:0;z-index:5;max-height:42vh;overflow:auto}}
+@media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{position:sticky;top:0;z-index:5;max-height:40vh;overflow:auto;border-right:none;border-bottom:1px solid var(--gm)}}
+
 .sidebar{background:#fff;border-right:1px solid var(--gm);display:flex;flex-direction:column}
-.side-head{padding:16px 16px 12px;border-bottom:4px solid var(--red)}
-.side-head h1{font-size:1.05rem;color:var(--red);font-weight:700}
-.side-head p{font-size:.75rem;color:var(--mute);margin-top:2px}
-.side-tools{padding:10px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--gm)}
-.side-tools input{width:100%;border:1px solid #C8C8C8;border-radius:4px;padding:8px 10px;font:inherit;font-size:.85rem}
-.proj-list{flex:1;overflow:auto;padding:8px}
-.proj-item{width:100%;text-align:left;border:1px solid transparent;background:transparent;border-radius:6px;padding:10px 12px;cursor:pointer;font:inherit;margin-bottom:4px}
+.side-head{padding:20px 18px 14px;border-bottom:3px solid var(--red)}
+.side-head h1{font-size:1.1rem;color:var(--red);font-weight:700;letter-spacing:.02em}
+.side-head p{font-size:.72rem;color:var(--mute);margin-top:4px}
+.side-tools{padding:12px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--gm)}
+.side-tools input{width:100%;border:1px solid #D0D0D0;border-radius:8px;padding:9px 12px;font:inherit;font-size:.85rem;background:var(--gl)}
+.side-tools input:focus{outline:none;border-color:var(--red);background:#fff;box-shadow:0 0 0 3px rgba(162,3,55,.1)}
+.proj-list{flex:1;overflow:auto;padding:10px}
+.proj-item{width:100%;text-align:left;border:1px solid transparent;background:transparent;border-radius:10px;padding:12px 14px;cursor:pointer;font:inherit;margin-bottom:6px;transition:background .12s,border-color .12s}
 .proj-item:hover{background:var(--gl)}
-.proj-item.active{background:var(--red-l);border-color:var(--red)}
-.proj-item .name{font-weight:700;font-size:.9rem;display:block}
-.proj-item .meta{font-size:.72rem;color:var(--mute);margin-top:2px}
-.main{display:flex;flex-direction:column;min-width:0}
-.topbar{background:#fff;border-bottom:1px solid var(--gm);padding:12px 18px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;position:relative;z-index:3}
-.crumb{font-size:.85rem;color:var(--mute);flex:1;min-width:180px}
+.proj-item.active{background:var(--red-l);border-color:rgba(162,3,55,.35)}
+.proj-item .name{font-weight:700;font-size:.9rem;display:block;line-height:1.35}
+.proj-item .meta{font-size:.72rem;color:var(--mute);margin-top:4px}
+
+.main{display:flex;flex-direction:column;min-width:0;min-height:100vh}
+.topbar{background:#fff;border-bottom:1px solid var(--gm);padding:14px 22px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.crumb{font-size:.88rem;color:var(--mute);flex:1;min-width:160px}
 .crumb strong{color:var(--text)}
-.btn{border:none;border-radius:4px;padding:8px 12px;font:inherit;font-size:.84rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+
+.btn{border:none;border-radius:8px;padding:9px 14px;font:inherit;font-size:.84rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;transition:background .12s,border-color .12s,color .12s}
 .btn-primary{background:var(--red);color:#fff}.btn-primary:hover{background:var(--red-d)}
-.btn-ghost{background:#fff;border:1px solid #C8C8C8;color:var(--text)}.btn-ghost:hover{border-color:var(--red);color:var(--red)}
+.btn-ghost{background:#fff;border:1px solid #D0D0D0;color:var(--text)}.btn-ghost:hover{border-color:var(--red);color:var(--red)}
 .btn-danger{background:#B42318;color:#fff}
-.btn-sm{padding:4px 8px;font-size:.75rem;font-weight:600}
-.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:12px 18px 0}
-@media(max-width:800px){.stats{grid-template-columns:repeat(2,1fr)}}
-.stat{background:#fff;border-radius:6px;padding:10px 12px;border-left:4px solid var(--red);box-shadow:var(--shadow)}
-.stat .n{font-size:1.25rem;font-weight:700;color:var(--red)}.stat .l{font-size:.72rem;color:var(--mute)}
-.content{padding:14px 18px 28px;overflow:auto}
-.empty{background:#fff;border:1px dashed var(--gm);border-radius:8px;padding:36px 20px;text-align:center;color:var(--mute)}
-.part-card{background:#fff;border:1px solid var(--gm);border-radius:8px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow)}
-.part-head{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;padding:14px 16px;background:linear-gradient(180deg,#fff,var(--gl));border-bottom:1px solid var(--gm);cursor:pointer}
-.part-head .title{flex:1;min-width:200px}
-.part-head h2{font-size:1rem;color:var(--red);font-weight:700}
-.part-head .ids{font-size:.8rem;color:var(--mute);margin-top:4px;display:flex;flex-wrap:wrap;gap:8px}
-.part-head .ids code{background:var(--gl);padding:1px 6px;border-radius:3px;color:var(--text);font-size:.78rem}
-.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.72rem;font-weight:700}
+.btn-sm{padding:5px 10px;font-size:.75rem;font-weight:600;border-radius:6px}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+
+.content{padding:18px 22px 12px;overflow:auto;flex:1}
+.empty{background:#fff;border:1px dashed #D0D0D0;border-radius:var(--radius);padding:48px 24px;text-align:center;color:var(--mute);box-shadow:var(--shadow)}
+.empty .hint-lg{font-size:.95rem;line-height:1.6;margin-bottom:16px}
+
+.pa-tabs{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:18px}
+.pa-tab{border:1px solid #D5D5D5;background:#fff;border-radius:999px;padding:8px 16px;font:inherit;font-size:.84rem;font-weight:700;cursor:pointer;color:var(--mute);transition:all .12s}
+.pa-tab:hover{border-color:var(--red);color:var(--red)}
+.pa-tab.active{background:var(--red);border-color:var(--red);color:#fff;box-shadow:0 2px 8px rgba(162,3,55,.25)}
+.pa-tab-add{border-style:dashed;color:var(--red);border-color:rgba(162,3,55,.4)}
+
+.header-card{background:#fff;border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow);margin-bottom:20px;border:1px solid var(--gm)}
+.header-card .row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start}
+.header-card h2{font-size:1.15rem;color:var(--red);font-weight:700;margin-bottom:8px}
+.header-meta{display:flex;flex-wrap:wrap;gap:10px 14px;font-size:.84rem;color:var(--mute);align-items:center}
+.header-meta code{background:var(--gl);padding:2px 8px;border-radius:5px;color:var(--text);font-size:.8rem}
+.header-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+
+.section{margin-bottom:24px}
+.section-title{font-size:.92rem;font-weight:700;color:var(--grey);margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.section-title::after{content:"";flex:1;height:1px;background:var(--gm)}
+
+.tile-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:700px){.tile-grid{grid-template-columns:1fr}}
+
+.tile{background:#fff;border:1px solid var(--gm);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;min-height:120px;transition:border-color .12s,box-shadow .12s}
+.tile:hover{border-color:rgba(162,3,55,.25);box-shadow:var(--shadow-lg)}
+.tile.empty-slot{border-style:dashed;background:var(--gl)}
+.tile .tile-title{font-weight:700;font-size:.95rem;color:var(--text)}
+.tile .tile-status{font-size:.78rem;font-weight:700}
+.tile .tile-status.has{color:var(--ok)}
+.tile .tile-status.miss{color:var(--mute)}
+.tile .tile-url{font-size:.78rem;color:var(--mute);word-break:break-all;line-height:1.4;flex:1}
+.tile .tile-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto}
+
+.day-card{background:#fff;border:1px solid var(--gm);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);margin-bottom:14px}
+.day-card .day-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--gm)}
+.day-card .day-date{font-weight:700;font-size:1rem}
+.day-card .day-sub{font-size:.8rem;color:var(--mute);flex:1}
+
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.72rem;font-weight:700}
 .b-progress{background:var(--infob);color:var(--info)}
 .b-b1{background:var(--warnb);color:var(--warn)}
 .b-b2{background:var(--purb);color:var(--pur)}
 .b-done{background:var(--okb);color:var(--ok)}
 .b-idle{background:var(--gl);color:var(--mute)}
-.part-body{padding:12px 14px 16px;display:none}
-.part-card.open .part-body{display:block}
-.part-card.open .chev{transform:rotate(90deg)}
-.chev{display:inline-block;transition:transform .15s;color:var(--mute);margin-right:4px}
-.day-row{border:1px solid var(--gm);border-radius:6px;margin-bottom:10px;overflow:hidden}
-.day-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;background:var(--gl);cursor:pointer}
-.day-head .date{font-weight:700;font-size:.92rem;min-width:100px}
-.day-head .sub{font-size:.78rem;color:var(--mute);flex:1}
-.day-body{display:none;padding:10px 12px 12px;background:#fff}
-.day-row.open .day-body{display:block}
-.day-tools{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
-table.links{width:100%;border-collapse:collapse;font-size:.82rem}
-table.links th,table.links td{padding:8px 8px;border-bottom:1px solid var(--gm);text-align:left;vertical-align:middle}
-table.links th{background:var(--gl);font-size:.75rem;color:var(--grey)}
-table.links tr:hover td{background:#FAFAFA}
-.type-pill{display:inline-block;padding:2px 7px;border-radius:4px;font-size:.7rem;font-weight:700;background:var(--gl)}
-.t-parta{background:#FFE4E8;color:var(--red)}
-.t-b1d,.t-b1e,.t-b1c{background:var(--warnb);color:var(--warn)}
-.t-b2{background:var(--purb);color:var(--pur)}
-.t-other{background:var(--infob);color:var(--info)}
-.t-pdf{background:#FEE2E2;color:#991B1B}
-.url-cell{max-width:340px}
-.url-cell a{color:var(--red);text-decoration:none;word-break:break-all;font-size:.78rem}
-.url-cell a:hover{text-decoration:underline}
-.actions{display:flex;flex-wrap:wrap;gap:4px;position:relative;z-index:2}
-.actions .btn{pointer-events:auto;cursor:pointer}
-.part-head .actions,.day-head .actions{flex-shrink:0}
+
 .hint{font-size:.75rem;color:var(--mute)}
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.42);display:none;align-items:flex-start;justify-content:center;padding:36px 14px;z-index:50;overflow:auto}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-start;justify-content:center;padding:40px 14px;z-index:50;overflow:auto}
 .modal-bg.show{display:flex}
-.modal{background:#fff;width:100%;max-width:620px;border-radius:8px;border-top:4px solid var(--red);box-shadow:0 14px 40px rgba(0,0,0,.2)}
-.modal header{padding:14px 18px;border-bottom:1px solid var(--gm)}
-.modal header h3{font-size:1rem;color:var(--red)}
-.modal .body{padding:16px 18px}
-.modal .foot{padding:12px 18px 16px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--gm);flex-wrap:wrap}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal{background:#fff;width:100%;max-width:560px;border-radius:12px;border-top:4px solid var(--red);box-shadow:0 16px 48px rgba(0,0,0,.22)}
+.modal header{padding:16px 20px;border-bottom:1px solid var(--gm)}
+.modal header h3{font-size:1.05rem;color:var(--red)}
+.modal .body{padding:18px 20px}
+.modal .foot{padding:14px 20px 18px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--gm);flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .span2{grid-column:span 2}
 @media(max-width:560px){.grid{grid-template-columns:1fr}.span2{grid-column:span 1}}
-.field{display:flex;flex-direction:column;gap:4px}
+.field{display:flex;flex-direction:column;gap:5px}
 .field label{font-size:.82rem;font-weight:700}
 .req{color:var(--red)}
-input,select,textarea{width:100%;border:1px solid #C8C8C8;border-radius:4px;padding:8px 10px;font:inherit;font-size:.88rem}
+input,select,textarea{width:100%;border:1px solid #D0D0D0;border-radius:8px;padding:9px 11px;font:inherit;font-size:.88rem}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(162,3,55,.12)}
-textarea{min-height:70px;resize:vertical}
-.toast{position:fixed;bottom:22px;right:22px;background:#222;color:#fff;padding:10px 14px;border-radius:6px;font-size:.85rem;opacity:0;transition:opacity .2s;z-index:80;pointer-events:none}
-.toast.show{opacity:1}
-.logic{background:var(--red-l);border-left:4px solid var(--red);padding:10px 12px;border-radius:0 6px 6px 0;font-size:.8rem;margin-bottom:12px}
-.logic ol{margin:6px 0 0 18px}
-.foot-note{font-size:.72rem;color:var(--mute);padding:0 18px 18px}
+textarea{min-height:72px;resize:vertical}
 
-.dropzone{border:2px dashed #C8C8C8;border-radius:8px;padding:28px 16px;text-align:center;background:var(--gl);cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;user-select:none}
-.dropzone:hover{border-color:var(--red);background:var(--red-l)}
-.dropzone.dragover{border-color:var(--red);background:var(--red-l);box-shadow:0 0 0 3px rgba(162,3,55,.15)}
-.dropzone .dz-icon{font-size:1.6rem;margin-bottom:6px}
-.dropzone .dz-title{font-weight:700;font-size:.92rem;color:var(--text)}
+.toast{position:fixed;bottom:24px;right:24px;background:#222;color:#fff;padding:12px 16px;border-radius:8px;font-size:.85rem;opacity:0;transition:opacity .2s;z-index:80;pointer-events:none;max-width:min(360px,90vw);box-shadow:var(--shadow-lg)}
+.toast.show{opacity:1}
+.toast.err{background:#8B1A1A}
+
+.dropzone{border:2px dashed #C8C8C8;border-radius:10px;padding:32px 16px;text-align:center;background:var(--gl);cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;user-select:none}
+.dropzone:hover,.dropzone.dragover{border-color:var(--red);background:var(--red-l);box-shadow:0 0 0 3px rgba(162,3,55,.12)}
+.dropzone .dz-icon{font-size:1.8rem;margin-bottom:8px}
+.dropzone .dz-title{font-weight:700;font-size:.95rem}
 .dropzone .dz-sub{font-size:.78rem;color:var(--mute);margin-top:4px}
-.upload-status{font-size:.82rem;padding:8px 10px;border-radius:4px;background:var(--gl);color:var(--mute);margin-top:10px;min-height:1.4em}
+.upload-status{font-size:.82rem;padding:9px 11px;border-radius:6px;background:var(--gl);color:var(--mute);margin-top:10px}
 .upload-status.ok{background:var(--okb);color:var(--ok)}
 .upload-status.err{background:#FEE2E2;color:#991B1B}
 .upload-status.busy{background:var(--infob);color:var(--info)}
 .upload-status.warn{background:var(--warnb);color:var(--warn)}
-.adv-toggle{margin-top:14px;border-top:1px solid var(--gm);padding-top:10px}
+.adv-toggle{margin-top:12px;border-top:1px solid var(--gm);padding-top:10px}
 .adv-toggle summary{cursor:pointer;font-size:.82rem;font-weight:700;color:var(--mute);list-style:none}
 .adv-toggle summary::-webkit-details-marker{display:none}
 .adv-toggle[open] summary{color:var(--red);margin-bottom:10px}
-.setup-hint{background:var(--warnb);border-left:4px solid var(--warn);padding:10px 12px;border-radius:0 6px 6px 0;font-size:.8rem;margin-bottom:12px;color:var(--warn)}
+
+.foot-bar{padding:10px 22px 16px;font-size:.75rem;color:var(--mute);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
+.sync-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok);margin-right:6px;vertical-align:middle;animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
 </style>
 </head>
 <body>
@@ -130,33 +139,27 @@ textarea{min-height:70px;resize:vertical}
   <aside class="sidebar">
     <div class="side-head">
       <h1>TS8 Link Manager</h1>
-      <p>主項目 → Part A → 隔離日 → Links</p>
+      <p>項目 → Part A → 隔離日</p>
     </div>
     <div class="side-tools">
-      <input type="search" id="globalSearch" placeholder="搜尋項目 / Part A ID / 連結 / PDF…">
-      <button class="btn btn-primary" id="btnNewProject">＋ 新主項目</button>
-      <div style="display:flex;gap:6px">
-        <button class="btn btn-ghost" id="btnExport" style="flex:1">匯出 JSON</button>
-        <button class="btn btn-ghost" id="btnImport" style="flex:1">匯入</button>
-      </div>
-      <button class="btn btn-ghost" id="btnPullShared">拉取雲端資料</button>
-      <button class="btn btn-ghost" id="btnPushShared">發布到雲端</button>
-      <input type="file" id="importFile" accept=".json,application/json" hidden>
+      <input type="search" id="globalSearch" placeholder="搜尋項目 / Part A / 連結…" autocomplete="off">
+      <button class="btn btn-primary" id="btnNewProject">＋ 新項目</button>
     </div>
     <div class="proj-list" id="projList"></div>
   </aside>
 
   <section class="main">
     <div class="topbar">
-      <div class="crumb" id="crumb">請選擇或建立主項目</div>
+      <div class="crumb" id="crumb">請選擇或建立項目</div>
       <button class="btn btn-ghost" id="btnEditProject" style="display:none">編輯項目</button>
-      <button class="btn btn-primary" id="btnNewPartA" style="display:none">＋ 新增 Part A</button>
     </div>
-    <div class="stats" id="stats"></div>
     <div class="content" id="content">
-      <div class="empty">左側選擇主項目。一單工程可有多個 Part A；每個 Part A 有自己的 E-Form ID，Part B（B1/B2）跟住該 ID。</div>
+      <div class="empty"><div class="hint-lg">左側選擇項目開始。<br>每個項目可有多個 Part A；每個隔離日有 B1／B2 連結與 PDF。</div></div>
     </div>
-    <div class="foot-note">多人同步：以後寫入為準（刪除會覆蓋舊資料，唔會再被另一個瀏覽器合併返嚟）。約每 5 秒背景同步。</div>
+    <div class="foot-bar">
+      <span><span class="sync-dot" id="syncDot"></span><span id="syncText">自動同步中</span></span>
+      <span id="syncMeta"></span>
+    </div>
   </section>
 </div>
 
@@ -166,28 +169,23 @@ textarea{min-height:70px;resize:vertical}
 <script src="./config.js"></script>
 <script>
 (function(){
-const KEY='ts8_project_link_manager_v5';
+const KEY='ts8_project_link_manager_v6';
+const KEY_V5='ts8_project_link_manager_v5';
 const CFG=(typeof window!=='undefined'&&window.TS8_CONFIG)||{};
 const DRIVE_FOLDER_ID=CFG.DRIVE_FOLDER_ID||'1FRJX-pH2gV_6bkv2HM9dt5S00Lmv_o2u';
 const UPLOAD_WEBAPP_URL=CFG.UPLOAD_WEBAPP_URL||'';
 const UPLOAD_SECRET=CFG.UPLOAD_SECRET||'';
 const SYNC_URL=UPLOAD_WEBAPP_URL;
-const LINK_TYPES=[
-  {v:'partA_share',l:'Part A 專屬連結',c:'t-parta'},
-  {v:'partA_edit',l:'Part A Edit',c:'t-parta'},
-  {v:'b1_create',l:'建立新 B1（可重用）',c:'t-b1c'},
-  {v:'b1_draft',l:'B1 Draft',c:'t-b1d'},
-  {v:'b1_edit',l:'B1 Edit',c:'t-b1e'},
-  {v:'b2_edit',l:'B2 Edit',c:'t-b2'},
-  {v:'pdf_b1',l:'PDF · B1',c:'t-pdf'},
-  {v:'pdf_b2',l:'PDF · B2',c:'t-pdf'},
-  {v:'pdf_parta',l:'PDF · Part A',c:'t-pdf'},
-  {v:'pdf',l:'PDF · 其他',c:'t-pdf'},
-  {v:'email',l:'電郵／通知連結',c:'t-other'},
-  {v:'file',l:'檔案／圖紙',c:'t-other'},
-  {v:'other',l:'其他',c:'t-other'}
-];
 const SHARED_DATA_URL='./data.json';
+
+const LINK_LABELS={
+  parta:'Part A 連結',
+  b1:'B1',
+  b2:'B2',
+  pdf_parta:'Part A PDF',
+  pdf_b1:'B1 PDF',
+  pdf_b2:'B2 PDF'
+};
 const DAY_STATUS=['未開始','B1進行中','B1已提交','B2進行中','已完結'];
 const PART_STATUS=['草稿','審核中','已完成','擱置'];
 
@@ -196,112 +194,167 @@ const SEED={
     id:'p-blk-a-podium',
     name:'Multi-function Area at Blk A Podium',
     code:'',
-    jobNo:'',
-    pm:'',
+    jobNo:'J26159',
+    pm:'Regina Chan',
     notes:'Blk A Podium 多用途場地 · TS8 消防工程',
     createdAt:'2026-09-09',
     partAs:[{
       id:'pa-1',
       label:'Part A #1',
       eformId:'',
-      docNo:'',
+      docNo:'CFSO-TS8-2026-0011',
       status:'草稿',
       notes:'',
-      links:[],
+      links:[
+        {
+          id:'l-parta-pdf-001',
+          type:'pdf_parta',
+          label:'CFSO-TS8-2026-0011 Part A',
+          url:'https://drive.google.com/file/d/17d5bAVWCNG9pMkEKw4G8pz-Zoz07gRHC/view',
+          notes:'',
+          driveFileId:'17d5bAVWCNG9pMkEKw4G8pz-Zoz07gRHC',
+          sourceEmailId:''
+        }
+      ],
       days:[
         {
-          id:'d-20260909',
-          date:'2026-09-09',
-          label:'隔離日',
-          partBSubmissionId:'',
-          status:'未開始',
-          notes:'',
-          links:[
-            {id:'l1',type:'b1_draft',label:'B1',url:'https://www.jotform.com/draft/01a0895170b870008b9179eb9c8073f82b6c',notes:''}
-          ]
+          id:'d-20260909', date:'2026-09-09', label:'隔離日', partBSubmissionId:'', status:'未開始', notes:'',
+          links:[{id:'l1',type:'b1',label:'B1',url:'https://www.jotform.com/draft/01a0895170b870008b9179eb9c8073f82b6c',notes:'',driveFileId:'',sourceEmailId:''}]
         },
         {
-          id:'d-20260910',
-          date:'2026-09-10',
-          label:'隔離日',
-          partBSubmissionId:'',
-          status:'未開始',
-          notes:'',
-          links:[
-            {id:'l2',type:'b1_draft',label:'B1',url:'https://www.jotform.com/draft/01a0895335d8700088bb4d006d7a18d0210a',notes:''}
-          ]
+          id:'d-20260910', date:'2026-09-10', label:'隔離日', partBSubmissionId:'', status:'未開始', notes:'',
+          links:[{id:'l2',type:'b1',label:'B1',url:'https://www.jotform.com/draft/01a0895335d8700088bb4d006d7a18d0210a',notes:'',driveFileId:'',sourceEmailId:''}]
         },
         {
-          id:'d-20260911',
-          date:'2026-09-11',
-          label:'隔離日',
-          partBSubmissionId:'',
-          status:'未開始',
-          notes:'',
+          id:'d-20260911', date:'2026-09-11', label:'隔離日', partBSubmissionId:'', status:'未開始', notes:'',
           links:[
-            {id:'l3',type:'b1_draft',label:'B1',url:'https://www.jotform.com/draft/01a0893349f8700083cff7c5ddbdf42aac49',notes:''},
-            {id:'l4',type:'b2_edit',label:'B2',url:'https://www.jotform.com/edit/6648191196608964059',notes:''}
+            {id:'l3',type:'b1',label:'B1',url:'https://www.jotform.com/draft/01a0893349f8700083cff7c5ddbdf42aac49',notes:'',driveFileId:'',sourceEmailId:''},
+            {id:'l4',type:'b2',label:'B2',url:'https://www.jotform.com/edit/6648191196608964059',notes:'',driveFileId:'',sourceEmailId:''}
           ]
         }
       ]
     }]
-  }]
+  }],
+  meta:{ updatedAt:'2026-09-11T04:00:00.000Z', driveFolderName:'TS8 PDFs', driveFolderId:DRIVE_FOLDER_ID }
 };
 
 let db={projects:[]};
 let selectedProjectId=null;
-let openPartAs=new Set();
-let openDays=new Set();
+let selectedPartAId=null;
 let searchQ='';
-let modalMode=null; // {kind, ...}
+let modalMode=null;
 
 const $=id=>document.getElementById(id);
 const toastEl=$('toast');
 
 function uid(p){return (p||'x')+'-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
-function toast(m){toastEl.textContent=m;toastEl.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>toastEl.classList.remove('show'),1800)}
+function toast(m, isErr){
+  toastEl.textContent=m;
+  toastEl.classList.toggle('err', !!isErr);
+  toastEl.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t=setTimeout(()=>toastEl.classList.remove('show'),2200);
+}
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function typeMeta(v){return LINK_TYPES.find(t=>t.v===v)||LINK_TYPES[LINK_TYPES.length-1]}
 function badgeStatus(s){
   const map={'草稿':'b-idle','審核中':'b-progress','已完成':'b-done','擱置':'b-idle','未開始':'b-idle','B1進行中':'b-b1','B1已提交':'b-b1','B2進行中':'b-b2','已完結':'b-done'};
   return `<span class="badge ${map[s]||'b-idle'}">${esc(s)}</span>`;
 }
 function shortUrl(u){
   if(!u) return '';
-  try{const x=new URL(u);const p=x.pathname+x.search;return x.hostname.replace(/^www\./,'')+(p.length>36?p.slice(0,36)+'…':p)}
-  catch{return u.length>42?u.slice(0,42)+'…':u}
+  try{const x=new URL(u);const p=x.pathname+x.search;return x.hostname.replace(/^www\./,'')+(p.length>40?p.slice(0,40)+'…':p)}
+  catch{return u.length>48?u.slice(0,48)+'…':u}
 }
 function today(){const d=new Date();const z=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`}
 
+/* —— type migration —— */
+function mapLinkType(type, scopeIsDay){
+  const t=String(type||'');
+  if(t==='partA_share'||t==='partA_edit'||t==='parta') return 'parta';
+  if(t==='b1_create'||t==='b1_draft'||t==='b1_edit'||t==='b1') return 'b1';
+  if(t==='b2_edit'||t==='b2') return 'b2';
+  if(t==='pdf_parta'||t==='pdf_b1'||t==='pdf_b2') return t;
+  if(t==='pdf') return scopeIsDay?'pdf_b1':'pdf_parta';
+  if(t==='email'||t==='file'||t==='other') return scopeIsDay?'b1':null; // drop unlabeled at PA unless url kept as b1 on day
+  return null;
+}
+function migrateLink(link, scopeIsDay, notesBucket){
+  if(!link) return null;
+  const mapped=mapLinkType(link.type, scopeIsDay);
+  if(!mapped){
+    if(link.url && notesBucket){
+      const bit=[LINK_LABELS[link.type]||link.type||'連結', link.label, link.url].filter(Boolean).join(' · ');
+      notesBucket.push(bit);
+    }
+    // Prefer keep url under b1 if day scope even when type unlabeled
+    if(scopeIsDay && link.url){
+      return Object.assign({}, link, {type:'b1', label:link.label||'B1'});
+    }
+    return null;
+  }
+  return Object.assign({}, link, {
+    type:mapped,
+    label:link.label||LINK_LABELS[mapped]||'',
+    notes:link.notes||'',
+    driveFileId:link.driveFileId||'',
+    sourceEmailId:link.sourceEmailId||''
+  });
+}
+function migrateDb(raw){
+  const data=JSON.parse(JSON.stringify(raw||{projects:[]}));
+  if(!Array.isArray(data.projects)) data.projects=[];
+  data.projects.forEach(p=>{
+    (p.partAs||[]).forEach(pa=>{
+      const dropNotes=[];
+      pa.links=(pa.links||[]).map(l=>migrateLink(l,false,dropNotes)).filter(Boolean);
+      if(dropNotes.length){
+        pa.notes=(pa.notes?pa.notes+'\n':'')+dropNotes.join('\n');
+      }
+      (pa.days||[]).forEach(d=>{
+        const dayDrop=[];
+        d.links=(d.links||[]).map(l=>migrateLink(l,true,dayDrop)).filter(Boolean);
+        if(dayDrop.length){
+          d.notes=(d.notes?d.notes+'\n':'')+dayDrop.join('\n');
+        }
+      });
+    });
+  });
+  if(!data.meta) data.meta={};
+  return data;
+}
+
 function load(){
   try{
-    const raw=localStorage.getItem(KEY);
-    if(!raw){db=JSON.parse(JSON.stringify(SEED));saveLocalOnly();return}
-    db=JSON.parse(raw);
-    if(!db.projects) db={projects:[]};
-  }catch{db=JSON.parse(JSON.stringify(SEED))}
+    let raw=localStorage.getItem(KEY);
+    if(!raw){
+      const v5=localStorage.getItem(KEY_V5);
+      if(v5){
+        db=migrateDb(JSON.parse(v5));
+        saveLocalOnly();
+        return;
+      }
+      db=migrateDb(JSON.parse(JSON.stringify(SEED)));
+      saveLocalOnly();
+      return;
+    }
+    db=migrateDb(JSON.parse(raw));
+    if(!db.projects) db={projects:[],meta:{}};
+  }catch{
+    db=migrateDb(JSON.parse(JSON.stringify(SEED)));
+  }
 }
 function saveLocalOnly(){localStorage.setItem(KEY,JSON.stringify(db))}
 let _pushTimer=null;
 function save(){
+  if(!db.meta) db.meta={};
+  db.meta.updatedAt=new Date().toISOString();
   saveLocalOnly();
+  setSyncText('自動同步中');
   if(!UPLOAD_WEBAPP_URL) return;
   clearTimeout(_pushTimer);
   _pushTimer=setTimeout(()=>{ pushShared(true); },800);
 }
-function countAllLinks(data){
-  let n=0;
-  (data.projects||[]).forEach(p=>{(p.partAs||[]).forEach(pa=>{n+=(pa.links||[]).length;(pa.days||[]).forEach(d=>n+=(d.links||[]).length)})});
-  return n;
-}
-function collectLinkIds(data){
-  const ids=new Set();
-  (data.projects||[]).forEach(p=>{(p.partAs||[]).forEach(pa=>{
-    (pa.links||[]).forEach(l=>{ if(l&&l.id) ids.add(l.id); });
-    (pa.days||[]).forEach(d=>{(d.links||[]).forEach(l=>{ if(l&&l.id) ids.add(l.id); });});
-  })});
-  return ids;
-}
+
 function parseUpdatedAt(iso){
   if(!iso) return 0;
   const n=Date.parse(iso);
@@ -311,7 +364,7 @@ function parseUpdatedAt(iso){
 function applyCloudDb(shared){
   if(!shared||!Array.isArray(shared.projects)) return {changed:false};
   const before=JSON.stringify(db);
-  db=JSON.parse(JSON.stringify(shared));
+  db=migrateDb(shared);
   if(!db.meta) db.meta={};
   saveLocalOnly();
   const at=(db.meta&&db.meta.updatedAt)||'';
@@ -332,7 +385,6 @@ async function fetchSharedDb(){
       const res=await fetch(SYNC_URL+'?op=db&t='+Date.now(),{cache:'no-store'});
       if(!res.ok) throw new Error('HTTP '+res.status);
       const data=await res.json();
-      // Apps Script may wrap as {ok:true, db:{...}} or return db directly
       if(data && data.db && Array.isArray(data.db.projects)) return data.db;
       if(data && Array.isArray(data.projects)) return data;
       throw new Error('invalid sync payload');
@@ -352,6 +404,11 @@ async function fetchSharedDb(){
 let _pullBusy=false;
 let _lastCloudUpdatedAt='';
 let _pushBusy=false;
+
+function setSyncText(t){
+  const el=$('syncText'); if(el) el.textContent=t;
+}
+
 async function pullShared(silent){
   if(_pullBusy) return null;
   _pullBusy=true;
@@ -361,49 +418,49 @@ async function pullShared(silent){
     if(silent && cloudUpdated && cloudUpdated===_lastCloudUpdatedAt){
       return {shared, skipped:true};
     }
-    // If local is newer (pending local edits), do not clobber with older/equal cloud
     if(!cloudIsNewer(shared, db) && cloudUpdated===((db.meta&&db.meta.updatedAt)||'')){
       if(cloudUpdated) _lastCloudUpdatedAt=cloudUpdated;
-      if(!silent) toast('雲端無較新資料');
       return {shared, skipped:true, reallyChanged:false};
     }
     if(!cloudIsNewer(shared, db) && parseUpdatedAt(db.meta&&db.meta.updatedAt) > parseUpdatedAt(cloudUpdated)){
-      // Local ahead — keep local; optional silent
-      if(!silent) toast('本機較新，保留本機（稍後會自動發布）');
       return {shared, localNewer:true, reallyChanged:false};
     }
     const applied=applyCloudDb(shared);
     if(!selectedProjectId || !db.projects.find(p=>p.id===selectedProjectId)){
       selectedProjectId=db.projects[0]?db.projects[0].id:null;
     }
-    if(selectedProjectId){ const p=proj(); if(p) (p.partAs||[]).forEach(pa=>{openPartAs.add(pa.id);(pa.days||[]).forEach(d=>openDays.add(d.id))}); }
-    if(!silent) toast(applied.changed?'已同步雲端資料':'雲端無較新資料');
+    ensureSelectedPartA();
+    if(!silent) toast(applied.changed?'已同步':'雲端無較新資料');
     if(!silent || applied.changed) render();
+    setSyncText('自動同步中');
     return {shared, reallyChanged:!!applied.changed};
-  }catch(err){ if(!silent) toast('拉取失敗（可稍後再試）'); console.warn(err); return null; }
-  finally{ _pullBusy=false; }
+  }catch(err){
+    if(!silent) toast('同步暫時失敗', true);
+    console.warn(err);
+    setSyncText('自動同步中（離線）');
+    return null;
+  }finally{ _pullBusy=false; }
 }
 async function pushShared(silent){
-  if(!SYNC_URL){ if(!silent) toast('尚未設定雲端同步'); return false; }
+  if(!SYNC_URL){ return false; }
   if(_pushBusy) return false;
   _pushBusy=true;
   try{
-    // Re-read cloud; never overwrite a newer cloud revision (protects deletes)
     try{
       const cloud=await fetchSharedDb();
       const cloudAt=(cloud.meta&&cloud.meta.updatedAt)||'';
       const localAt=(db.meta&&db.meta.updatedAt)||'';
       if(cloudIsNewer(cloud, db)){
         applyCloudDb(cloud);
-        if(selectedProjectId){ const p=proj(); if(p) (p.partAs||[]).forEach(pa=>{openPartAs.add(pa.id);(pa.days||[]).forEach(d=>openDays.add(d.id))}); }
+        ensureSelectedPartA();
         render();
-        if(!silent) toast('雲端有更新版本，已改用雲端（避免覆蓋他人刪除）');
+        if(!silent) toast('已同步較新版本');
         return false;
       }
       if(cloudAt && localAt && cloudAt===localAt && JSON.stringify(cloud)===JSON.stringify(db)){
-        return true; // nothing to do
+        return true;
       }
-    }catch(_){ /* offline cloud read — still try push */ }
+    }catch(_){}
 
     db.meta=db.meta||{};
     db.meta.updatedAt=new Date().toISOString();
@@ -420,32 +477,39 @@ async function pushShared(silent){
     if(data && data.ok===false && data.error==='stale' && data.current){
       applyCloudDb(data.current);
       render();
-      if(!silent) toast('發布被拒：雲端較新，已同步雲端');
+      if(!silent) toast('已同步較新版本');
       return false;
     }
     if(!res.ok || (data && data.ok===false)){
       throw new Error((data&&(data.error||data.message))||('HTTP '+res.status));
     }
     _lastCloudUpdatedAt=(db.meta&&db.meta.updatedAt)||_lastCloudUpdatedAt;
-    if(!silent) toast('已發布到雲端');
+    setSyncText('自動同步中');
     return true;
   }catch(err){
     console.warn(err);
-    if(!silent) toast('發布失敗（可稍後再試）');
+    if(!silent) toast('同步暫時失敗', true);
+    setSyncText('自動同步中（稍後重試）');
     return false;
   }finally{ _pushBusy=false; }
 }
-function proj(){return db.projects.find(p=>p.id===selectedProjectId)||null}
 
-function countLinks(p){
-  let n=0;
-  (p.partAs||[]).forEach(pa=>{n+=(pa.links||[]).length;(pa.days||[]).forEach(d=>n+=(d.links||[]).length)});
-  return n;
+function proj(){return db.projects.find(p=>p.id===selectedProjectId)||null}
+function partA(){
+  const p=proj(); if(!p) return null;
+  return (p.partAs||[]).find(x=>x.id===selectedPartAId)||null;
+}
+function ensureSelectedPartA(){
+  const p=proj();
+  if(!p){ selectedPartAId=null; return; }
+  const pas=p.partAs||[];
+  if(!pas.length){ selectedPartAId=null; return; }
+  if(!selectedPartAId || !pas.find(x=>x.id===selectedPartAId)){
+    selectedPartAId=pas[0].id;
+  }
 }
 function countDays(p){return (p.partAs||[]).reduce((a,pa)=>a+(pa.days||[]).length,0)}
-
 function matchQ(text){if(!searchQ.trim()) return true;return String(text).toLowerCase().includes(searchQ.trim().toLowerCase())}
-
 function projectMatches(p){
   if(!searchQ.trim()) return true;
   const bag=[p.name,p.code,p.jobNo,p.pm,p.notes];
@@ -460,150 +524,10 @@ function projectMatches(p){
   return matchQ(bag.join(' '));
 }
 
-function renderSidebar(){
-  const list=$('projList');
-  const items=db.projects.filter(projectMatches);
-  if(!items.length){list.innerHTML=`<div class="hint" style="padding:12px">沒有項目</div>`;return}
-  list.innerHTML=items.map(p=>`
-    <button class="proj-item ${p.id===selectedProjectId?'active':''}" data-pid="${esc(p.id)}">
-      <span class="name">${esc(p.name)}</span>
-      <span class="meta">${(p.partAs||[]).length} 個 Part A · ${countDays(p)} 隔離日 · ${countLinks(p)} links</span>
-    </button>`).join('');
+function findPrimary(links, type){
+  return (links||[]).find(l=>l.type===type)||null;
 }
-
-function renderStats(p){
-  if(!p){$('stats').innerHTML='';return}
-  const pas=p.partAs||[];
-  const days=countDays(p);
-  const links=countLinks(p);
-  const withId=pas.filter(x=>x.eformId).length;
-  const doneDays=pas.reduce((a,pa)=>a+(pa.days||[]).filter(d=>d.status==='已完結').length,0);
-  $('stats').innerHTML=`
-    <div class="stat"><div class="n">${pas.length}</div><div class="l">Part A</div></div>
-    <div class="stat"><div class="n">${withId}</div><div class="l">已有 E-Form ID</div></div>
-    <div class="stat"><div class="n">${days}</div><div class="l">隔離日</div></div>
-    <div class="stat"><div class="n">${links}</div><div class="l">連結總數</div></div>
-    <div class="stat"><div class="n">${doneDays}</div><div class="l">已完結日子</div></div>`;
-}
-
-function filteredPartAs(p){
-  if(!searchQ.trim()) return p.partAs||[];
-  return (p.partAs||[]).filter(pa=>{
-    const bag=[pa.label,pa.eformId,pa.docNo,pa.notes,pa.status];
-    (pa.links||[]).forEach(l=>bag.push(l.label,l.url,l.notes,l.type));
-    (pa.days||[]).forEach(d=>{
-      bag.push(d.date,d.label,d.partBSubmissionId,d.status,d.notes);
-      (d.links||[]).forEach(l=>bag.push(l.label,l.url,l.notes,l.type));
-    });
-    return matchQ(bag.join(' '));
-  });
-}
-
-function linkRows(links, scope){
-  if(!links||!links.length) return `<tr><td colspan="5" class="hint">尚未有連結 — 按「加 Link」</td></tr>`;
-  return links.map(l=>{
-    const t=typeMeta(l.type);
-    return `<tr>
-      <td><span class="type-pill ${t.c}">${esc(t.l)}</span></td>
-      <td>${esc(l.label||t.l)}</td>
-      <td class="url-cell">${l.url?`<a href="${esc(l.url)}" target="_blank" rel="noopener" title="${esc(l.url)}">${esc(shortUrl(l.url))}</a>`:'—'}</td>
-      <td class="hint">${esc(l.notes||'')}</td>
-      <td class="actions">
-        <button class="btn btn-ghost btn-sm" data-act="copy" data-url="${esc(l.url||'')}">複製</button>
-        <button class="btn btn-ghost btn-sm" data-act="edit-link" data-scope="${esc(scope)}" data-lid="${esc(l.id)}">編輯</button>
-        <button class="btn btn-ghost btn-sm" data-act="del-link" data-scope="${esc(scope)}" data-lid="${esc(l.id)}">刪</button>
-      </td>
-    </tr>`;
-  }).join('');
-}
-
-function renderMain(){
-  const p=proj();
-  $('btnEditProject').style.display=p?'inline-flex':'none';
-  $('btnNewPartA').style.display=p?'inline-flex':'none';
-  renderStats(p);
-  if(!p){
-    $('crumb').textContent='請選擇或建立主項目';
-    $('content').innerHTML=`<div class="empty">左側選擇主項目。一單工程可有多個 Part A；每個 Part A 有自己的 E-Form ID，Part B（B1/B2）跟住該 ID。</div>`;
-    return;
-  }
-  $('crumb').innerHTML=`主項目：<strong>${esc(p.name)}</strong>${p.code?` · ${esc(p.code)}`:''}${p.jobNo?` · 工程號碼 <code>${esc(p.jobNo)}</code>`:''}${p.pm?` · PM ${esc(p.pm)}`:''}`;
-  const pas=filteredPartAs(p);
-  if(!pas.length){
-    $('content').innerHTML=`<div class="empty">尚未有 Part A。<br><button class="btn btn-primary" style="margin-top:12px" id="btnNewPartA2">＋ 新增 Part A</button></div>`;
-    const b=$('btnNewPartA2'); if(b) b.onclick=()=>openModal({kind:'parta'});
-    return;
-  }
-
-  let html='';
-  html+=pas.map(pa=>{
-    const open=openPartAs.has(pa.id)||!!searchQ.trim();
-    const dayCount=(pa.days||[]).length;
-    const linkCount=(pa.links||[]).length+(pa.days||[]).reduce((a,d)=>a+(d.links||[]).length,0);
-    const days=[...(pa.days||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-    return `<article class="part-card ${open?'open':''}" data-paid="${esc(pa.id)}">
-      <div class="part-head" data-act="toggle-pa" data-paid="${esc(pa.id)}">
-        <div class="title">
-          <h2><span class="chev">▶</span>${esc(pa.label||'Part A')}</h2>
-          <div class="ids">
-            ${pa.eformId?`<span>E-Form ID：<code>${esc(pa.eformId)}</code></span>`:''}
-            ${pa.docNo?`<span>檔案編號：<code>${esc(pa.docNo)}</code></span>`:''}
-            ${badgeStatus(pa.status||'草稿')}
-            <span class="hint">${dayCount} 隔離日 · ${linkCount} links</span>
-          </div>
-          ${pa.notes?`<div class="hint" style="margin-top:4px">${esc(pa.notes)}</div>`:''}
-        </div>
-        <div class="actions">
-          <button class="btn btn-primary btn-sm" data-act="add-pa-pdf" data-paid="${esc(pa.id)}">＋ Part A PDF</button>
-          <button class="btn btn-ghost btn-sm" data-act="add-pa-link" data-paid="${esc(pa.id)}">＋ Part A 網址</button>
-          <button class="btn btn-ghost btn-sm" data-act="add-day" data-paid="${esc(pa.id)}">＋ 隔離日</button>
-          <button class="btn btn-ghost btn-sm" data-act="edit-pa" data-paid="${esc(pa.id)}">編輯</button>
-        </div>
-      </div>
-      <div class="part-body">
-        <div class="day-tools" style="margin-bottom:10px">
-          <button class="btn btn-primary btn-sm" data-act="add-pa-pdf" data-paid="${esc(pa.id)}">＋ 上傳 Part A PDF</button>
-          <button class="btn btn-ghost btn-sm" data-act="add-pa-link" data-paid="${esc(pa.id)}">＋ Part A 網址</button>
-          <span class="hint">Part A 表格／附件 PDF 放呢度（存 Google Drive）</span>
-        </div>
-        <div style="margin-bottom:12px"><div class="hint" style="margin-bottom:6px">Part A 檔案／連結</div>
-          <table class="links"><thead><tr><th>類型</th><th>名稱</th><th>URL</th><th>備註</th><th></th></tr></thead>
-          <tbody>${(pa.links&&pa.links.length)?linkRows(pa.links,'pa:'+pa.id):'<tr><td colspan="5" class="hint">未有 Part A PDF／連結 — 撳上面「＋ 上傳 Part A PDF」</td></tr>'}</tbody></table></div>
-        ${days.length?days.map(d=>{
-          const dOpen=openDays.has(d.id)||!!searchQ.trim();
-          return `<div class="day-row ${dOpen?'open':''}" data-did="${esc(d.id)}">
-            <div class="day-head" data-act="toggle-day" data-did="${esc(d.id)}">
-              <span class="date">${esc(d.date||'—')}</span>
-              ${badgeStatus(d.status||'未開始')}
-              <span class="sub">${esc(d.label||'隔離日')}${d.partBSubmissionId?` · Part B ID：<code>${esc(d.partBSubmissionId)}</code>`:''} · ${(d.links||[]).length} links</span>
-              <div class="actions">
-                <button class="btn btn-ghost btn-sm" data-act="edit-day" data-paid="${esc(pa.id)}" data-did="${esc(d.id)}">編輯日</button>
-                <button class="btn btn-primary btn-sm" data-act="add-day-link" data-paid="${esc(pa.id)}" data-did="${esc(d.id)}">＋ 網址</button>
-                <button class="btn btn-ghost btn-sm" data-act="add-day-pdf" data-paid="${esc(pa.id)}" data-did="${esc(d.id)}">＋ PDF</button>
-              </div>
-            </div>
-            <div class="day-body">
-              ${d.notes?`<div class="hint" style="margin-bottom:8px">${esc(d.notes)}</div>`:''}
-              <div class="day-tools">
-                <button class="btn btn-ghost btn-sm" data-act="copy-all" data-paid="${esc(pa.id)}" data-did="${esc(d.id)}">複製本日全部 URL</button>
-              </div>
-              <table class="links">
-                <thead><tr><th>類型</th><th>名稱</th><th>URL</th><th>備註</th><th></th></tr></thead>
-                <tbody>${linkRows(d.links||[],'day:'+pa.id+':'+d.id)}</tbody>
-              </table>
-            </div>
-          </div>`;
-        }).join(''):`<div class="hint">此 Part A 尚未有隔離日。按「＋ 隔離日」開始（多日工程可重用 B1 建立連結）。</div>`}
-      </div>
-    </article>`;
-  }).join('');
-  $('content').innerHTML=html;
-}
-
-function render(){renderSidebar();renderMain()}
-
 function findScope(scope){
-  // pa:ID | day:PAID:DID
   if(scope.startsWith('pa:')){
     const paid=scope.slice(3);
     const pa=(proj().partAs||[]).find(x=>x.id===paid);
@@ -622,36 +546,190 @@ function findScope(scope){
   return {};
 }
 
+function upsertSlotLink(scope, type, data){
+  const sc=findScope(scope);
+  if(!sc.links) return null;
+  const existing=findPrimary(sc.links, type);
+  if(existing){
+    Object.assign(existing, data, {type});
+    return existing;
+  }
+  const link={id:uid('l'), type, label:data.label||LINK_LABELS[type]||'', url:data.url||'', notes:data.notes||'', driveFileId:data.driveFileId||'', sourceEmailId:data.sourceEmailId||''};
+  sc.links.push(link);
+  return link;
+}
+function deleteSlotLink(scope, type, lid){
+  const sc=findScope(scope);
+  if(!sc.links) return;
+  if(lid) sc.links=sc.links.filter(x=>x.id!==lid);
+  else {
+    // remove primary of type
+    const primary=findPrimary(sc.links, type);
+    if(primary) sc.links=sc.links.filter(x=>x.id!==primary.id);
+  }
+  if(sc.day) sc.day.links=sc.links;
+  else if(sc.pa) sc.pa.links=sc.links;
+}
+
+function renderTile(title, type, link, scope, opts){
+  const has=!!(link&&link.url);
+  const isPdf=type.startsWith('pdf');
+  let actions='';
+  if(has){
+    actions=`
+      <a class="btn btn-primary btn-sm" href="${esc(link.url)}" target="_blank" rel="noopener">開啟</a>
+      <button class="btn btn-ghost btn-sm" data-act="edit-slot" data-scope="${esc(scope)}" data-type="${esc(type)}" data-lid="${esc(link.id)}">${isPdf?'取代':'編輯'}</button>
+      <button class="btn btn-ghost btn-sm" data-act="del-slot" data-scope="${esc(scope)}" data-type="${esc(type)}" data-lid="${esc(link.id)}">刪除</button>`;
+  }else{
+    if(isPdf){
+      actions=`<button class="btn btn-primary btn-sm" data-act="upload-slot" data-scope="${esc(scope)}" data-type="${esc(type)}">上傳 PDF</button>
+        <button class="btn btn-ghost btn-sm" data-act="paste-slot" data-scope="${esc(scope)}" data-type="${esc(type)}">貼上連結</button>`;
+    }else{
+      actions=`<button class="btn btn-primary btn-sm" data-act="paste-slot" data-scope="${esc(scope)}" data-type="${esc(type)}">新增連結</button>`;
+    }
+  }
+  return `<div class="tile ${has?'':'empty-slot'}">
+    <div class="tile-title">${esc(title)}</div>
+    <div class="tile-status ${has?'has':'miss'}">${has?'已有':'未有'}</div>
+    ${has?`<div class="tile-url" title="${esc(link.url)}">${esc(shortUrl(link.url))}${link.label&&link.label!==title?`<br><span class="hint">${esc(link.label)}</span>`:''}</div>`:`<div class="tile-url hint">${isPdf?'尚未上傳':'尚未加入連結'}</div>`}
+    <div class="tile-actions">${actions}</div>
+  </div>`;
+}
+
+function renderSidebar(){
+  const list=$('projList');
+  const items=db.projects.filter(projectMatches);
+  if(!items.length){list.innerHTML=`<div class="hint" style="padding:12px">沒有項目</div>`;return}
+  list.innerHTML=items.map(p=>`
+    <button class="proj-item ${p.id===selectedProjectId?'active':''}" data-pid="${esc(p.id)}">
+      <span class="name">${esc(p.name)}</span>
+      <span class="meta">${(p.partAs||[]).length} 個 Part A · ${countDays(p)} 隔離日</span>
+    </button>`).join('');
+}
+
+function renderMain(){
+  const p=proj();
+  $('btnEditProject').style.display=p?'inline-flex':'none';
+  if(!p){
+    $('crumb').textContent='請選擇或建立項目';
+    $('content').innerHTML=`<div class="empty"><div class="hint-lg">左側選擇項目開始。<br>每個項目可有多個 Part A；每個隔離日有 B1／B2 連結與 PDF。</div>
+      <button class="btn btn-primary" id="btnNewProject2">＋ 新項目</button></div>`;
+    const b=$('btnNewProject2'); if(b) b.onclick=()=>openModal({kind:'project'});
+    return;
+  }
+  $('crumb').innerHTML=`<strong>${esc(p.name)}</strong>${p.jobNo?` · ${esc(p.jobNo)}`:''}${p.pm?` · ${esc(p.pm)}`:''}`;
+  ensureSelectedPartA();
+  const pas=p.partAs||[];
+  let html=`<div class="pa-tabs">`;
+  html+=pas.map(pa=>`<button class="pa-tab ${pa.id===selectedPartAId?'active':''}" data-act="select-pa" data-paid="${esc(pa.id)}">${esc(pa.label||'Part A')}</button>`).join('');
+  html+=`<button class="pa-tab pa-tab-add" data-act="add-pa">＋ Part A</button></div>`;
+
+  const pa=partA();
+  if(!pa){
+    html+=`<div class="empty"><div class="hint-lg">尚未有 Part A。</div>
+      <button class="btn btn-primary" data-act="add-pa">＋ 新增 Part A</button></div>`;
+    $('content').innerHTML=html;
+    return;
+  }
+
+  const scopePa='pa:'+pa.id;
+  html+=`<div class="header-card"><div class="row">
+    <div style="flex:1;min-width:200px">
+      <h2>${esc(pa.label||'Part A')}</h2>
+      <div class="header-meta">
+        ${pa.eformId?`<span>E-Form ID <code>${esc(pa.eformId)}</code></span>`:`<span class="hint">未填 E-Form ID</span>`}
+        ${pa.docNo?`<span>檔案編號 <code>${esc(pa.docNo)}</code></span>`:''}
+        ${badgeStatus(pa.status||'草稿')}
+      </div>
+      ${pa.notes?`<div class="hint" style="margin-top:8px">${esc(pa.notes)}</div>`:''}
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost btn-sm" data-act="edit-pa" data-paid="${esc(pa.id)}">編輯</button>
+      <button class="btn btn-ghost btn-sm" data-act="add-day" data-paid="${esc(pa.id)}">＋ 隔離日</button>
+    </div>
+  </div></div>`;
+
+  html+=`<div class="section"><div class="section-title">Part A 文件</div>
+    <div class="tile-grid">
+      ${renderTile('Part A 連結','parta',findPrimary(pa.links,'parta'),scopePa)}
+      ${renderTile('Part A PDF','pdf_parta',findPrimary(pa.links,'pdf_parta'),scopePa)}
+    </div></div>`;
+
+  const days=[...(pa.days||[])].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  html+=`<div class="section"><div class="section-title">隔離日</div>`;
+  if(!days.length){
+    html+=`<div class="empty" style="padding:28px"><div class="hint-lg">尚未有隔離日</div>
+      <button class="btn btn-primary" data-act="add-day" data-paid="${esc(pa.id)}">＋ 新增隔離日</button></div>`;
+  }else{
+    html+=days.map(d=>{
+      const scope='day:'+pa.id+':'+d.id;
+      return `<div class="day-card">
+        <div class="day-head">
+          <span class="day-date">${esc(d.date||'—')}</span>
+          ${badgeStatus(d.status||'未開始')}
+          <span class="day-sub">${esc(d.label||'隔離日')}${d.partBSubmissionId?` · Part B：<code>${esc(d.partBSubmissionId)}</code>`:''}</span>
+          <button class="btn btn-ghost btn-sm" data-act="edit-day" data-paid="${esc(pa.id)}" data-did="${esc(d.id)}">編輯</button>
+        </div>
+        ${d.notes?`<div class="hint" style="margin-bottom:12px">${esc(d.notes)}</div>`:''}
+        <div class="tile-grid">
+          ${renderTile('B1 連結','b1',findPrimary(d.links,'b1'),scope)}
+          ${renderTile('B1 PDF','pdf_b1',findPrimary(d.links,'pdf_b1'),scope)}
+          ${renderTile('B2 連結','b2',findPrimary(d.links,'b2'),scope)}
+          ${renderTile('B2 PDF','pdf_b2',findPrimary(d.links,'pdf_b2'),scope)}
+        </div>
+      </div>`;
+    }).join('');
+  }
+  html+=`</div>`;
+  $('content').innerHTML=html;
+}
+
+function render(){
+  renderSidebar();
+  renderMain();
+  const at=(db.meta&&db.meta.updatedAt)||'';
+  const meta=$('syncMeta');
+  if(meta && at){
+    try{
+      const d=new Date(at);
+      meta.textContent='上次更新 '+d.toLocaleString('zh-HK',{timeZone:'Asia/Hong_Kong'});
+    }catch{ meta.textContent=''; }
+  }
+}
+
 function openModal(cfg){
   modalMode=cfg;
   const bg=$('modal');
   let title='', body='', danger='';
+
   if(cfg.kind==='project'){
     const p=cfg.id?db.projects.find(x=>x.id===cfg.id):null;
-    title=p?'編輯主項目':'新主項目';
+    title=p?'編輯項目':'新項目';
     body=`<div class="grid">
-      <div class="field span2"><label>項目名稱 <span class="req">*</span></label><input id="m_name" value="${esc(p?p.name:'')}" placeholder="例如：Multi-function Area at Blk A Podium" required></div>
-      <div class="field"><label>簡稱／代號</label><input id="m_code" value="${esc(p?p.code||'':'')}" placeholder="Blk A Podium MFA"></div>
+      <div class="field span2"><label>項目名稱 <span class="req">*</span></label><input id="m_name" value="${esc(p?p.name:'')}" placeholder="例如：Multi-function Area at Blk A Podium"></div>
+      <div class="field"><label>簡稱／代號</label><input id="m_code" value="${esc(p?p.code||'':'')}"></div>
       <div class="field"><label>工程號碼</label><input id="m_job" value="${esc(p?p.jobNo||'':'')}" placeholder="J26159"></div>
-      <div class="field"><label>項目經理</label><input id="m_pm" value="${esc(p?p.pm||'':'')}" placeholder="姓名 / 部門"></div>
+      <div class="field"><label>項目經理</label><input id="m_pm" value="${esc(p?p.pm||'':'')}"></div>
       <div class="field"><label>建立日期</label><input type="date" id="m_created" value="${esc(p?p.createdAt||today():today())}"></div>
       <div class="field span2"><label>備註</label><textarea id="m_notes">${esc(p?p.notes||'':'')}</textarea></div>
     </div>`;
     if(p) danger=`<button class="btn btn-danger" id="m_del" style="margin-right:auto">刪除項目</button>`;
   }
+
   if(cfg.kind==='parta'){
     const p=proj();
     const pa=cfg.paid?(p.partAs||[]).find(x=>x.id===cfg.paid):null;
     title=pa?'編輯 Part A':'新增 Part A';
     body=`<div class="grid">
-      <div class="field span2"><label>顯示名稱 <span class="req">*</span></label><input id="m_label" value="${esc(pa?pa.label:'Part A #'+((p.partAs||[]).length+1))}" ></div>
-      <div class="field"><label>TS8 E-Form ID</label><input id="m_eform" value="${esc(pa?pa.eformId||'':'')}" placeholder="Part A 提交後填入"></div>
-      <div class="field"><label>檔案編號</label><input id="m_doc" value="${esc(pa?pa.docNo||'':'')}" placeholder="消防處／內部檔案編號"></div>
+      <div class="field span2"><label>顯示名稱 <span class="req">*</span></label><input id="m_label" value="${esc(pa?pa.label:'Part A #'+((p.partAs||[]).length+1))}"></div>
+      <div class="field"><label>E-Form ID</label><input id="m_eform" value="${esc(pa?pa.eformId||'':'')}"></div>
+      <div class="field"><label>檔案編號</label><input id="m_doc" value="${esc(pa?pa.docNo||'':'')}"></div>
       <div class="field"><label>狀態</label><select id="m_status">${PART_STATUS.map(s=>`<option ${pa&&pa.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
       <div class="field span2"><label>備註</label><textarea id="m_notes">${esc(pa?pa.notes||'':'')}</textarea></div>
     </div>`;
     if(pa) danger=`<button class="btn btn-danger" id="m_del" style="margin-right:auto">刪除 Part A</button>`;
   }
+
   if(cfg.kind==='day'){
     const p=proj();
     const pa=(p.partAs||[]).find(x=>x.id===cfg.paid);
@@ -660,58 +738,50 @@ function openModal(cfg){
     body=`<div class="grid">
       <div class="field"><label>日期 <span class="req">*</span></label><input type="date" id="m_date" value="${esc(d?d.date:today())}"></div>
       <div class="field"><label>狀態</label><select id="m_status">${DAY_STATUS.map(s=>`<option ${d&&d.status===s?'selected':(!d&&s==='未開始'?'selected':'')}>${s}</option>`).join('')}</select></div>
-      <div class="field span2"><label>標籤</label><input id="m_label" value="${esc(d?d.label||'隔離日':'隔離日')}" placeholder="隔離日 / 放水日…"></div>
-      <div class="field span2"><label>Part B Submission ID</label><input id="m_pbid" value="${esc(d?d.partBSubmissionId||'':'')}" placeholder="B1 提交後電郵提供"></div>
+      <div class="field span2"><label>標籤</label><input id="m_label" value="${esc(d?d.label||'隔離日':'隔離日')}"></div>
+      <div class="field span2"><label>Part B Submission ID</label><input id="m_pbid" value="${esc(d?d.partBSubmissionId||'':'')}"></div>
       <div class="field span2"><label>備註</label><textarea id="m_notes">${esc(d?d.notes||'':'')}</textarea></div>
     </div>`;
     if(d) danger=`<button class="btn btn-danger" id="m_del" style="margin-right:auto">刪除隔離日</button>`;
   }
-  if(cfg.kind==='link'){
+
+  if(cfg.kind==='url'){
+    const type=cfg.type;
     const existing=cfg.link||null;
-    title=existing?'編輯連結':'新增連結';
-    const defType=existing?existing.type:(cfg.defaultType||'b1_draft');
+    title=(existing?'編輯 ':'新增 ')+(LINK_LABELS[type]||type);
     body=`<div class="grid">
-      <div class="field"><label>類型</label><select id="m_type">${LINK_TYPES.map(t=>`<option value="${t.v}" ${t.v===defType?'selected':''}>${t.l}</option>`).join('')}</select></div>
-      <div class="field"><label>名稱</label><input id="m_label" value="${esc(existing?existing.label||'':'')}" placeholder="可留空，用類型名稱"></div>
-      <div class="field span2"><label>URL / Google Drive 連結 <span class="req">*</span></label><input id="m_url" value="${esc(existing?existing.url||'':'')}" placeholder="https://drive.google.com/… 或其它連結"></div>
-      <div class="field"><label>Drive File ID</label><input id="m_driveId" value="${esc(existing?existing.driveFileId||'':'')}" placeholder="自動／可選"></div>
-      <div class="field"><label>來源電郵 ID</label><input id="m_emailId" value="${esc(existing?existing.sourceEmailId||'':'')}" placeholder="Outlook message id（bot 用）"></div>
+      <div class="field span2"><label>URL <span class="req">*</span></label><input id="m_url" value="${esc(existing?existing.url||'':'')}" placeholder="https://…" autofocus></div>
+      <div class="field span2"><label>名稱（可選）</label><input id="m_label" value="${esc(existing?existing.label||LINK_LABELS[type]||'':'')}"></div>
       <div class="field span2"><label>備註</label><textarea id="m_notes">${esc(existing?existing.notes||'':'')}</textarea></div>
     </div>`;
-    if(existing) danger=`<button class="btn btn-danger" id="m_del" style="margin-right:auto">刪除連結</button>`;
+    if(existing) danger=`<button class="btn btn-danger" id="m_del" style="margin-right:auto">刪除</button>`;
   }
 
-
   if(cfg.kind==='pdf-upload'){
-    const defType=cfg.defaultType||'pdf_b1';
-    const pdfTypes=LINK_TYPES.filter(t=>t.v.startsWith('pdf'));
-    title='上傳 PDF 至 Google Drive';
+    const type=cfg.type||'pdf_b1';
+    title='上傳 '+(LINK_LABELS[type]||'PDF');
     const setupHint=!UPLOAD_WEBAPP_URL
-      ? `<div class="setup-hint">上傳服務端點尚未接上（Apps Script Web App）。請稍後填入 <code>UPLOAD_WEBAPP_URL</code>；以下拖曳介面可先預覽，接上後即可上傳至「TS8 PDFs」資料夾。</div>`
-      : '';
+      ? `<div class="upload-status warn" style="margin-bottom:12px">上傳服務尚未接上，暫未能上傳。</div>` : '';
     body=`${setupHint}<div class="grid">
-      <div class="field"><label>PDF 類型</label><select id="m_type">${pdfTypes.map(t=>`<option value="${t.v}" ${t.v===defType?'selected':''}>${t.l}</option>`).join('')}</select></div>
-      <div class="field"><label>名稱（可選）</label><input id="m_label" value="" placeholder="可留空，用檔名／類型"></div>
+      <div class="field span2"><label>名稱（可選）</label><input id="m_label" value="" placeholder="可留空，用檔名"></div>
       <div class="field span2">
         <label>拖曳或選擇 PDF</label>
-        <div class="dropzone" id="m_dropzone" tabindex="0" role="button" aria-label="拖曳 PDF 至此">
+        <div class="dropzone" id="m_dropzone" tabindex="0" role="button">
           <div class="dz-icon">📄</div>
           <div class="dz-title">將 PDF 拖曳到這裡</div>
-          <div class="dz-sub">或按下方按鈕選擇檔案（可多選）</div>
+          <div class="dz-sub">或按下方按鈕選擇檔案</div>
         </div>
-        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <button type="button" class="btn btn-primary btn-sm" id="m_pick">選擇 PDF 檔案</button>
-          <input type="file" id="m_file" accept="application/pdf,.pdf" multiple hidden>
-        </div>
-        <div class="upload-status ${UPLOAD_WEBAPP_URL?'':'warn'}" id="m_status">${UPLOAD_WEBAPP_URL?'準備就緒 — 拖曳或選擇 PDF':'端點未設定 — 可預覽介面，暫未能上傳'}</div>
+        <div style="margin-top:10px"><button type="button" class="btn btn-primary btn-sm" id="m_pick">選擇 PDF</button>
+          <input type="file" id="m_file" accept="application/pdf,.pdf" hidden></div>
+        <div class="upload-status ${UPLOAD_WEBAPP_URL?'':'warn'}" id="m_status">${UPLOAD_WEBAPP_URL?'準備就緒':'端點未設定'}</div>
       </div>
       <div class="field span2">
         <details class="adv-toggle" id="m_adv">
-          <summary>▸ 改為貼上已有 Drive 連結（進階）</summary>
+          <summary>▸ 改為貼上已有 Drive 連結</summary>
           <div class="grid" style="margin-top:8px">
-            <div class="field span2"><label>URL / Google Drive 連結</label><input id="m_url" value="" placeholder="https://drive.google.com/file/d/…/view"></div>
-            <div class="field"><label>Drive File ID</label><input id="m_driveId" value="" placeholder="可選"></div>
-            <div class="field"><label>備註</label><input id="m_notes" value="" placeholder="可選"></div>
+            <div class="field span2"><label>URL</label><input id="m_url" value="" placeholder="https://drive.google.com/file/d/…/view"></div>
+            <div class="field"><label>Drive File ID</label><input id="m_driveId" value=""></div>
+            <div class="field"><label>備註</label><input id="m_notes" value=""></div>
           </div>
         </details>
       </div>
@@ -728,111 +798,75 @@ function openModal(cfg){
   $('m_save').onclick=saveModal;
   const del=$('m_del'); if(del) del.onclick=deleteModal;
   if(cfg.kind==='pdf-upload') wirePdfUploadModal(cfg);
+  if(cfg.kind==='url'){ const u=$('m_url'); if(u) setTimeout(()=>u.focus(),50); }
 }
-
 
 function setUploadStatus(msg, cls){
   const el=$('m_status'); if(!el) return;
   el.className='upload-status'+(cls?' '+cls:'');
   el.textContent=msg;
 }
-
 function fileToBase64(file){
   return new Promise((resolve,reject)=>{
     const r=new FileReader();
-    r.onload=()=>{
-      const s=String(r.result||'');
-      const i=s.indexOf(',');
-      resolve(i>=0?s.slice(i+1):s);
-    };
+    r.onload=()=>{ const s=String(r.result||''); const i=s.indexOf(','); resolve(i>=0?s.slice(i+1):s); };
     r.onerror=()=>reject(r.error||new Error('讀取失敗'));
     r.readAsDataURL(file);
   });
 }
-
 async function uploadPdfToDrive(file){
-  if(!UPLOAD_WEBAPP_URL){
-    throw new Error('上傳端點尚未設定（UPLOAD_WEBAPP_URL）');
-  }
+  if(!UPLOAD_WEBAPP_URL) throw new Error('上傳端點尚未設定');
   const base64=await fileToBase64(file);
   const res=await fetch(UPLOAD_WEBAPP_URL,{
     method:'POST',
     headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body:JSON.stringify({
-      secret:UPLOAD_SECRET,
-      filename:file.name,
-      mimeType:file.type||'application/pdf',
-      base64,
-      folderId:DRIVE_FOLDER_ID
-    })
+    body:JSON.stringify({ secret:UPLOAD_SECRET, filename:file.name, mimeType:file.type||'application/pdf', base64, folderId:DRIVE_FOLDER_ID })
   });
   const text=await res.text();
   let data;
   try{ data=JSON.parse(text); }catch{ throw new Error('伺服器回應無效'); }
-  if(!res.ok || !data || !data.ok){
-    throw new Error((data&&(data.error||data.message))||('上傳失敗 HTTP '+res.status));
-  }
+  if(!res.ok || !data || !data.ok) throw new Error((data&&(data.error||data.message))||('上傳失敗'));
   const id=data.id||data.fileId||'';
   const url=data.url||data.webViewLink||(id?('https://drive.google.com/file/d/'+id+'/view'):'');
   if(!url) throw new Error('回應缺少檔案連結');
   return {id,url,name:data.name||file.name};
 }
-
-function appendPdfLink(scope, type, label, url, driveFileId, notes){
-  const sc=findScope(scope);
-  if(!sc.links){ toast('找不到位置'); return false; }
-  sc.links.push({
-    id:uid('l'),
-    type:type||'pdf',
-    label:label||'',
-    url,
-    notes:notes||'',
-    driveFileId:driveFileId||''
-  });
-  if(sc.paid) openPartAs.add(sc.paid);
-  if(sc.did) openDays.add(sc.did);
-  save();
-  return true;
-}
-
 async function handlePdfFiles(files, cfg){
   const list=[...files].filter(f=>{
     const n=(f.name||'').toLowerCase();
     return f.type==='application/pdf' || n.endsWith('.pdf');
   });
-  if(!list.length){ setUploadStatus('請選擇 PDF 檔案','err'); toast('請選擇 PDF'); return; }
-  if(!UPLOAD_WEBAPP_URL){
-    setUploadStatus('上傳端點尚未接上，無法上傳。請稍後設定 UPLOAD_WEBAPP_URL。','warn');
-    toast('上傳端點尚未接上');
-    return;
-  }
-  const type=$('m_type').value;
-  const labelBase=$('m_label').value.trim();
+  if(!list.length){ setUploadStatus('請選擇 PDF','err'); toast('請選擇 PDF', true); return; }
+  if(!UPLOAD_WEBAPP_URL){ setUploadStatus('上傳端點尚未接上','warn'); toast('上傳端點尚未接上', true); return; }
+  const labelBase=$('m_label')?$('m_label').value.trim():'';
   let ok=0, fail=0;
   for(let i=0;i<list.length;i++){
     const file=list[i];
     setUploadStatus(`上傳中（${i+1}/${list.length}）：${file.name}`,'busy');
     try{
       const result=await uploadPdfToDrive(file);
-      const label=labelBase || result.name || file.name;
-      if(appendPdfLink(cfg.scope, type, label, result.url, result.id, '')) ok++;
-      else fail++;
+      upsertSlotLink(cfg.scope, cfg.type, {
+        label: labelBase || result.name || file.name,
+        url: result.url,
+        driveFileId: result.id,
+        notes:''
+      });
+      ok++;
     }catch(err){
       console.warn(err);
       fail++;
       setUploadStatus('錯誤：'+(err&&err.message?err.message:String(err)),'err');
+      toast(err&&err.message?err.message:'上傳失敗', true);
     }
   }
   if(ok){
-    setUploadStatus(fail?`完成 ${ok} 個，失敗 ${fail} 個`:`完成 — 已上傳 ${ok} 個 PDF`,'ok');
-    toast(ok===1?'PDF 已上傳':'已上傳 '+ok+' 個 PDF');
+    save();
+    setUploadStatus(fail?`完成 ${ok} 個，失敗 ${fail} 個`:`完成 — 已上傳`,'ok');
+    toast('PDF 已上傳');
     render();
-    if(!fail) setTimeout(()=>closeModal(), 700);
-  }else if(fail){
-    toast('上傳失敗');
+    if(!fail) setTimeout(()=>closeModal(), 600);
   }
 }
-
 function wirePdfUploadModal(cfg){
   const dz=$('m_dropzone'), pick=$('m_pick'), input=$('m_file'), adv=$('m_adv'), saveBtn=$('m_save');
   if(!dz||!input) return;
@@ -840,22 +874,14 @@ function wirePdfUploadModal(cfg){
   pick&&(pick.onclick=e=>{e.preventDefault();e.stopPropagation();openPicker()});
   dz.onclick=e=>{ if(e.target.closest('button')) return; openPicker(); };
   dz.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openPicker(); }});
-  ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{
-    e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover');
-  }));
-  ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{
-    e.preventDefault(); e.stopPropagation();
-    if(ev==='dragleave') dz.classList.remove('dragover');
-  }));
+  ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{ e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover'); }));
+  ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{ e.preventDefault(); e.stopPropagation(); if(ev==='dragleave') dz.classList.remove('dragover'); }));
   dz.addEventListener('drop',e=>{
     dz.classList.remove('dragover');
     const files=e.dataTransfer&&e.dataTransfer.files;
     if(files&&files.length) handlePdfFiles(files, cfg);
   });
-  input.onchange=()=>{
-    if(input.files&&input.files.length) handlePdfFiles(input.files, cfg);
-    input.value='';
-  };
+  input.onchange=()=>{ if(input.files&&input.files.length) handlePdfFiles(input.files, cfg); input.value=''; };
   if(adv&&saveBtn){
     const sync=()=>{ saveBtn.style.display=adv.open?'inline-flex':'none'; };
     adv.addEventListener('toggle',sync); sync();
@@ -867,55 +893,59 @@ function closeModal(){$('modal').classList.remove('show');modalMode=null}
 function saveModal(){
   const cfg=modalMode; if(!cfg) return;
   if(cfg.kind==='project'){
-    const name=$('m_name').value.trim(); if(!name){toast('請填項目名稱');return}
+    const name=$('m_name').value.trim(); if(!name){toast('請填項目名稱', true);return}
     if(cfg.id){
       const p=db.projects.find(x=>x.id===cfg.id);
       Object.assign(p,{name,code:$('m_code').value.trim(),jobNo:$('m_job').value.trim(),pm:$('m_pm').value.trim(),createdAt:$('m_created').value,notes:$('m_notes').value.trim()});
     }else{
       const p={id:uid('p'),name,code:$('m_code').value.trim(),jobNo:$('m_job').value.trim(),pm:$('m_pm').value.trim(),createdAt:$('m_created').value||today(),notes:$('m_notes').value.trim(),partAs:[]};
-      db.projects.push(p); selectedProjectId=p.id;
+      db.projects.push(p); selectedProjectId=p.id; selectedPartAId=null;
     }
-    toast('已儲存項目');
+    toast('已儲存');
   }
   if(cfg.kind==='parta'){
     const p=proj(); if(!p) return;
-    const label=$('m_label').value.trim(); if(!label){toast('請填名稱');return}
+    const label=$('m_label').value.trim(); if(!label){toast('請填名稱', true);return}
     const data={label,eformId:$('m_eform').value.trim(),docNo:$('m_doc').value.trim(),status:$('m_status').value,notes:$('m_notes').value.trim()};
     if(cfg.paid){
       const pa=p.partAs.find(x=>x.id===cfg.paid); Object.assign(pa,data);
     }else{
-      const pa={id:uid('pa'),...data,links:[],days:[]}; p.partAs.push(pa); openPartAs.add(pa.id);
+      const pa={id:uid('pa'),...data,links:[],days:[]}; p.partAs.push(pa); selectedPartAId=pa.id;
     }
     toast('已儲存 Part A');
   }
   if(cfg.kind==='day'){
     const p=proj(); const pa=p.partAs.find(x=>x.id===cfg.paid); if(!pa) return;
-    const date=$('m_date').value; if(!date){toast('請填日期');return}
+    const date=$('m_date').value; if(!date){toast('請填日期', true);return}
     const data={date,label:$('m_label').value.trim()||'隔離日',partBSubmissionId:$('m_pbid').value.trim(),status:$('m_status').value,notes:$('m_notes').value.trim()};
     if(cfg.did){
       const d=pa.days.find(x=>x.id===cfg.did); Object.assign(d,data);
     }else{
-      const d={id:uid('d'),...data,links:[]}; pa.days.push(d); openPartAs.add(pa.id); openDays.add(d.id);
+      const d={id:uid('d'),...data,links:[]}; pa.days.push(d);
     }
     toast('已儲存隔離日');
   }
-  if(cfg.kind==='link' || cfg.kind==='pdf-upload'){
+  if(cfg.kind==='url'){
+    const url=$('m_url').value.trim(); if(!url){toast('請填 URL', true);return}
+    upsertSlotLink(cfg.scope, cfg.type, {
+      label: $('m_label').value.trim()||LINK_LABELS[cfg.type]||'',
+      url,
+      notes: $('m_notes').value.trim(),
+      driveFileId: (cfg.link&&cfg.link.driveFileId)||'',
+      sourceEmailId: (cfg.link&&cfg.link.sourceEmailId)||''
+    });
+    toast('已儲存');
+  }
+  if(cfg.kind==='pdf-upload'){
     const url=$('m_url')?$('m_url').value.trim():'';
-    if(cfg.kind==='pdf-upload' && !url){toast('請先上傳 PDF，或在進階選項貼上 Drive 連結');return}
-    if(!url){toast('請填 URL');return}
-    const notesEl=$('m_notes');
-    const data={type:$('m_type').value,label:$('m_label').value.trim(),url,notes:notesEl?notesEl.value.trim():'',driveFileId:($('m_driveId')&&$('m_driveId').value.trim())||'',sourceEmailId:($('m_emailId')&&$('m_emailId').value.trim())||''};
-    const sc=findScope(cfg.scope);
-    if(!sc.links){toast('找不到位置');return}
-    if(!Array.isArray(sc.links)) return;
-    if(cfg.lid){
-      const L=sc.links.find(x=>x.id===cfg.lid); Object.assign(L,data);
-    }else{
-      sc.links.push({id:uid('l'),...data});
-    }
-    if(sc.paid) openPartAs.add(sc.paid);
-    if(sc.did) openDays.add(sc.did);
-    toast('已儲存連結');
+    if(!url){toast('請先上傳 PDF，或貼上 Drive 連結', true);return}
+    upsertSlotLink(cfg.scope, cfg.type, {
+      label: $('m_label').value.trim()||LINK_LABELS[cfg.type]||'',
+      url,
+      notes: ($('m_notes')&&$('m_notes').value.trim())||'',
+      driveFileId: ($('m_driveId')&&$('m_driveId').value.trim())||''
+    });
+    toast('已儲存');
   }
   save(); closeModal(); render();
 }
@@ -923,179 +953,82 @@ function saveModal(){
 function deleteModal(){
   const cfg=modalMode; if(!cfg) return;
   if(cfg.kind==='project'&&cfg.id){
-    if(!confirm('刪除整個主項目及其所有 Part A／隔離日／連結？')) return;
+    if(!confirm('刪除整個項目及其所有 Part A／隔離日？')) return;
     db.projects=db.projects.filter(x=>x.id!==cfg.id);
-    if(selectedProjectId===cfg.id) selectedProjectId=db.projects[0]?db.projects[0].id:null;
+    if(selectedProjectId===cfg.id){ selectedProjectId=db.projects[0]?db.projects[0].id:null; selectedPartAId=null; }
   }
   if(cfg.kind==='parta'&&cfg.paid){
-    if(!confirm('刪除此 Part A 及底下所有隔離日／連結？')) return;
+    if(!confirm('刪除此 Part A 及底下所有隔離日？')) return;
     const p=proj(); p.partAs=p.partAs.filter(x=>x.id!==cfg.paid);
+    if(selectedPartAId===cfg.paid) selectedPartAId=null;
   }
   if(cfg.kind==='day'&&cfg.paid&&cfg.did){
-    if(!confirm('刪除此隔離日及底下所有連結？')) return;
+    if(!confirm('刪除此隔離日？')) return;
     const pa=proj().partAs.find(x=>x.id===cfg.paid); pa.days=pa.days.filter(x=>x.id!==cfg.did);
   }
-  if(cfg.kind==='link'&&cfg.scope&&cfg.lid){
+  if(cfg.kind==='url'&&cfg.scope&&cfg.type){
     if(!confirm('刪除此連結？')) return;
-    const sc=findScope(cfg.scope);
-    if(sc.day) sc.day.links=sc.day.links.filter(x=>x.id!==cfg.lid);
-    else if(sc.pa) sc.pa.links=sc.pa.links.filter(x=>x.id!==cfg.lid);
+    deleteSlotLink(cfg.scope, cfg.type, cfg.lid);
   }
   save(); closeModal(); render(); toast('已刪除');
 }
 
-// events
+/* events */
 $('projList').addEventListener('click',e=>{
   const b=e.target.closest('[data-pid]'); if(!b) return;
-  selectedProjectId=b.getAttribute('data-pid'); render();
+  selectedProjectId=b.getAttribute('data-pid');
+  selectedPartAId=null;
+  ensureSelectedPartA();
+  render();
 });
 $('btnNewProject').onclick=()=>openModal({kind:'project'});
 $('btnEditProject').onclick=()=>{if(selectedProjectId) openModal({kind:'project',id:selectedProjectId})};
-$('btnNewPartA').onclick=()=>openModal({kind:'parta'});
 $('globalSearch').addEventListener('input',e=>{searchQ=e.target.value;render()});
-
-function copyText(text, okMsg){
-  if(!text){toast('無內容');return}
-  const done=()=>toast(okMsg||'已複製');
-  if(navigator.clipboard&&window.isSecureContext){
-    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text, done));
-  } else fallbackCopy(text, done);
-}
-function fallbackCopy(text, done){
-  const ta=document.createElement('textarea');
-  ta.value=text; ta.setAttribute('readonly','');
-  ta.style.position='fixed'; ta.style.left='-9999px';
-  document.body.appendChild(ta); ta.select();
-  try{ document.execCommand('copy'); done(); }
-  catch(err){ prompt('複製：', text); }
-  document.body.removeChild(ta);
-}
 
 $('content').addEventListener('click',e=>{
   const t=e.target.closest('[data-act]'); if(!t) return;
   const act=t.getAttribute('data-act');
-  // Header toggles: ignore when the real click is on an action button inside
-  if(act==='toggle-pa'){
-    if(e.target.closest('.actions, button, a, input, select, textarea, label')) return;
-    const id=t.getAttribute('data-paid');
-    if(openPartAs.has(id)) openPartAs.delete(id); else openPartAs.add(id);
+  if(act==='select-pa'){
+    selectedPartAId=t.getAttribute('data-paid');
     render(); return;
   }
-  if(act==='toggle-day'){
-    if(e.target.closest('.actions, button, a, input, select, textarea, label')) return;
-    const id=t.getAttribute('data-did');
-    if(openDays.has(id)) openDays.delete(id); else openDays.add(id);
-    render(); return;
-  }
-  e.preventDefault();
-  e.stopPropagation();
-  if(act==='edit-pa'){openModal({kind:'parta',paid:t.getAttribute('data-paid')});return}
-  if(act==='add-day'){
-    const paid=t.getAttribute('data-paid');
-    openPartAs.add(paid);
-    openModal({kind:'day',paid}); return;
-  }
-  if(act==='edit-day'){
-    openModal({kind:'day',paid:t.getAttribute('data-paid'),did:t.getAttribute('data-did')}); return;
-  }
-  if(act==='add-pa-link'){
-    const paid=t.getAttribute('data-paid');
-    const pa=(proj().partAs||[]).find(x=>x.id===paid);
-    if(pa && !Array.isArray(pa.links)) pa.links=[];
-    openPartAs.add(paid);
-    openModal({kind:'link',scope:'pa:'+paid,defaultType:'partA_share'}); return;
-  }
-  if(act==='add-day-link'){
-    const paid=t.getAttribute('data-paid'), did=t.getAttribute('data-did');
-    const pa=(proj().partAs||[]).find(x=>x.id===paid);
-    const day=pa?(pa.days||[]).find(d=>d.id===did):null;
-    if(day && !Array.isArray(day.links)) day.links=[];
-    openPartAs.add(paid); openDays.add(did);
-    openModal({kind:'link',scope:'day:'+paid+':'+did,defaultType:'b1_draft'}); return;
-  }
-  if(act==='add-day-pdf'){
-    const paid=t.getAttribute('data-paid'), did=t.getAttribute('data-did');
-    const pa=(proj().partAs||[]).find(x=>x.id===paid);
-    const day=pa?(pa.days||[]).find(d=>d.id===did):null;
-    if(day && !Array.isArray(day.links)) day.links=[];
-    openPartAs.add(paid); openDays.add(did);
-    openModal({kind:'pdf-upload',scope:'day:'+paid+':'+did,defaultType:'pdf_b1'}); return;
-  }
-  if(act==='add-pa-pdf'){
-    const paid=t.getAttribute('data-paid');
-    const pa=(proj().partAs||[]).find(x=>x.id===paid);
-    if(pa && !Array.isArray(pa.links)) pa.links=[];
-    openPartAs.add(paid);
-    openModal({kind:'pdf-upload',scope:'pa:'+paid,defaultType:'pdf_parta'}); return;
-  }
-  if(act==='copy'){
-    copyText(t.getAttribute('data-url')||'', '已複製');
-    return;
-  }
-  if(act==='copy-all'){
-    const paid=t.getAttribute('data-paid'), did=t.getAttribute('data-did');
-    const pa=(proj().partAs||[]).find(x=>x.id===paid);
-    const d=pa?(pa.days||[]).find(x=>x.id===did):null;
-    if(!d){toast('找不到記錄');return}
-    const urls=(d.links||[]).map(l=>l.url).filter(Boolean).join('\n');
-    copyText(urls, '已複製本日全部 URL');
-    return;
-  }
-  if(act==='edit-link'){
-    const scope=t.getAttribute('data-scope'), lid=t.getAttribute('data-lid');
-    const sc=findScope(scope); const link=(sc.links||[]).find(x=>x.id===lid);
-    if(!link){toast('找不到連結');return}
-    openModal({kind:'link',scope,lid,link}); return;
-  }
-  if(act==='del-link'){
-    const scope=t.getAttribute('data-scope'), lid=t.getAttribute('data-lid');
-    if(!confirm('刪除此連結？')) return;
+  if(act==='add-pa'){ openModal({kind:'parta'}); return; }
+  if(act==='edit-pa'){ openModal({kind:'parta',paid:t.getAttribute('data-paid')}); return; }
+  if(act==='add-day'){ openModal({kind:'day',paid:t.getAttribute('data-paid')}); return; }
+  if(act==='edit-day'){ openModal({kind:'day',paid:t.getAttribute('data-paid'),did:t.getAttribute('data-did')}); return; }
+  if(act==='paste-slot'||act==='edit-slot'){
+    const scope=t.getAttribute('data-scope');
+    const type=t.getAttribute('data-type');
     const sc=findScope(scope);
-    if(sc.day) sc.day.links=(sc.day.links||[]).filter(x=>x.id!==lid);
-    else if(sc.pa) sc.pa.links=(sc.pa.links||[]).filter(x=>x.id!==lid);
-    else {toast('找不到連結');return}
-    save(); render(); toast('已刪除'); return;
+    const link=act==='edit-slot'?(sc.links||[]).find(x=>x.id===t.getAttribute('data-lid')):findPrimary(sc.links,type);
+    if(type.startsWith('pdf') && act==='edit-slot'){
+      openModal({kind:'pdf-upload', scope, type, link});
+      return;
+    }
+    openModal({kind:'url', scope, type, link, lid:link?link.id:null});
+    return;
+  }
+  if(act==='upload-slot'){
+    openModal({kind:'pdf-upload', scope:t.getAttribute('data-scope'), type:t.getAttribute('data-type')});
+    return;
+  }
+  if(act==='del-slot'){
+    if(!confirm('刪除此項目？')) return;
+    deleteSlotLink(t.getAttribute('data-scope'), t.getAttribute('data-type'), t.getAttribute('data-lid'));
+    save(); render(); toast('已刪除');
+    return;
   }
 });
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('modal').classList.contains('show')) closeModal()});
 
-$('btnExport').onclick=()=>{
-  const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=`TS8_links_${today()}.json`;
-  a.click(); URL.revokeObjectURL(a.href); toast('已匯出 JSON');
-};
-$('btnImport').onclick=()=>$('importFile').click();
-$('importFile').onchange=e=>{
-  const f=e.target.files&&e.target.files[0]; if(!f) return;
-  const r=new FileReader();
-  r.onload=()=>{
-    try{
-      const data=JSON.parse(r.result);
-      if(!data.projects) throw new Error('格式不對');
-      if(!confirm('匯入會取代目前本機資料，繼續？')) return;
-      db=data; selectedProjectId=db.projects[0]?db.projects[0].id:null;
-      save(); render(); toast('已匯入');
-    }catch(err){toast('匯入失敗：'+err.message)}
-  };
-  r.readAsText(f,'UTF-8'); e.target.value='';
-};
-
 load();
 selectedProjectId=db.projects[0]?db.projects[0].id:null;
-if(selectedProjectId){
-  const p=proj();
-  (p.partAs||[]).forEach(pa=>{openPartAs.add(pa.id);(pa.days||[]).forEach(d=>openDays.add(d.id))});
-}
+ensureSelectedPartA();
 render();
-const btnPull=$('btnPullShared'); if(btnPull) btnPull.onclick=()=>pullShared(false);
-const btnPush=$('btnPushShared'); if(btnPush) btnPush.onclick=()=>pushShared(false);
+
 (async function bootSync(){
-  // Last-write-wins pull only — do NOT push local extras (that resurrects deletes).
   await pullShared(true);
-  // If this browser is strictly newer than cloud, publish once.
   try{
     const cloud=await fetchSharedDb();
     if(parseUpdatedAt(db.meta&&db.meta.updatedAt) > parseUpdatedAt(cloud.meta&&cloud.meta.updatedAt)){

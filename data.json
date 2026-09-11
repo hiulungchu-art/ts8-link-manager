@@ -38,7 +38,7 @@
               "links": [
                 {
                   "id": "l1",
-                  "type": "b1_draft",
+                  "type": "b1",
                   "label": "B1",
                   "url": "https://www.jotform.com/draft/01a0895170b870008b9179eb9c8073f82b6c",
                   "notes": "",
@@ -57,7 +57,7 @@
               "links": [
                 {
                   "id": "l2",
-                  "type": "b1_draft",
+                  "type": "b1",
                   "label": "B1",
                   "url": "https://www.jotform.com/draft/01a0895335d8700088bb4d006d7a18d0210a",
                   "notes": "",
@@ -76,7 +76,7 @@
               "links": [
                 {
                   "id": "l3",
-                  "type": "b1_draft",
+                  "type": "b1",
                   "label": "B1",
                   "url": "https://www.jotform.com/draft/01a0893349f8700083cff7c5ddbdf42aac49",
                   "notes": "",
@@ -85,7 +85,7 @@
                 },
                 {
                   "id": "l4",
-                  "type": "b2_edit",
+                  "type": "b2",
                   "label": "B2",
                   "url": "https://www.jotform.com/edit/6648191196608964059",
                   "notes": "",
@@ -100,7 +100,7 @@
     }
   ],
   "meta": {
-    "updatedAt": "2026-09-10T17:01:27+08:00",
+    "updatedAt": "2026-09-11T04:05:00.000Z",
     "driveFolderName": "TS8 PDFs",
     "driveFolderId": "1FRJX-pH2gV_6bkv2HM9dt5S00Lmv_o2u"
   }
