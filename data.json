@@ -14,7 +14,7 @@
           "label": "Part A #1",
           "eformId": "",
           "docNo": "CFSO-TS8-2026-0011",
-          "status": "草稿",
+          "status": "審核中",
           "notes": "",
           "links": [
             {
@@ -33,7 +33,7 @@
               "date": "2026-09-09",
               "label": "隔離日",
               "partBSubmissionId": "",
-              "status": "未開始",
+              "status": "已完結",
               "notes": "",
               "links": [
                 {
@@ -44,6 +44,15 @@
                   "notes": "",
                   "driveFileId": "",
                   "sourceEmailId": ""
+                },
+                {
+                  "id": "l-pdf-b2-0909",
+                  "type": "pdf_b2",
+                  "label": "B2 PDF（完整）",
+                  "url": "https://drive.google.com/file/d/1uEWUJ59E3NwuCo00M62oVlfR00BmBE9R/view",
+                  "notes": "從 Drive 救回",
+                  "driveFileId": "1uEWUJ59E3NwuCo00M62oVlfR00BmBE9R",
+                  "sourceEmailId": ""
                 }
               ]
             },
@@ -52,7 +61,7 @@
               "date": "2026-09-10",
               "label": "隔離日",
               "partBSubmissionId": "",
-              "status": "未開始",
+              "status": "已完結",
               "notes": "",
               "links": [
                 {
@@ -63,6 +72,15 @@
                   "notes": "",
                   "driveFileId": "",
                   "sourceEmailId": ""
+                },
+                {
+                  "id": "l-pdf-b2-0910",
+                  "type": "pdf_b2",
+                  "label": "B2 PDF（完整）",
+                  "url": "https://drive.google.com/file/d/1PObiasIiwUBJJCneUdoF44HxXPIWo6fj/view",
+                  "notes": "從 Drive 救回",
+                  "driveFileId": "1PObiasIiwUBJJCneUdoF44HxXPIWo6fj",
+                  "sourceEmailId": ""
                 }
               ]
             },
@@ -71,7 +89,7 @@
               "date": "2026-09-11",
               "label": "隔離日",
               "partBSubmissionId": "",
-              "status": "未開始",
+              "status": "B2進行中",
               "notes": "",
               "links": [
                 {
@@ -100,8 +118,9 @@
     }
   ],
   "meta": {
-    "updatedAt": "2026-09-11T04:05:00.000Z",
+    "updatedAt": "2026-09-11T04:14:33.634025Z",
     "driveFolderName": "TS8 PDFs",
-    "driveFolderId": "1FRJX-pH2gV_6bkv2HM9dt5S00Lmv_o2u"
+    "driveFolderId": "1FRJX-pH2gV_6bkv2HM9dt5S00Lmv_o2u",
+    "note": "restored Part B PDFs from Drive after accidental overwrite"
   }
 }
