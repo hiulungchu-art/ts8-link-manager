@@ -6,6 +6,8 @@ const MAX_B64 = 12000000;
 const MAX_AUDIT = 2500;
 /** Only this Google account may open the admin console (case-insensitive). */
 const ADMIN_EMAILS = ['hlung.chu@connect.polyu.hk', 'hiulungchu@gmail.com'];
+/** Private admin unlock (URL ?k=...). Do not publish in site UI. */
+const ADMIN_KEY = 'UBoSZm_ZKN6_2i9pC7QHyrVc_JuseZDf';
 
 function json_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
@@ -183,15 +185,20 @@ function adminPageHtml_(email, events) {
 }
 
 /** Server-rendered admin: works on user-access deployment without client GIS. */
-function serveAdmin_() {
+function serveAdmin_(e) {
+  var key = '';
+  try { key = String((e && e.parameter && e.parameter.k) || ''); } catch (err) {}
   var email = normalizeEmail_(activeUserEmail_());
-  if (!isAdminEmail_(email)) {
+  var keyOk = ADMIN_KEY && key && key === ADMIN_KEY;
+  var emailOk = isAdminEmail_(email);
+  if (!keyOk && !emailOk) {
     return HtmlService.createHtmlOutput(adminForbiddenHtml_(email))
       .setTitle('Console')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   }
+  var who = emailOk ? email : ('key:' + (email || 'private'));
   var audit = readAudit_();
-  return HtmlService.createHtmlOutput(adminPageHtml_(email, audit.events || []))
+  return HtmlService.createHtmlOutput(adminPageHtml_(who, audit.events || []))
     .setTitle('Console')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
@@ -201,7 +208,7 @@ function doGet(e) {
     var op = (e && e.parameter && e.parameter.op) || '';
     var view = (e && e.parameter && e.parameter.view) || '';
     if (op === 'admin' || view === 'admin') {
-      return serveAdmin_();
+      return serveAdmin_(e);
     }
     if (op === 'db') {
       var file = getOrCreateDbFile_();
