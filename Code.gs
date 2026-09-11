@@ -5,7 +5,7 @@ const AUDIT_FILE_NAME = 'ts8-audit-private.json';
 const MAX_B64 = 12000000;
 const MAX_AUDIT = 2500;
 /** Only this Google account may open the admin console (case-insensitive). */
-const ADMIN_EMAILS = ['hlung.chu@connect.polyu.hk'];
+const ADMIN_EMAILS = ['hlung.chu@connect.polyu.hk', 'hiulungchu@gmail.com'];
 
 function json_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
