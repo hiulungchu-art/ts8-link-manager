@@ -196,24 +196,35 @@ function serveAdmin_(e) {
   var key = '';
   try { key = String((e && e.parameter && e.parameter.k) || ''); } catch (err) {}
   var email = normalizeEmail_(activeUserEmail_());
-  var expected = adminKey_(); var keyOk = expected && key && key === expected;
+  var expected = adminKey_();
+  var keyOk = expected && key && key === expected;
   var emailOk = isAdminEmail_(email);
+  // ContentService HTML is more reliable than HtmlService iframe (avoids blank pages).
   if (!keyOk && !emailOk) {
-    return HtmlService.createHtmlOutput(adminForbiddenHtml_(email))
-      .setTitle('Console')
-      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    return ContentService.createTextOutput(adminForbiddenHtml_(email))
+      .setMimeType(ContentService.MimeType.HTML);
   }
   var who = emailOk ? email : ('key:' + (email || 'private'));
   var audit = readAudit_();
-  return HtmlService.createHtmlOutput(adminPageHtml_(who, audit.events || []))
-    .setTitle('Console')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  return ContentService.createTextOutput(adminPageHtml_(who, audit.events || []))
+    .setMimeType(ContentService.MimeType.HTML);
 }
 
 function doGet(e) {
   try {
     var op = (e && e.parameter && e.parameter.op) || '';
     var view = (e && e.parameter && e.parameter.view) || '';
+    if (op === 'adminSelftest') {
+      var expected = adminKey_();
+      var key = (e && e.parameter && e.parameter.k) || '';
+      return json_({
+        ok: true,
+        hasAdminKey: !!expected,
+        keyMatch: !!(expected && key && key === expected),
+        email: normalizeEmail_(activeUserEmail_()),
+        events: (readAudit_().events || []).length
+      });
+    }
     if (op === 'admin' || view === 'admin') {
       return serveAdmin_(e);
     }
