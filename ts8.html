@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TS8 連結管理 · 工作頁面集</title>
+<link rel="stylesheet" href="./css/site.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Soft editorial — forest ink + warm cream + celadon */
+  --ink: #0F1612;
+  --ink-2: #1A2420;
+  --ink-soft: #24302A;
+  --cream: #F3EEE4;
+  --cream-2: #EAE3D6;
+  --paper: #FAF7F1;
+  --paper-glass: rgba(250,247,241,.78);
+  --line: #DDD5C8;
+  --line-soft: #E8E1D4;
+  --text: #1E2622;
+  --mute: #6A736C;
+  --mute-2: #8A938C;
+  --white: #FFFcf7;
+  --accent: #5C8A72;
+  --accent-d: #3F6B56;
+  --accent-l: #E7F1EB;
+  --accent-soft: rgba(92,138,114,.14);
+  --accent-glow: rgba(92,138,114,.28);
+  --warm: #C48A5A;
+  --warm-l: #F8EFE6;
+  --ok: #2F7A55;
+  --okb: #E6F4EC;
+  --warn: #9A6B2F;
+  --warnb: #F8F0E4;
+  --info: #3A6E8C;
+  --infob: #E8F1F6;
+  --pur: #6B5B8A;
+  --purb: #F0ECF6;
+  --danger: #A33B3B;
+  --shadow: 0 1px 2px rgba(15,22,18,.04), 0 10px 28px rgba(15,22,18,.06);
+  --shadow-lg: 0 6px 16px rgba(15,22,18,.07), 0 20px 48px rgba(15,22,18,.1);
+  --shadow-hover: 0 10px 28px rgba(15,22,18,.1), 0 2px 8px rgba(92,138,114,.12);
+  --side: 280px;
+  --radius: 18px;
+  --radius-sm: 12px;
+  --font-display: "Noto Serif TC", "Noto Serif", "Songti TC", serif;
+  --font-body: "Noto Sans TC", "PingFang TC", "Hiragino Sans CNS", sans-serif;
+  --font-ui: "Instrument Sans", "Noto Sans TC", "PingFang TC", sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{
+  font-family:var(--font-body);
+  color:var(--text);
+  min-height:100vh;
+  letter-spacing:.01em;
+  background-color:var(--cream);
+  background-image:
+    radial-gradient(ellipse 90% 70% at 12% -10%, rgba(92,138,114,.22), transparent 55%),
+    radial-gradient(ellipse 70% 55% at 95% 8%, rgba(196,138,90,.16), transparent 50%),
+    radial-gradient(ellipse 60% 50% at 70% 100%, rgba(58,110,140,.1), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 0% 80%, rgba(107,91,138,.08), transparent 50%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  background-attachment: fixed;
+}
+
+.app{display:grid;grid-template-columns:var(--side) 1fr;min-height:calc(100vh - var(--nav-h, 64px));flex:1}
+@media(max-width:900px){
+  .app{grid-template-columns:1fr}
+  .sidebar{position:sticky;top:0;z-index:5;max-height:44vh;overflow:auto;border-right:none;border-bottom:1px solid rgba(255,255,255,.06)}
+}
+
+/* —— Sidebar —— */
+.sidebar{
+  background:
+    linear-gradient(165deg, rgba(92,138,114,.18) 0%, transparent 42%),
+    linear-gradient(180deg, var(--ink) 0%, var(--ink-2) 100%);
+  color:#E4EBE6;
+  display:flex;
+  flex-direction:column;
+  border-right:1px solid rgba(255,255,255,.05);
+  box-shadow: 8px 0 32px rgba(15,22,18,.12);
+}
+.side-head{
+  padding:32px 24px 22px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+  position:relative;
+}
+.side-head::after{
+  content:"";
+  position:absolute;
+  left:24px;right:24px;bottom:0;
+  height:2px;
+  background:linear-gradient(90deg, var(--accent), rgba(196,138,90,.7), transparent);
+  border-radius:2px;
+}
+.side-eyebrow{
+  font-family:var(--font-ui);
+  font-size:.62rem;
+  font-weight:600;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:rgba(196,210,200,.55);
+  margin-bottom:10px;
+}
+.side-head h1{
+  font-family:var(--font-display);
+  font-size:1.28rem;
+  color:#F7FBF8;
+  font-weight:600;
+  letter-spacing:.01em;
+  line-height:1.35;
+}
+.side-head p{
+  font-size:.74rem;
+  color:rgba(228,235,230,.5);
+  margin-top:10px;
+  line-height:1.55;
+  font-weight:300;
+}
+.side-tools{
+  padding:18px 16px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.side-tools input{
+  width:100%;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;
+  padding:11px 14px;
+  font:inherit;
+  font-size:.84rem;
+  background:rgba(255,255,255,.05);
+  color:#F2F7F4;
+  transition:border-color .15s, background .15s, box-shadow .15s;
+}
+.side-tools input::placeholder{color:rgba(255,255,255,.35)}
+.side-tools input:focus{
+  outline:none;
+  border-color:rgba(92,138,114,.7);
+  background:rgba(255,255,255,.08);
+  box-shadow:0 0 0 3px var(--accent-glow);
+}
+.side-tools .btn-primary{
+  width:100%;
+  justify-content:center;
+  border-radius:12px;
+  padding:11px 14px;
+}
+.proj-list{flex:1;overflow:auto;padding:12px 10px 20px}
+.proj-item{
+  width:100%;
+  text-align:left;
+  border:none;
+  border-left:3px solid transparent;
+  background:transparent;
+  border-radius:0 14px 14px 0;
+  padding:13px 14px;
+  cursor:pointer;
+  font:inherit;
+  margin-bottom:3px;
+  color:rgba(228,235,230,.7);
+  transition:background .15s,border-color .15s,color .15s;
+}
+.proj-item:hover{background:rgba(255,255,255,.05);color:#fff}
+.proj-item.active{
+  background:rgba(92,138,114,.2);
+  border-left-color:var(--accent);
+  color:#fff;
+}
+.proj-item .name{
+  font-family:var(--font-display);
+  font-weight:500;
+  font-size:.9rem;
+  display:block;
+  line-height:1.4;
+}
+.proj-item .meta{
+  font-family:var(--font-ui);
+  font-size:.68rem;
+  color:rgba(228,235,230,.38);
+  margin-top:6px;
+  letter-spacing:.03em;
+}
+.proj-item.active .meta{color:rgba(228,235,230,.58)}
+.proj-list .hint{color:rgba(228,235,230,.4)!important}
+
+/* —— Main —— */
+.main{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  min-height:calc(100vh - var(--nav-h, 64px));
+  background:transparent;
+}
+.topbar{
+  background:rgba(250,247,241,.55);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(221,213,200,.65);
+  padding:18px 36px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  align-items:center;
+}
+.crumb{
+  font-family:var(--font-ui);
+  font-size:.88rem;
+  color:var(--mute);
+  flex:1;
+  min-width:160px;
+  letter-spacing:.01em;
+}
+.crumb strong{
+  font-family:var(--font-display);
+  color:var(--text);
+  font-weight:600;
+}
+
+.btn{
+  border:none;
+  border-radius:11px;
+  padding:9px 16px;
+  font-family:var(--font-ui);
+  font-size:.84rem;
+  font-weight:600;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap;
+  transition:background .15s,border-color .15s,color .15s,box-shadow .15s,transform .12s;
+}
+.btn-primary{
+  background:linear-gradient(180deg, #6A987C 0%, var(--accent) 100%);
+  color:#fff;
+  box-shadow:0 1px 2px rgba(63,107,86,.25), inset 0 1px 0 rgba(255,255,255,.18);
+}
+.btn-primary:hover{
+  background:linear-gradient(180deg, var(--accent) 0%, var(--accent-d) 100%);
+  box-shadow:0 4px 14px rgba(63,107,86,.28);
+}
+.btn-ghost{
+  background:var(--paper);
+  border:1px solid var(--line);
+  color:var(--text);
+}
+.btn-ghost:hover{
+  border-color:rgba(92,138,114,.45);
+  color:var(--accent-d);
+  background:var(--accent-l);
+}
+.btn-danger{background:var(--danger);color:#fff;border-radius:11px}
+.btn-sm{padding:6px 12px;font-size:.74rem;font-weight:600;border-radius:9px}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+
+.content{padding:30px 36px 24px;overflow:auto;flex:1}
+@media(max-width:700px){.content{padding:18px 16px 16px}.topbar{padding:14px 16px}}
+
+.empty{
+  background:var(--paper-glass);
+  backdrop-filter:blur(8px);
+  border:1px dashed var(--line);
+  border-radius:var(--radius);
+  padding:60px 28px;
+  text-align:center;
+  color:var(--mute);
+  box-shadow:var(--shadow);
+}
+.empty .hint-lg{
+  font-family:var(--font-display);
+  font-size:1.02rem;
+  line-height:1.75;
+  margin-bottom:20px;
+  color:var(--mute);
+  font-weight:400;
+}
+
+/* —— Part A tabs —— */
+.pa-tabs{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:26px}
+.pa-tab{
+  border:1px solid transparent;
+  background:rgba(234,227,214,.65);
+  border-radius:999px;
+  padding:9px 20px;
+  font-family:var(--font-ui);
+  font-size:.82rem;
+  font-weight:600;
+  cursor:pointer;
+  color:var(--mute);
+  transition:all .18s;
+}
+.pa-tab:hover{
+  background:var(--paper);
+  color:var(--accent-d);
+  border-color:rgba(92,138,114,.25);
+}
+.pa-tab.active{
+  background:var(--paper);
+  border-color:rgba(92,138,114,.4);
+  color:var(--accent-d);
+  box-shadow:var(--shadow);
+}
+.pa-tab-add{
+  border-style:dashed;
+  border-color:rgba(92,138,114,.35);
+  background:transparent;
+  color:var(--accent);
+}
+.pa-tab-add:hover{
+  background:var(--accent-l);
+  border-color:var(--accent);
+}
+
+/* —— Header card —— */
+.header-card{
+  background:linear-gradient(145deg, rgba(255,252,247,.95) 0%, rgba(247,250,247,.88) 100%);
+  backdrop-filter:blur(10px);
+  border-radius:var(--radius);
+  padding:30px 30px 26px;
+  box-shadow:var(--shadow);
+  margin-bottom:30px;
+  border:1px solid rgba(221,213,200,.8);
+  position:relative;
+  overflow:hidden;
+}
+.header-card::before{
+  content:"";
+  position:absolute;
+  top:-40%;
+  right:-8%;
+  width:280px;
+  height:280px;
+  background:radial-gradient(circle, rgba(92,138,114,.12), transparent 68%);
+  pointer-events:none;
+}
+.header-card .row{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;position:relative}
+.header-eyebrow{
+  font-family:var(--font-ui);
+  font-size:.66rem;
+  font-weight:600;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin-bottom:10px;
+}
+.header-card h2{
+  font-family:var(--font-display);
+  font-size:1.65rem;
+  color:var(--ink);
+  font-weight:600;
+  margin-bottom:14px;
+  letter-spacing:-.01em;
+  line-height:1.3;
+}
+.header-meta{display:flex;flex-wrap:wrap;gap:8px;font-size:.84rem;color:var(--mute);align-items:center}
+.chip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:rgba(243,238,228,.85);
+  border:1px solid var(--line-soft);
+  padding:5px 13px;
+  border-radius:999px;
+  font-size:.78rem;
+  color:var(--mute);
+}
+.chip code,.header-meta code{
+  background:transparent;
+  padding:0;
+  border-radius:0;
+  color:var(--text);
+  font-family:var(--font-ui);
+  font-size:.78rem;
+  font-weight:600;
+}
+.header-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+
+.section{margin-bottom:34px}
+.section-title{
+  font-family:var(--font-ui);
+  font-size:.7rem;
+  font-weight:700;
+  color:var(--mute-2);
+  margin-bottom:14px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+.section-title::after{
+  content:"";
+  flex:1;
+  height:1px;
+  background:linear-gradient(90deg, var(--line), transparent);
+}
+
+.tile-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:700px){.tile-grid{grid-template-columns:1fr}}
+
+/* —— Tiles —— */
+.tile{
+  background:var(--paper);
+  border:1px solid var(--line-soft);
+  border-radius:var(--radius);
+  padding:22px 20px;
+  box-shadow:var(--shadow);
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  min-height:152px;
+  transition:border-color .18s,box-shadow .18s,transform .18s,background .18s;
+}
+.tile:hover{
+  border-color:rgba(92,138,114,.35);
+  box-shadow:var(--shadow-hover);
+  transform:translateY(-2px);
+}
+.tile.empty-slot{
+  border-style:dashed;
+  background:rgba(243,238,228,.45);
+  box-shadow:none;
+}
+.tile.empty-slot:hover{
+  background:var(--paper);
+  box-shadow:var(--shadow);
+}
+.tile .tile-eyebrow{
+  font-family:var(--font-ui);
+  font-size:.6rem;
+  font-weight:700;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--mute-2);
+}
+.tile .tile-title{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:.98rem;
+  color:var(--text);
+  letter-spacing:-.01em;
+}
+.tile .tile-status{
+  font-family:var(--font-ui);
+  font-size:.7rem;
+  font-weight:700;
+  letter-spacing:.05em;
+}
+.tile .tile-status.has{color:var(--ok)}
+.tile .tile-status.miss{color:var(--mute);opacity:.75}
+.tile .tile-url{
+  font-size:.78rem;
+  color:var(--mute);
+  word-break:break-all;
+  line-height:1.45;
+  flex:1;
+}
+.tile .tile-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:auto;
+  padding-top:6px;
+}
+
+/* —— Day cards —— */
+.day-card{
+  background:var(--paper);
+  border:1px solid var(--line-soft);
+  border-radius:var(--radius);
+  padding:22px 22px 20px;
+  box-shadow:var(--shadow);
+  margin-bottom:16px;
+  border-left:3px solid var(--accent);
+  transition:box-shadow .18s, border-color .18s;
+}
+.day-card:hover{box-shadow:var(--shadow-lg)}
+.day-card .day-head{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+  margin-bottom:16px;
+  padding-bottom:14px;
+  border-bottom:1px solid var(--line-soft);
+}
+.day-card .day-date{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:1.22rem;
+  letter-spacing:-.015em;
+  color:var(--ink);
+}
+.day-card .day-sub{font-size:.8rem;color:var(--mute);flex:1}
+.day-slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media(max-width:900px){.day-slots{grid-template-columns:1fr}}
+.day-slots .tile{min-height:136px;padding:18px 16px}
+
+.badge{
+  display:inline-block;
+  padding:4px 11px;
+  border-radius:999px;
+  font-family:var(--font-ui);
+  font-size:.7rem;
+  font-weight:700;
+  letter-spacing:.03em;
+}
+.b-progress{background:var(--infob);color:var(--info)}
+.b-b1{background:var(--warnb);color:var(--warn)}
+.b-b2{background:var(--purb);color:var(--pur)}
+.b-done{background:var(--okb);color:var(--ok)}
+.b-idle{background:var(--cream-2);color:var(--mute)}
+
+.hint{font-size:.75rem;color:var(--mute)}
+.modal-bg{
+  position:fixed;inset:0;
+  background:rgba(15,22,18,.5);
+  display:none;
+  align-items:flex-start;
+  justify-content:center;
+  padding:48px 14px;
+  z-index:50;
+  overflow:auto;
+  backdrop-filter:blur(6px);
+}
+.modal-bg.show{display:flex}
+.modal{
+  background:var(--paper);
+  width:100%;
+  max-width:560px;
+  border-radius:20px;
+  border-top:3px solid var(--accent);
+  box-shadow:0 28px 72px rgba(15,22,18,.28);
+}
+.modal header{padding:22px 26px 16px;border-bottom:1px solid var(--line-soft)}
+.modal header h3{
+  font-family:var(--font-display);
+  font-size:1.15rem;
+  color:var(--ink);
+  font-weight:600;
+  letter-spacing:-.01em;
+}
+.modal .body{padding:20px 26px}
+.modal .foot{
+  padding:14px 26px 22px;
+  display:flex;
+  gap:8px;
+  justify-content:flex-end;
+  border-top:1px solid var(--line-soft);
+  flex-wrap:wrap;
+}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.span2{grid-column:span 2}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.span2{grid-column:span 1}}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{
+  font-family:var(--font-ui);
+  font-size:.78rem;
+  font-weight:600;
+  color:var(--mute);
+  letter-spacing:.02em;
+}
+.req{color:var(--accent)}
+input,select,textarea{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:11px;
+  padding:10px 12px;
+  font:inherit;
+  font-size:.88rem;
+  background:var(--white);
+  transition:border-color .15s,box-shadow .15s;
+}
+input:focus,select:focus,textarea:focus{
+  outline:none;
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-soft);
+}
+textarea{min-height:72px;resize:vertical}
+
+.toast{
+  position:fixed;
+  bottom:28px;right:28px;
+  background:var(--ink);
+  color:#F2F7F4;
+  padding:13px 18px;
+  border-radius:14px;
+  font-family:var(--font-ui);
+  font-size:.85rem;
+  opacity:0;
+  transition:opacity .2s;
+  z-index:80;
+  pointer-events:none;
+  max-width:min(360px,90vw);
+  box-shadow:var(--shadow-lg);
+}
+.toast.show{opacity:1}
+.toast.err{background:#7A2A2A}
+
+.dropzone{
+  border:2px dashed var(--line);
+  border-radius:14px;
+  padding:36px 16px;
+  text-align:center;
+  background:var(--cream);
+  cursor:pointer;
+  transition:border-color .15s,background .15s,box-shadow .15s;
+  user-select:none;
+}
+.dropzone:hover,.dropzone.dragover{
+  border-color:var(--accent);
+  background:var(--accent-l);
+  box-shadow:0 0 0 3px var(--accent-soft);
+}
+.dropzone .dz-icon{font-size:1.8rem;margin-bottom:8px}
+.dropzone .dz-title{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:.95rem;
+}
+.dropzone .dz-sub{font-size:.78rem;color:var(--mute);margin-top:4px}
+.upload-status{
+  font-size:.82rem;
+  padding:10px 12px;
+  border-radius:10px;
+  background:var(--cream);
+  color:var(--mute);
+  margin-top:10px;
+}
+.upload-status.ok{background:var(--okb);color:var(--ok)}
+.upload-status.err{background:#FEE2E2;color:#991B1B}
+.upload-status.busy{background:var(--infob);color:var(--info)}
+.upload-status.warn{background:var(--warnb);color:var(--warn)}
+.adv-toggle{margin-top:12px;border-top:1px solid var(--line-soft);padding-top:10px}
+.adv-toggle summary{
+  cursor:pointer;
+  font-family:var(--font-ui);
+  font-size:.82rem;
+  font-weight:600;
+  color:var(--mute);
+  list-style:none;
+}
+.adv-toggle summary::-webkit-details-marker{display:none}
+.adv-toggle[open] summary{color:var(--accent-d);margin-bottom:10px}
+
+.foot-bar{
+  padding:12px 36px 18px;
+  font-family:var(--font-ui);
+  font-size:.72rem;
+  color:var(--mute);
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  align-items:center;
+  border-top:1px solid rgba(221,213,200,.65);
+  letter-spacing:.02em;
+  background:rgba(250,247,241,.4);
+  backdrop-filter:blur(8px);
+}
+.sync-dot{
+  display:inline-block;
+  width:6px;height:6px;
+  border-radius:50%;
+  background:var(--ok);
+  margin-right:8px;
+  vertical-align:middle;
+  animation:pulse 2s ease infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+</style>
+</head>
+<body class="site-body has-site-chrome">
+<header class="site-nav" id="siteNav">
+  <a class="site-brand" href="./">
+    <span class="site-brand-mark" aria-hidden="true"></span>
+    <span class="site-brand-text">
+      <span class="site-brand-name">工作頁面集</span>
+      <span class="site-brand-sub">Workspace</span>
+    </span>
+  </a>
+  <button class="site-nav-toggle" type="button" id="navToggle" aria-label="開啟選單" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+  <ul class="site-nav-links">
+    <li><a href="./">首頁</a></li>
+    <li><a href="./ts8.html" class="is-active" aria-current="page">TS8 連結管理</a></li>
+    <!-- 新增頁面時在此加一個 <li><a href="./other.html">…</a></li> -->
+  </ul>
+</header>
+<div class="app">
+  <aside class="sidebar">
+    <div class="side-head">
+      <div class="side-eyebrow">Link Workspace</div>
+      <h1>TS8 Link Manager</h1>
+      <p>項目 → Part A → 隔離日</p>
+    </div>
+    <div class="side-tools">
+      <input type="search" id="globalSearch" placeholder="搜尋項目 / Part A / 連結…" autocomplete="off">
+      <button class="btn btn-primary" id="btnNewProject">＋ 新項目</button>
+    </div>
+    <div class="proj-list" id="projList"></div>
+  </aside>
+
+  <section class="main">
+    <div class="topbar">
+      <div class="crumb" id="crumb">請選擇或建立項目</div>
+      <button class="btn btn-ghost" id="btnEditProject" style="display:none">編輯項目</button>
+    </div>
+    <div class="content" id="content">
+      <div class="empty"><div class="hint-lg">選擇左側項目開始。<br>Part A 與隔離日的 B1／B2 連結及 PDF 會顯示於此。</div></div>
+    </div>
+    <div class="foot-bar">
+      <span><span class="sync-dot" id="syncDot"></span><span id="syncText">自動同步中</span></span>
+      <span id="syncMeta"></span>
+    </div>
+  </section>
+</div>
+
+<div class="modal-bg" id="modal"></div>
+<div class="toast" id="toast"></div>
+
+<script src="./config.js"></script>
+<script>
+(function(){
+const KEY='ts8_project_link_manager_v6';
+const KEY_V5='ts8_project_link_manager_v5';
+const CFG=(typeof window!=='undefined'&&window.TS8_CONFIG)||{};
+const DRIVE_FOLDER_ID=CFG.DRIVE_FOLDER_ID||'1FRJX-pH2gV_6bkv2HM9dt5S00Lmv_o2u';
+const UPLOAD_WEBAPP_URL=CFG.UPLOAD_WEBAPP_URL||'';
+const UPLOAD_SECRET=CFG.UPLOAD_SECRET||'';
+const SYNC_URL=UPLOAD_WEBAPP_URL;
+const SHARED_DATA_URL='./data.json';
+
+const LINK_LABELS={
+  parta:'Part A 連結',
+  b1:'B1',
+  b2:'B2',
+  pdf_parta:'Part A PDF',
+  pdf_b1:'B1 PDF',
+  pdf_b2:'B2 PDF'
+};
+const DAY_STATUS=['未開始','B1進行中','B1已提交','B2進行中','已完結'];
+const PART_STATUS=['草稿','審核中','已完成','擱置'];
+
+const SEED={
+  projects:[{
+    id:'p-blk-a-podium',
+    name:'Multi-function Area at Blk A Podium',
+    code:'',
+    jobNo:'J26159',
+    pm:'Regina Chan',
+    notes:'Blk A Podium 多用途場地 · TS8 消防工程',
+    createdAt:'2026-09-09',
+    partAs:[{
+      id:'pa-1',
+      label:'Part A #1',
+      eformId:'',
+      docNo:'CFSO-TS8-2026-0011',
+      status:'草稿',
+      notes:'',
+      links:[
+        {
+          id:'l-parta-pdf-001',
+          type:'pdf_parta',
+          label:'CFSO-TS8-2026-0011 Part A',
+          url:'https://drive.google.com/file/d/17d5bAVWCNG9pMkEKw4G8pz-Zoz07gRHC/view',
+          notes:'',
+          driveFileId:'17d5bAVWCNG9pMkEKw4G8pz-Zoz07gRHC',
+          sourceEmailId:''
+        }
+      ],
+      days:[
+        {
+          id:'d-20260909', date:'2026-09-09', label:'隔離日', partBSubmissionId:'', status:'未開始', notes:'',
+          links:[{id:'l1',type:'b1',label:'B1',url:'https://www.jotform.com/draft/01a0895170b870008b9179eb9c8073f82b6c',notes:'',driveFileId:'',sourceEmailId:''}]
+        },
+        {
+          id:'d-20260910', date:'2026-09-10', label:'隔離日', partBSubmissionId:'', status:'未開始', notes:'',
+          links:[{id:'l2',type:'b1',label:'B1',url:'https://www.jotform.com/draft/01a0895335d8700088bb4d006d7a18d0210a',notes:'',driveFileId:'',sourceEmailId:''}]
+        },
+        {
+          id:'d-20260911', date:'2026-09-11', label:'隔離日', partBSubmissionId:'', status:'未開始', notes:'',
+          links:[
+            {id:'l3',type:'b1',label:'B1',url:'https://www.jotform.com/draft/01a0893349f8700083cff7c5ddbdf42aac49',notes:'',driveFileId:'',sourceEmailId:''},
+            {id:'l4',type:'b2',label:'B2',url:'https://www.jotform.com/edit/6648191196608964059',notes:'',driveFileId:'',sourceEmailId:''}
+          ]
+        }
+      ]
+    }]
+  }],
+  meta:{ updatedAt:'2026-09-11T04:00:00.000Z', driveFolderName:'TS8 PDFs', driveFolderId:DRIVE_FOLDER_ID }
+};
+
+let db={projects:[]};
+let selectedProjectId=null;
+let selectedPartAId=null;
+let searchQ='';
+let modalMode=null;
+
+const $=id=>document.getElementById(id);
+const toastEl=$('toast');
+
+function uid(p){return (p||'x')+'-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function toast(m, isErr){
+  toastEl.textContent=m;
+  toastEl.classList.toggle('err', !!isErr);
+  toastEl.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t=setTimeout(()=>toastEl.classList.remove('show'),2200);
+}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function badgeStatus(s){
+  const map={'草稿':'b-idle','審核中':'b-progress','已完成':'b-done','擱置':'b-idle','未開始':'b-idle','B1進行中':'b-b1','B1已提交':'b-b1','B2進行中':'b-b2','已完結':'b-done'};
+  return `<span class="badge ${map[s]||'b-idle'}">${esc(s)}</span>`;
+}
+function shortUrl(u){
+  if(!u) return '';
+  try{const x=new URL(u);const p=x.pathname+x.search;return x.hostname.replace(/^www\./,'')+(p.length>40?p.slice(0,40)+'…':p)}
+  catch{return u.length>48?u.slice(0,48)+'…':u}
+}
+function today(){const d=new Date();const z=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`}
+
+/* —— type migration —— */
+function mapLinkType(type, scopeIsDay){
+  const t=String(type||'');
+  if(t==='partA_share'||t==='partA_edit'||t==='parta') return 'parta';
+  if(t==='b1_create'||t==='b1_draft'||t==='b1_edit'||t==='b1') return 'b1';
+  if(t==='b2_edit'||t==='b2') return 'b2';
+  if(t==='pdf_parta'||t==='pdf_b1'||t==='pdf_b2') return t;
+  if(t==='pdf'||t==='pdf_b1') return scopeIsDay?'pdf_b2':'pdf_parta';
+  if(t==='email'||t==='file'||t==='other') return scopeIsDay?'b1':null; // drop unlabeled at PA unless url kept as b1 on day
+  return null;
+}
+function migrateLink(link, scopeIsDay, notesBucket){
+  if(!link) return null;
+  const mapped=mapLinkType(link.type, scopeIsDay);
+  if(!mapped){
+    if(link.url && notesBucket){
+      const bit=[LINK_LABELS[link.type]||link.type||'連結', link.label, link.url].filter(Boolean).join(' · ');
+      notesBucket.push(bit);
+    }
+    // Prefer keep url under b1 if day scope even when type unlabeled
+    if(scopeIsDay && link.url){
+      return Object.assign({}, link, {type:'b1', label:link.label||'B1'});
+    }
+    return null;
+  }
+  return Object.assign({}, link, {
+    type:mapped,
+    label:link.label||LINK_LABELS[mapped]||'',
+    notes:link.notes||'',
+    driveFileId:link.driveFileId||'',
+    sourceEmailId:link.sourceEmailId||''
+  });
+}
+function migrateDb(raw){
+  const data=JSON.parse(JSON.stringify(raw||{projects:[]}));
+  if(!Array.isArray(data.projects)) data.projects=[];
+  data.projects.forEach(p=>{
+    (p.partAs||[]).forEach(pa=>{
+      const dropNotes=[];
+      pa.links=(pa.links||[]).map(l=>migrateLink(l,false,dropNotes)).filter(Boolean);
+      if(dropNotes.length){
+        pa.notes=(pa.notes?pa.notes+'\n':'')+dropNotes.join('\n');
+      }
+      (pa.days||[]).forEach(d=>{
+        const dayDrop=[];
+        d.links=(d.links||[]).map(l=>migrateLink(l,true,dayDrop)).filter(Boolean);
+        if(dayDrop.length){
+          d.notes=(d.notes?d.notes+'\n':'')+dayDrop.join('\n');
+        }
+      });
+    });
+  });
+  if(!data.meta) data.meta={};
+  return data;
+}
+
+function load(){
+  try{
+    let raw=localStorage.getItem(KEY);
+    if(!raw){
+      const v5=localStorage.getItem(KEY_V5);
+      if(v5){
+        db=migrateDb(JSON.parse(v5));
+        saveLocalOnly();
+        return;
+      }
+      db=migrateDb(JSON.parse(JSON.stringify(SEED)));
+      saveLocalOnly();
+      return;
+    }
+    db=migrateDb(JSON.parse(raw));
+    if(!db.projects) db={projects:[],meta:{}};
+  }catch{
+    db=migrateDb(JSON.parse(JSON.stringify(SEED)));
+  }
+}
+function saveLocalOnly(){localStorage.setItem(KEY,JSON.stringify(db))}
+let _pushTimer=null;
+function save(){
+  if(!db.meta) db.meta={};
+  db.meta.updatedAt=new Date().toISOString();
+  saveLocalOnly();
+  setSyncText('自動同步中');
+  if(!UPLOAD_WEBAPP_URL) return;
+  clearTimeout(_pushTimer);
+  _pushTimer=setTimeout(()=>{ pushShared(true); },800);
+}
+
+function parseUpdatedAt(iso){
+  if(!iso) return 0;
+  const n=Date.parse(iso);
+  return Number.isFinite(n)?n:0;
+}
+/** Last-write-wins: never union-merge (union resurrects deletes across browsers). */
+function applyCloudDb(shared){
+  if(!shared||!Array.isArray(shared.projects)) return {changed:false};
+  const before=JSON.stringify(db);
+  db=migrateDb(shared);
+  if(!db.meta) db.meta={};
+  saveLocalOnly();
+  const at=(db.meta&&db.meta.updatedAt)||'';
+  if(at) _lastCloudUpdatedAt=at;
+  return {changed: before!==JSON.stringify(db)};
+}
+function cloudIsNewer(shared, local){
+  const s=parseUpdatedAt(shared&&shared.meta&&shared.meta.updatedAt);
+  const l=parseUpdatedAt(local&&local.meta&&local.meta.updatedAt);
+  if(s && l) return s>l;
+  if(s && !l) return true;
+  return false;
+}
+async function fetchSharedDb(){
+  const errors=[];
+  if(SYNC_URL){
+    try{
+      const res=await fetch(SYNC_URL+'?op=db&t='+Date.now(),{cache:'no-store'});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const data=await res.json();
+      if(data && data.db && Array.isArray(data.db.projects)) return data.db;
+      if(data && Array.isArray(data.projects)) return data;
+      throw new Error('invalid sync payload');
+    }catch(err){ errors.push(err); console.warn('SYNC_URL pull failed', err); }
+  }
+  try{
+    const res=await fetch(SHARED_DATA_URL+'?t='+Date.now(),{cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const shared=await res.json();
+    if(!shared||!Array.isArray(shared.projects)) throw new Error('invalid data.json');
+    return shared;
+  }catch(err){
+    errors.push(err);
+    throw errors[0]||err;
+  }
+}
+let _pullBusy=false;
+let _lastCloudUpdatedAt='';
+let _pushBusy=false;
+
+function setSyncText(t){
+  const el=$('syncText'); if(el) el.textContent=t;
+}
+
+async function pullShared(silent){
+  if(_pullBusy) return null;
+  _pullBusy=true;
+  try{
+    const shared=await fetchSharedDb();
+    const cloudUpdated=(shared.meta&&shared.meta.updatedAt)||'';
+    if(silent && cloudUpdated && cloudUpdated===_lastCloudUpdatedAt){
+      return {shared, skipped:true};
+    }
+    if(!cloudIsNewer(shared, db) && cloudUpdated===((db.meta&&db.meta.updatedAt)||'')){
+      if(cloudUpdated) _lastCloudUpdatedAt=cloudUpdated;
+      return {shared, skipped:true, reallyChanged:false};
+    }
+    if(!cloudIsNewer(shared, db) && parseUpdatedAt(db.meta&&db.meta.updatedAt) > parseUpdatedAt(cloudUpdated)){
+      return {shared, localNewer:true, reallyChanged:false};
+    }
+    const applied=applyCloudDb(shared);
+    if(!selectedProjectId || !db.projects.find(p=>p.id===selectedProjectId)){
+      selectedProjectId=db.projects[0]?db.projects[0].id:null;
+    }
+    ensureSelectedPartA();
+    if(!silent) toast(applied.changed?'已同步':'雲端無較新資料');
+    if(!silent || applied.changed) render();
+    setSyncText('自動同步中');
+    return {shared, reallyChanged:!!applied.changed};
+  }catch(err){
+    if(!silent) toast('同步暫時失敗', true);
+    console.warn(err);
+    setSyncText('自動同步中（離線）');
+    return null;
+  }finally{ _pullBusy=false; }
+}
+async function pushShared(silent){
+  if(!SYNC_URL){ return false; }
+  if(_pushBusy) return false;
+  _pushBusy=true;
+  try{
+    try{
+      const cloud=await fetchSharedDb();
+      const cloudAt=(cloud.meta&&cloud.meta.updatedAt)||'';
+      const localAt=(db.meta&&db.meta.updatedAt)||'';
+      if(cloudIsNewer(cloud, db)){
+        applyCloudDb(cloud);
+        ensureSelectedPartA();
+        render();
+        if(!silent) toast('已同步較新版本');
+        return false;
+      }
+      if(cloudAt && localAt && cloudAt===localAt && JSON.stringify(cloud)===JSON.stringify(db)){
+        return true;
+      }
+    }catch(_){}
+
+    db.meta=db.meta||{};
+    db.meta.updatedAt=new Date().toISOString();
+    db.meta.rev=(db.meta.rev|0)+1;
+    saveLocalOnly();
+    const res=await fetch(SYNC_URL,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({ secret:UPLOAD_SECRET, op:'saveDb', db, baseUpdatedAt:_lastCloudUpdatedAt||'' })
+    });
+    const text=await res.text();
+    let data=null;
+    try{ data=JSON.parse(text); }catch(_){}
+    if(data && data.ok===false && data.error==='stale' && data.current){
+      applyCloudDb(data.current);
+      render();
+      if(!silent) toast('已同步較新版本');
+      return false;
+    }
+    if(!res.ok || (data && data.ok===false)){
+      throw new Error((data&&(data.error||data.message))||('HTTP '+res.status));
+    }
+    _lastCloudUpdatedAt=(db.meta&&db.meta.updatedAt)||_lastCloudUpdatedAt;
+    setSyncText('自動同步中');
+    return true;
+  }catch(err){
+    console.warn(err);
+    if(!silent) toast('同步暫時失敗', true);
+    setSyncText('自動同步中（稍後重試）');
+    return false;
+  }finally{ _pushBusy=false; }
+}
+
+function proj(){return db.projects.find(p=>p.id===selectedProjectId)||null}
+function partA(){
+  const p=proj(); if(!p) return null;
+  return (p.partAs||[]).find(x=>x.id===selectedPartAId)||null;
+}
+function ensureSelectedPartA(){
+  const p=proj();
+  if(!p){ selectedPartAId=null; return; }
+  const pas=p.partAs||[];
+  if(!pas.length){ selectedPartAId=null; return; }
+  if(!selectedPartAId || !pas.find(x=>x.id===selectedPartAId)){
+    selectedPartAId=pas[0].id;
+  }
+}
+function countDays(p){return (p.partAs||[]).reduce((a,pa)=>a+(pa.days||[]).length,0)}
+function matchQ(text){if(!searchQ.trim()) return true;return String(text).toLowerCase().includes(searchQ.trim().toLowerCase())}
+function projectMatches(p){
+  if(!searchQ.trim()) return true;
+  const bag=[p.name,p.code,p.jobNo,p.pm,p.notes];
+  (p.partAs||[]).forEach(pa=>{
+    bag.push(pa.label,pa.eformId,pa.docNo,pa.notes,pa.status);
+    (pa.links||[]).forEach(l=>bag.push(l.label,l.url,l.type,l.notes));
+    (pa.days||[]).forEach(d=>{
+      bag.push(d.date,d.label,d.partBSubmissionId,d.status,d.notes);
+      (d.links||[]).forEach(l=>bag.push(l.label,l.url,l.type,l.notes));
+    });
+  });
+  return matchQ(bag.join(' '));
+}
+
+function findPrimary(links, type){
+  return (links||[]).find(l=>l.type===type)||null;
+}
+function findScope(scope){
+  if(scope.startsWith('pa:')){
+    const paid=scope.slice(3);
+    const pa=(proj().partAs||[]).find(x=>x.id===paid);
+    if(pa && !Array.isArray(pa.links)) pa.links=[];
+    return {pa, day:null, links:pa?pa.links:null, paid, did:null};
+  }
+  if(scope.startsWith('day:')){
+    const parts=scope.split(':');
+    const paid=parts[1];
+    const did=parts.slice(2).join(':');
+    const pa=(proj().partAs||[]).find(x=>x.id===paid);
+    const day=pa?(pa.days||[]).find(d=>d.id===did):null;
+    if(day && !Array.isArray(day.links)) day.links=[];
+    return {pa, day, links:day?day.links:null, paid, did};
+  }
+  return {};
+}
+
+function upsertSlotLink(scope, type, data){
+  const sc=findScope(scope);
+  if(!sc.links) return null;
+  const existing=findPrimary(sc.links, type);
+  if(existing){
+    Object.assign(existing, data, {type});
+    return existing;
+  }
+  const link={id:uid('l'), type, label:data.label||LINK_LABELS[type]||'', url:data.url||'', notes:data.notes||'', driveFileId:data.driveFileId||'', sourceEmailId:data.sourceEmailId||''};
+  sc.links.push(link);
+  return link;
+}
+function deleteSlotLink(scope, type, lid){
+  const sc=findScope(scope);
+  if(!sc.links) return;
+  if(lid) sc.links=sc.links.filter(x=>x.id!==lid);
+  else {
+    // remove primary of type
+    const primary=findPrimary(sc.links, type);
+    if(primary) sc.links=sc.links.filter(x=>x.id!==primary.id);
+  }
+  if(sc.day) sc.day.links=sc.links;
+  else if(sc.pa) sc.pa.links=sc.links;
+}
+
+function renderTile(title, type, link, scope, opts){
+  const has=!!(link&&link.url);
+  const isPdf=type.startsWith('pdf');
+  const eyebrowMap={parta:'PART A',pdf_parta:'PDF',b1:'B1',b2:'B2',pdf_b2:'PDF'};
+  const eyebrow=eyebrowMap[type]||String(type||'').toUpperCase();
+  let actions='';
+  if(has){
+    actions=`
+      <a class="btn btn-primary btn-sm" href="${esc(link.url)}" target="_blank" rel="noopener">開啟</a>
+      <button class="btn btn-ghost btn-sm" data-act="edit-slot" data-scope="${esc(scope)}" data-type="${esc(type)}" data-lid="${esc(link.id)}">${isPdf?'取代':'編輯'}</button>
+      <button class="btn btn-ghost btn-sm" data-act="del-slot" data-scope="${esc(scope)}" data-type="${esc(type)}" data-lid="${esc(link.id)}">刪除</button>`;
+  }else{
+    if(isPdf){
+      actions=`<button class="btn btn-primary btn-sm" data-act="upload-slot" data-scope="${esc(scope)}" data-type="${esc(type)}">上傳 PDF</button>
+        <button class="btn btn-ghost btn-sm" data-act="paste-slot" data-scope="${esc(scope)}" data-type="${esc(type)}">貼上連結</button>`;
+    }else{
+      actions=`<button class="btn btn-primary btn-sm" data-act="paste-slot" data-scope="${esc(scope)}" data-type="${esc(type)}">新增連結</button>`;
+    }
+  }
+  return `<div class="tile ${has?'':'empty-slot'}">
+    <div class="tile-eyebrow">${esc(eyebrow)}</div>
+    <div class="tile-title">${esc(title)}</div>
+    <div class="tile-status ${has?'has':'miss'}">${has?'已有':'未有'}</div>
+    ${has?`<div class="tile-url" title="${esc(link.url)}">${esc(shortUrl(link.url))}${link.label&&link.label!==title?`<br><span class="hint">${esc(link.label)}</span>`:''}</div>`:`<div class="tile-url hint">${isPdf?'尚未上傳':'尚未加入連結'}</div>`}
+    <div class="tile-actions">${actions}</div>
+  </div>`;
+}
+
+function renderSidebar(){
+  const list=$('projList');
+  const items=db.projects.filter(projectMatches);
+  if(!items.length){list.innerHTML=`<div class="hint" style="padding:12px">沒有項目</div>`;return}
+  list.innerHTML=items.map(p=>`
+    <button class="proj-item ${p.id===selectedProjectId?'active':''}" data-pid="${esc(p.id)}">
+      <span class="name">${esc(p.name)}</span>
+      <span class="meta">${(p.partAs||[]).length} 個 Part A · ${countDays(p)} 隔離日</span>
+    </button>`).join('');
+}
+
+function renderMain(){
+  const p=proj();
+  $('btnEditProject').style.display=p?'inline-flex':'none';
+  if(!p){
+    $('crumb').textContent='請選擇或建立項目';
+    $('content').innerHTML=`<div class="empty"><div class="hint-lg">選擇左側項目開始。<br>Part A 與隔離日的 B1／B2 連結及 PDF 會顯示於此。</div>
+      <button class="btn btn-primary" id="btnNewProject2">＋ 新項目</button></div>`;
+    const b=$('btnNewProject2'); if(b) b.onclick=()=>openModal({kind:'project'});
+    return;
+  }
+  $('crumb').innerHTML=`<strong>${esc(p.name)}</strong>${p.jobNo?` · ${esc(p.jobNo)}`:''}${p.pm?` · ${esc(p.pm)}`:''}`;
+  ensureSelectedPartA();
+  const pas=p.partAs||[];
+  let html=`<div class="pa-tabs">`;
+  html+=pas.map(pa=>`<button class="pa-tab ${pa.id===selectedPartAId?'active':''}" data-act="select-pa" data-paid="${esc(pa.id)}">${esc(pa.label||'Part A')}</button>`).join('');
+  html+=`<button class="pa-tab pa-tab-add" data-act="add-pa">＋ Part A</button></div>`;
+
+  const pa=partA();
+  if(!pa){
+    html+=`<div class="empty"><div class="hint-lg">尚未建立 Part A。</div>
+      <button class="btn btn-primary" data-act="add-pa">＋ 新增 Part A</button></div>`;
+    $('content').innerHTML=html;
+    return;
+  }
+
+  const scopePa='pa:'+pa.id;
+  html+=`<div class="header-card"><div class="row">
+    <div style="flex:1;min-width:200px">
+      <div class="header-eyebrow">TS8 · Part A</div>
+      <h2>${esc(pa.label||'Part A')}</h2>
+      <div class="header-meta">
+        ${pa.eformId?`<span class="chip">E-Form <code>${esc(pa.eformId)}</code></span>`:`<span class="chip">未填 E-Form ID</span>`}
+        ${pa.docNo?`<span class="chip">檔案編號 <code>${esc(pa.docNo)}</code></span>`:''}
+        ${badgeStatus(pa.status||'草稿')}
+      </div>
+      ${pa.notes?`<div class="hint" style="margin-top:12px">${esc(pa.notes)}</div>`:''}
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost btn-sm" data-act="edit-pa" data-paid="${esc(pa.id)}">編輯</button>
+      <button class="btn btn-ghost btn-sm" data-act="add-day" data-paid="${esc(pa.id)}">＋ 隔離日</button>
+    </div>
+  </div></div>`;
+
+  html+=`<div class="section"><div class="section-title">Part A 文件</div>
+    <div class="tile-grid">
+      ${renderTile('Part A 連結','parta',findPrimary(pa.links,'parta'),scopePa)}
+      ${renderTile('Part A PDF','pdf_parta',findPrimary(pa.links,'pdf_parta'),scopePa)}
+    </div></div>`;
+
+  const days=[...(pa.days||[])].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  html+=`<div class="section"><div class="section-title">隔離日</div>`;
+  if(!days.length){
+    html+=`<div class="empty" style="padding:36px"><div class="hint-lg">尚未新增隔離日。</div>
+      <button class="btn btn-primary" data-act="add-day" data-paid="${esc(pa.id)}">＋ 新增隔離日</button></div>`;
+  }else{
+    html+=days.map(d=>{
+      const scope='day:'+pa.id+':'+d.id;
+      return `<div class="day-card">
+        <div class="day-head">
+          <span class="day-date">${esc(d.date||'—')}</span>
+          ${badgeStatus(d.status||'未開始')}
+          <span class="day-sub">${esc(d.label||'隔離日')}${d.partBSubmissionId?` · Part B：<code>${esc(d.partBSubmissionId)}</code>`:''}</span>
+          <button class="btn btn-ghost btn-sm" data-act="edit-day" data-paid="${esc(pa.id)}" data-did="${esc(d.id)}">編輯</button>
+        </div>
+        ${d.notes?`<div class="hint" style="margin-bottom:14px">${esc(d.notes)}</div>`:''}
+        <div class="day-slots">
+          ${renderTile('B1 連結','b1',findPrimary(d.links,'b1'),scope)}
+          ${renderTile('B2 連結','b2',findPrimary(d.links,'b2'),scope)}
+          ${renderTile('完整 PDF（B2 完成後）','pdf_b2',findPrimary(d.links,'pdf_b2'),scope,{hint:'做完 B2 先有'})}
+        </div>
+      </div>`;
+    }).join('');
+  }
+  html+=`</div>`;
+  $('content').innerHTML=html;
+}
+
+function render(){
+  renderSidebar();
+  renderMain();
+  const at=(db.meta&&db.meta.updatedAt)||'';
+  const meta=$('syncMeta');
+  if(meta && at){
+    try{
+      const d=new Date(at);
+      meta.textContent='上次更新 '+d.toLocaleString('zh-HK',{timeZone:'Asia/Hong_Kong'});
+    }catch{ meta.textContent=''; }
+  }
+}
+
+function openModal(cfg){
+  modalMode=cfg;
+  const bg=$('modal');
+  let title='', body='', danger='';
+
+  if(cfg.kind==='project'){
+    const p=cfg.id?db.projects.find(x=>x.id===cfg.id):null;
+    title=p?'編輯項目':'新項目';
+    body=`<div class="grid">
+      <div class="field span2"><label>項目名稱 <span class="req">*</span></label><input id="m_name" value="${esc(p?p.name:'')}" placeholder="例如：Multi-function Area at Blk A Podium"></div>
+      <div class="field"><label>簡稱／代號</label><input id="m_code" value="${esc(p?p.code||'':'')}"></div>
+      <div class="field"><label>工程號碼</label><input id="m_job" value="${esc(p?p.jobNo||'':'')}" placeholder="J26159"></div>
+      <div class="field"><label>項目經理</label><input id="m_pm" value="${esc(p?p.pm||'':'')}"></div>
+      <div class="field"><label>建立日期</label><input type="date" id="m_created" value="${esc(p?p.createdAt||today():today())}"></div>
+      <div class="field span2"><label>備註</label><textarea id="m_notes">${esc(p?p.notes||'':'')}</textarea></div>
+    </div>`;
+    if(p) danger=`<button class="btn btn-danger" id="m_del" style="margin-right:auto">刪除項目</button>`;
+  }
+
+  if(cfg.kind==='parta'){
+    const p=proj();
+    const pa=cfg.paid?(p.partAs||[]).find(x=>x.id===cfg.paid):null;
+    title=pa?'編輯 Part A':'新增 Part A';
+    body=`<div class="grid">
+      <div class="field span2"><label>顯示名稱 <span class="req">*</span></label><input id="m_label" value="${esc(pa?pa.label:'Part A #'+((p.partAs||[]).length+1))}"></div>
+      <div class="field"><label>E-Form ID</label><input id="m_eform" value="${esc(pa?pa.eformId||'':'')}"></div>
+      <div class="field"><label>檔案編號</label><input id="m_doc" value="${esc(pa?pa.docNo||'':'')}"></div>
+      <div class="field"><label>狀態</label><select id="m_status">${PART_STATUS.map(s=>`<option ${pa&&pa.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="field span2"><label>備註</label><textarea id="m_notes">${esc(pa?pa.notes||'':'')}</textarea></div>
+    </div>`;
+    if(pa) danger=`<button class="btn btn-danger" id="m_del" style="margin-right:auto">刪除 Part A</button>`;
+  }
+
+  if(cfg.kind==='day'){
+    const p=proj();
+    const pa=(p.partAs||[]).find(x=>x.id===cfg.paid);
+    const d=cfg.did?(pa.days||[]).find(x=>x.id===cfg.did):null;
+    title=d?'編輯隔離日':'新增隔離日';
+    body=`<div class="grid">
+      <div class="field"><label>日期 <span class="req">*</span></label><input type="date" id="m_date" value="${esc(d?d.date:today())}"></div>
+      <div class="field"><label>狀態</label><select id="m_status">${DAY_STATUS.map(s=>`<option ${d&&d.status===s?'selected':(!d&&s==='未開始'?'selected':'')}>${s}</option>`).join('')}</select></div>
+      <div class="field span2"><label>標籤</label><input id="m_label" value="${esc(d?d.label||'隔離日':'隔離日')}"></div>
+      <div class="field span2"><label>Part B Submission ID</label><input id="m_pbid" value="${esc(d?d.partBSubmissionId||'':'')}"></div>
+      <div class="field span2"><label>備註</label><textarea id="m_notes">${esc(d?d.notes||'':'')}</textarea></div>
+    </div>`;
+    if(d) danger=`<button class="btn btn-danger" id="m_del" style="margin-right:auto">刪除隔離日</button>`;
+  }
+
+  if(cfg.kind==='url'){
+    const type=cfg.type;
+    const existing=cfg.link||null;
+    title=(existing?'編輯 ':'新增 ')+(LINK_LABELS[type]||type);
+    body=`<div class="grid">
+      <div class="field span2"><label>URL <span class="req">*</span></label><input id="m_url" value="${esc(existing?existing.url||'':'')}" placeholder="https://…" autofocus></div>
+      <div class="field span2"><label>名稱（可選）</label><input id="m_label" value="${esc(existing?existing.label||LINK_LABELS[type]||'':'')}"></div>
+      <div class="field span2"><label>備註</label><textarea id="m_notes">${esc(existing?existing.notes||'':'')}</textarea></div>
+    </div>`;
+    if(existing) danger=`<button class="btn btn-danger" id="m_del" style="margin-right:auto">刪除</button>`;
+  }
+
+  if(cfg.kind==='pdf-upload'){
+    const type=cfg.type||'pdf_b2';
+    title='上傳 '+(LINK_LABELS[type]||'PDF');
+    const setupHint=!UPLOAD_WEBAPP_URL
+      ? `<div class="upload-status warn" style="margin-bottom:12px">上傳服務尚未接上，暫未能上傳。</div>` : '';
+    body=`${setupHint}<div class="grid">
+      <div class="field span2"><label>名稱（可選）</label><input id="m_label" value="" placeholder="可留空，用檔名"></div>
+      <div class="field span2">
+        <label>拖曳或選擇 PDF</label>
+        <div class="dropzone" id="m_dropzone" tabindex="0" role="button">
+          <div class="dz-icon">📄</div>
+          <div class="dz-title">將 PDF 拖曳到這裡</div>
+          <div class="dz-sub">或按下方按鈕選擇檔案</div>
+        </div>
+        <div style="margin-top:10px"><button type="button" class="btn btn-primary btn-sm" id="m_pick">選擇 PDF</button>
+          <input type="file" id="m_file" accept="application/pdf,.pdf" hidden></div>
+        <div class="upload-status ${UPLOAD_WEBAPP_URL?'':'warn'}" id="m_status">${UPLOAD_WEBAPP_URL?'準備就緒':'端點未設定'}</div>
+      </div>
+      <div class="field span2">
+        <details class="adv-toggle" id="m_adv">
+          <summary>▸ 改為貼上已有 Drive 連結</summary>
+          <div class="grid" style="margin-top:8px">
+            <div class="field span2"><label>URL</label><input id="m_url" value="" placeholder="https://drive.google.com/file/d/…/view"></div>
+            <div class="field"><label>Drive File ID</label><input id="m_driveId" value=""></div>
+            <div class="field"><label>備註</label><input id="m_notes" value=""></div>
+          </div>
+        </details>
+      </div>
+    </div>`;
+  }
+
+  const saveLabel = cfg.kind==='pdf-upload' ? '儲存連結' : '儲存';
+  const saveHidden = cfg.kind==='pdf-upload' ? ' style="display:none"' : '';
+  bg.innerHTML=`<div class="modal"><header><h3>${title}</h3></header><div class="body">${body}</div>
+    <div class="foot">${danger}<button class="btn btn-ghost" id="m_cancel">取消</button><button class="btn btn-primary" id="m_save"${saveHidden}>${saveLabel}</button></div></div>`;
+  bg.classList.add('show');
+  $('m_cancel').onclick=closeModal;
+  bg.onclick=e=>{if(e.target===bg) closeModal()};
+  $('m_save').onclick=saveModal;
+  const del=$('m_del'); if(del) del.onclick=deleteModal;
+  if(cfg.kind==='pdf-upload') wirePdfUploadModal(cfg);
+  if(cfg.kind==='url'){ const u=$('m_url'); if(u) setTimeout(()=>u.focus(),50); }
+}
+
+function setUploadStatus(msg, cls){
+  const el=$('m_status'); if(!el) return;
+  el.className='upload-status'+(cls?' '+cls:'');
+  el.textContent=msg;
+}
+function fileToBase64(file){
+  return new Promise((resolve,reject)=>{
+    const r=new FileReader();
+    r.onload=()=>{ const s=String(r.result||''); const i=s.indexOf(','); resolve(i>=0?s.slice(i+1):s); };
+    r.onerror=()=>reject(r.error||new Error('讀取失敗'));
+    r.readAsDataURL(file);
+  });
+}
+async function uploadPdfToDrive(file){
+  if(!UPLOAD_WEBAPP_URL) throw new Error('上傳端點尚未設定');
+  const base64=await fileToBase64(file);
+  const res=await fetch(UPLOAD_WEBAPP_URL,{
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({ secret:UPLOAD_SECRET, filename:file.name, mimeType:file.type||'application/pdf', base64, folderId:DRIVE_FOLDER_ID })
+  });
+  const text=await res.text();
+  let data;
+  try{ data=JSON.parse(text); }catch{ throw new Error('伺服器回應無效'); }
+  if(!res.ok || !data || !data.ok) throw new Error((data&&(data.error||data.message))||('上傳失敗'));
+  const id=data.id||data.fileId||'';
+  const url=data.url||data.webViewLink||(id?('https://drive.google.com/file/d/'+id+'/view'):'');
+  if(!url) throw new Error('回應缺少檔案連結');
+  return {id,url,name:data.name||file.name};
+}
+async function handlePdfFiles(files, cfg){
+  const list=[...files].filter(f=>{
+    const n=(f.name||'').toLowerCase();
+    return f.type==='application/pdf' || n.endsWith('.pdf');
+  });
+  if(!list.length){ setUploadStatus('請選擇 PDF','err'); toast('請選擇 PDF', true); return; }
+  if(!UPLOAD_WEBAPP_URL){ setUploadStatus('上傳端點尚未接上','warn'); toast('上傳端點尚未接上', true); return; }
+  const labelBase=$('m_label')?$('m_label').value.trim():'';
+  let ok=0, fail=0;
+  for(let i=0;i<list.length;i++){
+    const file=list[i];
+    setUploadStatus(`上傳中（${i+1}/${list.length}）：${file.name}`,'busy');
+    try{
+      const result=await uploadPdfToDrive(file);
+      upsertSlotLink(cfg.scope, cfg.type, {
+        label: labelBase || result.name || file.name,
+        url: result.url,
+        driveFileId: result.id,
+        notes:''
+      });
+      ok++;
+    }catch(err){
+      console.warn(err);
+      fail++;
+      setUploadStatus('錯誤：'+(err&&err.message?err.message:String(err)),'err');
+      toast(err&&err.message?err.message:'上傳失敗', true);
+    }
+  }
+  if(ok){
+    save();
+    setUploadStatus(fail?`完成 ${ok} 個，失敗 ${fail} 個`:`完成 — 已上傳`,'ok');
+    toast('PDF 已上傳');
+    render();
+    if(!fail) setTimeout(()=>closeModal(), 600);
+  }
+}
+function wirePdfUploadModal(cfg){
+  const dz=$('m_dropzone'), pick=$('m_pick'), input=$('m_file'), adv=$('m_adv'), saveBtn=$('m_save');
+  if(!dz||!input) return;
+  const openPicker=()=>input.click();
+  pick&&(pick.onclick=e=>{e.preventDefault();e.stopPropagation();openPicker()});
+  dz.onclick=e=>{ if(e.target.closest('button')) return; openPicker(); };
+  dz.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openPicker(); }});
+  ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{ e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover'); }));
+  ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{ e.preventDefault(); e.stopPropagation(); if(ev==='dragleave') dz.classList.remove('dragover'); }));
+  dz.addEventListener('drop',e=>{
+    dz.classList.remove('dragover');
+    const files=e.dataTransfer&&e.dataTransfer.files;
+    if(files&&files.length) handlePdfFiles(files, cfg);
+  });
+  input.onchange=()=>{ if(input.files&&input.files.length) handlePdfFiles(input.files, cfg); input.value=''; };
+  if(adv&&saveBtn){
+    const sync=()=>{ saveBtn.style.display=adv.open?'inline-flex':'none'; };
+    adv.addEventListener('toggle',sync); sync();
+  }
+}
+
+function closeModal(){$('modal').classList.remove('show');modalMode=null}
+
+function saveModal(){
+  const cfg=modalMode; if(!cfg) return;
+  if(cfg.kind==='project'){
+    const name=$('m_name').value.trim(); if(!name){toast('請填項目名稱', true);return}
+    if(cfg.id){
+      const p=db.projects.find(x=>x.id===cfg.id);
+      Object.assign(p,{name,code:$('m_code').value.trim(),jobNo:$('m_job').value.trim(),pm:$('m_pm').value.trim(),createdAt:$('m_created').value,notes:$('m_notes').value.trim()});
+    }else{
+      const p={id:uid('p'),name,code:$('m_code').value.trim(),jobNo:$('m_job').value.trim(),pm:$('m_pm').value.trim(),createdAt:$('m_created').value||today(),notes:$('m_notes').value.trim(),partAs:[]};
+      db.projects.push(p); selectedProjectId=p.id; selectedPartAId=null;
+    }
+    toast('已儲存');
+  }
+  if(cfg.kind==='parta'){
+    const p=proj(); if(!p) return;
+    const label=$('m_label').value.trim(); if(!label){toast('請填名稱', true);return}
+    const data={label,eformId:$('m_eform').value.trim(),docNo:$('m_doc').value.trim(),status:$('m_status').value,notes:$('m_notes').value.trim()};
+    if(cfg.paid){
+      const pa=p.partAs.find(x=>x.id===cfg.paid); Object.assign(pa,data);
+    }else{
+      const pa={id:uid('pa'),...data,links:[],days:[]}; p.partAs.push(pa); selectedPartAId=pa.id;
+    }
+    toast('已儲存 Part A');
+  }
+  if(cfg.kind==='day'){
+    const p=proj(); const pa=p.partAs.find(x=>x.id===cfg.paid); if(!pa) return;
+    const date=$('m_date').value; if(!date){toast('請填日期', true);return}
+    const data={date,label:$('m_label').value.trim()||'隔離日',partBSubmissionId:$('m_pbid').value.trim(),status:$('m_status').value,notes:$('m_notes').value.trim()};
+    if(cfg.did){
+      const d=pa.days.find(x=>x.id===cfg.did); Object.assign(d,data);
+    }else{
+      const d={id:uid('d'),...data,links:[]}; pa.days.push(d);
+    }
+    toast('已儲存隔離日');
+  }
+  if(cfg.kind==='url'){
+    const url=$('m_url').value.trim(); if(!url){toast('請填 URL', true);return}
+    upsertSlotLink(cfg.scope, cfg.type, {
+      label: $('m_label').value.trim()||LINK_LABELS[cfg.type]||'',
+      url,
+      notes: $('m_notes').value.trim(),
+      driveFileId: (cfg.link&&cfg.link.driveFileId)||'',
+      sourceEmailId: (cfg.link&&cfg.link.sourceEmailId)||''
+    });
+    toast('已儲存');
+  }
+  if(cfg.kind==='pdf-upload'){
+    const url=$('m_url')?$('m_url').value.trim():'';
+    if(!url){toast('請先上傳 PDF，或貼上 Drive 連結', true);return}
+    upsertSlotLink(cfg.scope, cfg.type, {
+      label: $('m_label').value.trim()||LINK_LABELS[cfg.type]||'',
+      url,
+      notes: ($('m_notes')&&$('m_notes').value.trim())||'',
+      driveFileId: ($('m_driveId')&&$('m_driveId').value.trim())||''
+    });
+    toast('已儲存');
+  }
+  save(); closeModal(); render();
+}
+
+function deleteModal(){
+  const cfg=modalMode; if(!cfg) return;
+  if(cfg.kind==='project'&&cfg.id){
+    if(!confirm('刪除整個項目及其所有 Part A／隔離日？')) return;
+    db.projects=db.projects.filter(x=>x.id!==cfg.id);
+    if(selectedProjectId===cfg.id){ selectedProjectId=db.projects[0]?db.projects[0].id:null; selectedPartAId=null; }
+  }
+  if(cfg.kind==='parta'&&cfg.paid){
+    if(!confirm('刪除此 Part A 及底下所有隔離日？')) return;
+    const p=proj(); p.partAs=p.partAs.filter(x=>x.id!==cfg.paid);
+    if(selectedPartAId===cfg.paid) selectedPartAId=null;
+  }
+  if(cfg.kind==='day'&&cfg.paid&&cfg.did){
+    if(!confirm('刪除此隔離日？')) return;
+    const pa=proj().partAs.find(x=>x.id===cfg.paid); pa.days=pa.days.filter(x=>x.id!==cfg.did);
+  }
+  if(cfg.kind==='url'&&cfg.scope&&cfg.type){
+    if(!confirm('刪除此連結？')) return;
+    deleteSlotLink(cfg.scope, cfg.type, cfg.lid);
+  }
+  save(); closeModal(); render(); toast('已刪除');
+}
+
+/* events */
+$('projList').addEventListener('click',e=>{
+  const b=e.target.closest('[data-pid]'); if(!b) return;
+  selectedProjectId=b.getAttribute('data-pid');
+  selectedPartAId=null;
+  ensureSelectedPartA();
+  render();
+});
+$('btnNewProject').onclick=()=>openModal({kind:'project'});
+$('btnEditProject').onclick=()=>{if(selectedProjectId) openModal({kind:'project',id:selectedProjectId})};
+$('globalSearch').addEventListener('input',e=>{searchQ=e.target.value;render()});
+
+$('content').addEventListener('click',e=>{
+  const t=e.target.closest('[data-act]'); if(!t) return;
+  const act=t.getAttribute('data-act');
+  if(act==='select-pa'){
+    selectedPartAId=t.getAttribute('data-paid');
+    render(); return;
+  }
+  if(act==='add-pa'){ openModal({kind:'parta'}); return; }
+  if(act==='edit-pa'){ openModal({kind:'parta',paid:t.getAttribute('data-paid')}); return; }
+  if(act==='add-day'){ openModal({kind:'day',paid:t.getAttribute('data-paid')}); return; }
+  if(act==='edit-day'){ openModal({kind:'day',paid:t.getAttribute('data-paid'),did:t.getAttribute('data-did')}); return; }
+  if(act==='paste-slot'||act==='edit-slot'){
+    const scope=t.getAttribute('data-scope');
+    const type=t.getAttribute('data-type');
+    const sc=findScope(scope);
+    const link=act==='edit-slot'?(sc.links||[]).find(x=>x.id===t.getAttribute('data-lid')):findPrimary(sc.links,type);
+    if(type.startsWith('pdf') && act==='edit-slot'){
+      openModal({kind:'pdf-upload', scope, type, link});
+      return;
+    }
+    openModal({kind:'url', scope, type, link, lid:link?link.id:null});
+    return;
+  }
+  if(act==='upload-slot'){
+    openModal({kind:'pdf-upload', scope:t.getAttribute('data-scope'), type:t.getAttribute('data-type')});
+    return;
+  }
+  if(act==='del-slot'){
+    if(!confirm('刪除此項目？')) return;
+    deleteSlotLink(t.getAttribute('data-scope'), t.getAttribute('data-type'), t.getAttribute('data-lid'));
+    save(); render(); toast('已刪除');
+    return;
+  }
+});
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('modal').classList.contains('show')) closeModal()});
+
+load();
+selectedProjectId=db.projects[0]?db.projects[0].id:null;
+ensureSelectedPartA();
+render();
+
+(async function bootSync(){
+  await pullShared(true);
+  try{
+    const cloud=await fetchSharedDb();
+    if(parseUpdatedAt(db.meta&&db.meta.updatedAt) > parseUpdatedAt(cloud.meta&&cloud.meta.updatedAt)){
+      await pushShared(true);
+    }
+  }catch(_){}
+  const POLL_MS=5000;
+  setInterval(()=>{
+    if(document.hidden) return;
+    if($('modal') && $('modal').classList.contains('show')) return;
+    if(_pushBusy||_pullBusy) return;
+    pullShared(true);
+  }, POLL_MS);
+  document.addEventListener('visibilitychange', ()=>{
+    if(!document.hidden) pullShared(true);
+  });
+})();
+})();
+</script>
+
+<script>
+(function(){
+  var nav=document.getElementById('siteNav');
+  var btn=document.getElementById('navToggle');
+  if(!nav||!btn) return;
+  btn.addEventListener('click', function(){
+    var open=nav.classList.toggle('is-open');
+    btn.setAttribute('aria-expanded', open?'true':'false');
+  });
+})();
+</script>
+</body>
+</html>
