@@ -257,6 +257,8 @@ function htmlOut_(html) {
 }
 
 function isAdminAuthorized_(e) {
+  // Admin HTML console: require password session token (or legacy key).
+  // Do NOT auto-admit via Google email — that skipped the login form.
   var token = '';
   var key = '';
   try {
@@ -266,8 +268,6 @@ function isAdminAuthorized_(e) {
   if (token && verifyAdminToken_(token)) return { ok: true, who: 'RSJOP', token: token };
   var expectedKey = adminKey_();
   if (expectedKey && key && key === expectedKey) return { ok: true, who: 'key', token: '' };
-  var email = normalizeEmail_(activeUserEmail_());
-  if (isAdminEmail_(email)) return { ok: true, who: email, token: '' };
   return { ok: false, who: '', token: '' };
 }
 
