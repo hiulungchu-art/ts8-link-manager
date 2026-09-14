@@ -429,6 +429,9 @@ body{
 .stats-chip .num{font-family:var(--font-display);font-size:1.45rem;font-weight:600;color:var(--ink);margin-top:2px}
 .stats-chip.total{background:var(--okb);border-color:transparent}
 .stats-chip.total .num{color:var(--ok)}
+.stats-chip.year{background:rgba(61,143,110,.12);border-color:rgba(61,143,110,.25)}
+.stats-row-label{font-size:.68rem;font-weight:700;color:var(--mute-2);letter-spacing:.1em;text-transform:uppercase;margin:12px 0 8px;width:100%}
+.stats-row-label:first-of-type{margin-top:0}
 
 .tile-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:700px){.tile-grid{grid-template-columns:1fr}}
@@ -1272,9 +1275,10 @@ function isPartBDone(day){
   return !!(findPrimary(day.links,'pdf_b2'));
 }
 
-/** Count completed Part B by isolation-day month (YYYY-MM). Scope: whole project. */
+/** Count completed Part B by month (YYYY-MM) and year (YYYY). Scope: whole project. */
 function partBStatsByMonth(project){
   const map={};
+  const yearMap={};
   let total=0;
   (project.partAs||[]).forEach(pa=>{
     (pa.days||[]).forEach(d=>{
@@ -1282,31 +1286,54 @@ function partBStatsByMonth(project){
       const m=(d.date||'').slice(0,7);
       if(!/^\d{4}-\d{2}$/.test(m)) return;
       map[m]=(map[m]||0)+1;
+      const y=m.slice(0,4);
+      yearMap[y]=(yearMap[y]||0)+1;
       total++;
     });
   });
   const months=Object.keys(map).sort().reverse();
-  return {total, months, map};
+  const years=Object.keys(yearMap).sort().reverse();
+  return {total, months, map, years, yearMap};
 }
 
 function renderPartBStats(project){
-  const {total, months, map}=partBStatsByMonth(project);
+  const {total, months, map, years, yearMap}=partBStatsByMonth(project);
   const now=new Date();
-  const ym=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const yNow=String(now.getFullYear());
+  const ym=yNow+'-'+String(now.getMonth()+1).padStart(2,'0');
   const thisMonth=map[ym]||0;
-  let chips=`<div class="stats-chip total"><div class="lab">累計 Part B</div><div class="num">${total}</div></div>`
-    +`<div class="stats-chip"><div class="lab">本月 ${esc(ym)}</div><div class="num">${thisMonth}</div></div>`;
-  months.forEach(m=>{
-    if(m===ym) return;
-    chips+=`<div class="stats-chip"><div class="lab">${esc(m)}</div><div class="num">${map[m]}</div></div>`;
-  });
-  if(!months.length){
-    chips+=`<div class="stats-chip"><div class="lab">尚無完成</div><div class="num">0</div></div>`;
+  const thisYear=yearMap[yNow]||0;
+
+  let overview=`<div class="stats-row-label">總覽</div><div class="stats-grid">`
+    +`<div class="stats-chip total"><div class="lab">累計 Part B</div><div class="num">${total}</div></div>`
+    +`<div class="stats-chip year"><div class="lab">本年 ${esc(yNow)}</div><div class="num">${thisYear}</div></div>`
+    +`<div class="stats-chip"><div class="lab">本月 ${esc(ym)}</div><div class="num">${thisMonth}</div></div>`
+    +`</div>`;
+
+  let yearRow=`<div class="stats-row-label">按年</div><div class="stats-grid">`;
+  if(!years.length){
+    yearRow+=`<div class="stats-chip"><div class="lab">尚無完成</div><div class="num">0</div></div>`;
+  }else{
+    years.forEach(y=>{
+      yearRow+=`<div class="stats-chip year"><div class="lab">${esc(y)} 年</div><div class="num">${yearMap[y]}</div></div>`;
+    });
   }
+  yearRow+=`</div>`;
+
+  let monthRow=`<div class="stats-row-label">按月</div><div class="stats-grid">`;
+  if(!months.length){
+    monthRow+=`<div class="stats-chip"><div class="lab">尚無完成</div><div class="num">0</div></div>`;
+  }else{
+    months.forEach(m=>{
+      monthRow+=`<div class="stats-chip"><div class="lab">${esc(m)}</div><div class="num">${map[m]}</div></div>`;
+    });
+  }
+  monthRow+=`</div>`;
+
   return `<div class="stats-panel">
     <h3>Part B 統計</h3>
-    <div class="stats-sub">以隔離日日期計月；完成條件：狀態「已完結」或已有完整 PDF（B2 完成後）。</div>
-    <div class="stats-grid">${chips}</div>
+    <div class="stats-sub">以隔離日日期計；完成＝狀態「已完結」或已有完整 PDF。總覽 → 全年 → 各月。</div>
+    ${overview}${yearRow}${monthRow}
   </div>`;
 }
 
