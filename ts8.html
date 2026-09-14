@@ -563,62 +563,83 @@ body{
 .b-idle{background:var(--cream-2);color:var(--mute)}
 
 
-/* —— Internal view tabs + Part B stats (Gemini editorial) —— */
-.view-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-right:auto;border-bottom:1px solid rgba(44,66,54,.1);padding-bottom:0}
+/* —— Part B stats tab: Gemini visual + PolyU states —— */
+:root{
+  --s-page:#F4F3ED;
+  --s-card:#FAF9F6;
+  --s-text:#1A2C22;
+  --s-muted:#5C6B61;
+  --s-line:#DCE0D9;
+  --s-invert:#1A3A2B;
+  --s-line-chart:#2A5A3B;
+  --s-bar:#A0B4A6;
+  --s-ok:#2E6F40;
+  --s-bad:#9E3B33;
+  --s-clay:#C27A62;
+}
+.view-tabs{display:flex;gap:32px;flex-wrap:wrap;margin-right:auto;border-bottom:1px solid var(--s-line);padding-bottom:0}
 .view-tab{
-  border:0;background:transparent;color:var(--mute);
-  border-radius:0;padding:8px 14px 10px;font:inherit;font-size:.84rem;font-weight:600;cursor:pointer;
-  border-bottom:2px solid transparent;margin-bottom:-1px;
+  border:0;background:transparent;color:var(--s-muted);
+  border-radius:0;padding:10px 0 12px;font:inherit;font-size:.88rem;font-weight:600;cursor:pointer;
+  border-bottom:2px solid transparent;margin-bottom:-1px;min-height:44px;
 }
-.view-tab:hover{color:#2C4236}
-.view-tab.active{background:transparent;color:#2C4236;border-bottom-color:#5C8A72}
-.topbar{gap:12px;align-items:center}
-.kpi-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:18px}
-@media(max-width:720px){.kpi-row{grid-template-columns:1fr}}
-.kpi{
-  background:rgba(253,251,247,.92);
-  border:1px solid rgba(44,66,54,.1);
-  border-radius:8px;
-  box-shadow:none;
-  padding:18px 18px 16px;
-}
-.kpi .lab{font-family:var(--font-ui);font-size:.72rem;font-weight:600;color:rgba(44,66,54,.55);letter-spacing:.08em;text-transform:uppercase}
-.kpi .num{font-family:var(--font-display);font-size:2.35rem;font-weight:600;color:#2C4236;margin-top:6px;line-height:1.05;letter-spacing:-.02em}
-.kpi.accent{
-  background:#5C8A72;
-  border-color:#5C8A72;
-}
-.kpi.accent .lab{color:rgba(253,251,247,.78)}
-.kpi.accent .num{color:#FDFBF7}
-.stats-toolbar{
-  display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:16px;
-  background:transparent;border:0;border-radius:0;padding:0 0 4px;
-}
-.stats-toolbar .field{margin:0;min-width:140px}
-.stats-toolbar label{display:block;font-size:.68rem;color:rgba(44,66,54,.55);font-weight:700;margin-bottom:4px;letter-spacing:.06em}
+.view-tab:hover{color:var(--s-text)}
+.view-tab.active{color:var(--s-text);border-bottom-color:var(--s-line-chart)}
+.view-tab:focus-visible{outline:2px solid var(--s-line-chart);outline-offset:3px}
+.topbar{gap:16px;align-items:center}
+.stats-shell{max-width:1180px;margin:0 auto}
+.stats-hero-inline{margin-bottom:24px}
+.stats-hero-inline .eyebrow{font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--s-muted);margin-bottom:8px}
+.stats-hero-inline h2{font-family:var(--font-display);font-size:clamp(1.35rem,2.2vw,1.7rem);color:var(--s-text);margin:0 0 6px;font-weight:600}
+.stats-hero-inline p{font-size:.9rem;color:var(--s-muted);margin:0;line-height:1.5;max-width:40rem}
+.stats-toolbar{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;margin-bottom:20px;padding:0}
+.stats-toolbar .field{margin:0;min-width:160px}
+.stats-toolbar label{display:block;font-size:.68rem;color:var(--s-muted);font-weight:700;margin-bottom:6px;letter-spacing:.08em;text-transform:uppercase}
 .stats-toolbar select{
-  width:100%;padding:8px 2px;border-radius:0;border:0;border-bottom:1px solid rgba(44,66,54,.25);
-  background:transparent;font:inherit;font-size:.92rem;color:#2C4236;outline:none;
+  width:100%;min-height:44px;padding:8px 2px;border:0;border-bottom:1px solid var(--s-line);
+  border-radius:0;background:transparent;font:inherit;font-size:.95rem;color:var(--s-text);outline:none;
 }
-.stats-toolbar select:focus{border-bottom-color:#5C8A72}
-.chart-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:16px}
-@media(max-width:900px){.chart-grid{grid-template-columns:1fr}}
+.stats-toolbar select:focus{border-bottom-color:var(--s-line-chart)}
+.kpi-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:24px}
+@media(max-width:1023px){.kpi-row{grid-template-columns:1fr 1fr}}
+@media(max-width:767px){.kpi-row{grid-template-columns:1fr}}
+.kpi{
+  background:var(--s-card);border:1px solid var(--s-line);border-radius:16px;
+  box-shadow:none;padding:24px;min-height:140px;display:flex;flex-direction:column;justify-content:space-between;
+}
+.kpi .lab{font-size:.72rem;font-weight:700;color:var(--s-muted);letter-spacing:.08em;text-transform:uppercase}
+.kpi .num{font-family:var(--font-display);font-size:clamp(2rem,3vw,2.75rem);font-weight:600;color:var(--s-text);margin-top:10px;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.kpi .delta{margin-top:10px;font-size:.8rem;font-weight:600;color:var(--s-muted);font-variant-numeric:tabular-nums}
+.kpi .delta.up{color:var(--s-ok)}
+.kpi .delta.down{color:var(--s-bad)}
+.kpi.accent{background:var(--s-invert);border-color:var(--s-invert)}
+.kpi.accent .lab{color:rgba(250,249,246,.72)}
+.kpi.accent .num{color:#FAF9F6}
+.kpi.accent .delta{color:rgba(250,249,246,.7)}
+.kpi.accent .delta.up{color:#B7E0C4}
+.kpi.accent .delta.down{color:#F0B4AE}
+.chart-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:20px}
+@media(max-width:1023px){.chart-grid{grid-template-columns:1fr}}
 .chart-card{
-  background:rgba(253,251,247,.95);
-  border:1px solid rgba(44,66,54,.1);
-  border-radius:8px;
-  box-shadow:none;
-  padding:18px 18px 12px;min-height:300px;
+  background:var(--s-card);border:1px solid var(--s-line);border-radius:16px;
+  box-shadow:none;padding:20px 20px 14px;min-height:0;
 }
-.chart-card h2{font-family:var(--font-display);font-size:1.08rem;margin:0 0 4px;color:#2C4236;font-weight:600}
-.chart-card .sub{font-size:.76rem;color:rgba(44,66,54,.5);margin-bottom:12px;letter-spacing:.02em}
-.chart-wrap{position:relative;height:250px}
-.stats-note{margin-top:14px;font-size:.76rem;color:rgba(44,66,54,.5)}
-.stats-empty{padding:48px;text-align:center;color:rgba(44,66,54,.5)}
-.stats-hero-inline{margin-bottom:14px}
-.stats-hero-inline .eyebrow{font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(44,66,54,.45);margin-bottom:6px}
-.stats-hero-inline h2{font-family:var(--font-display);font-size:1.45rem;color:#2C4236;margin:0 0 4px;font-weight:600}
-.stats-hero-inline p{font-size:.86rem;color:rgba(44,66,54,.55);margin:0}
+.chart-card h2{font-family:var(--font-display);font-size:1.08rem;margin:0 0 4px;color:var(--s-text);font-weight:600}
+.chart-card .sub{font-size:.78rem;color:var(--s-muted);margin-bottom:14px}
+.chart-wrap{position:relative;height:300px}
+@media(max-width:1023px){.chart-wrap{height:280px}}
+@media(max-width:767px){.chart-wrap{height:240px}}
+.chart-wrap.bar-h{height:300px}
+@media(max-width:767px){.chart-wrap.bar-h{height:260px}}
+.stats-note{margin-top:16px;font-size:.78rem;color:var(--s-muted)}
+.stats-empty,.chart-empty{
+  padding:36px 20px;text-align:center;color:var(--s-muted);font-size:.9rem;line-height:1.5;
+  border:1px dashed var(--s-line);border-radius:16px;background:rgba(250,249,246,.6)
+}
+.chart-empty{position:absolute;inset:12px;display:flex;align-items:center;justify-content:center;margin:0;border:0;background:transparent}
+@media (prefers-reduced-motion: reduce){
+  .view-tab,.kpi,.chart-card{transition:none !important}
+}
 
 .hint{font-size:.75rem;color:var(--mute)}
 .modal-bg{
@@ -1510,14 +1531,31 @@ function renderStatsView(){
   if(!p){
     $('crumb').textContent='請先選擇項目';
     destroyStatsCharts();
-    $('content').innerHTML=`<div class="stats-empty">請先在左側選擇項目，再查看 Part B 統計。</div>`;
+    $('content').innerHTML=`<div class="stats-shell"><div class="stats-empty">請先在左側選擇項目，再查看 Part B 統計。</div></div>`;
     return;
   }
   $('crumb').innerHTML=`<strong>${esc(p.name)}</strong> · Part B 統計`;
   const st=partBStats(p);
   const now=new Date();
   const yNow=String(now.getFullYear());
-  const ym=yNow+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const mNow=now.getMonth()+1;
+  const ym=yNow+'-'+String(mNow).padStart(2,'0');
+  const prevM = mNow===1 ? ((yNow-1)+'-12') : (yNow+'-'+String(mNow-1).padStart(2,'0'));
+  const thisMonth=st.map[ym]||0;
+  const lastMonth=st.map[prevM]||0;
+  const thisYear=st.yearMap[yNow]||0;
+  const lastYear=st.yearMap[String(Number(yNow)-1)]||0;
+
+  function deltaHtml(cur, prev, invert){
+    if(prev===0 && cur===0) return `<div class="delta">與上期相同 · 0</div>`;
+    if(prev===0) return `<div class="delta up">較上期 +${cur}</div>`;
+    const d=cur-prev;
+    const pct=Math.round((d/prev)*100);
+    const cls=d>0?'up':(d<0?'down':'');
+    const sign=d>0?'+':'';
+    return `<div class="delta ${cls}">較上期 ${sign}${d}（${sign}${pct}%）</div>`;
+  }
+
   let selectedYear=statsYearFilter;
   if(!selectedYear){
     selectedYear=st.years.includes(yNow)?yNow:(st.years[st.years.length-1]||yNow);
@@ -1527,55 +1565,65 @@ function renderStatsView(){
   }
   const yearOpts=(st.years.length?st.years:[yNow]).map(y=>`<option value="${esc(y)}" ${y===selectedYear?'selected':''}>${esc(y)} 年</option>`).join('');
 
+  const metaAt=(db.meta&&db.meta.updatedAt)||'';
+  let metaLine='完成條件：狀態「已完結」或已有完整 PDF。以隔離日日期計。';
+  if(metaAt){
+    try{ metaLine+=' 資料更新至 '+new Date(metaAt).toLocaleString('zh-HK',{timeZone:'Asia/Hong_Kong'}); }catch(_){}
+  }
+
   $('content').innerHTML=`
-    <div class="stats-hero-inline">
-      <div class="eyebrow">TS8 · Analytics</div>
-      <h2>Part B 統計</h2>
-      <p>月趨勢看走勢；右側揀年份對比各月。</p>
-    </div>
-    <div class="stats-toolbar">
-      <div class="field"><label>年份</label><select id="statsYearSelect">${yearOpts}</select></div>
-    </div>
-    <div class="kpi-row">
-      <div class="kpi"><div class="lab">累計 Part B</div><div class="num">${st.total}</div></div>
-      <div class="kpi"><div class="lab">本年 ${esc(yNow)}</div><div class="num">${st.yearMap[yNow]||0}</div></div>
-      <div class="kpi accent"><div class="lab">本月 ${esc(ym)}</div><div class="num">${st.map[ym]||0}</div></div>
-    </div>
-    <div class="chart-grid">
-      <div class="chart-card">
-        <h2>每月趨勢</h2>
-        <div class="sub">折線 · 時間順序</div>
-        <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+    <div class="stats-shell">
+      <div class="stats-hero-inline">
+        <div class="eyebrow">TS8 · Analytics</div>
+        <h2>Part B 統計</h2>
+        <p>一眼睇完成量；月趨勢睇走勢，右側對比選定年份各月。</p>
       </div>
-      <div class="chart-card">
-        <h2>年內各月</h2>
-        <div class="sub" id="monthSub">柱狀 · ${esc(selectedYear)} 年</div>
-        <div class="chart-wrap"><canvas id="monthChart"></canvas></div>
+      <div class="stats-toolbar">
+        <div class="field"><label>年份</label><select id="statsYearSelect" aria-label="選擇年份">${yearOpts}</select></div>
       </div>
-    </div>
-    <p class="stats-note">完成條件：狀態「已完結」或已有完整 PDF。以隔離日日期計。</p>`;
+      <div class="kpi-row">
+        <div class="kpi"><div class="lab">累計 Part B</div><div class="num">${st.total}</div><div class="delta">全部完成次數</div></div>
+        <div class="kpi"><div class="lab">本年 ${esc(yNow)}</div><div class="num">${thisYear}</div>${deltaHtml(thisYear,lastYear)}</div>
+        <div class="kpi accent"><div class="lab">本月 ${esc(ym)}</div><div class="num">${thisMonth}</div>${deltaHtml(thisMonth,lastMonth)}</div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h2>每月趨勢</h2>
+          <div class="sub">折線 · 時間順序</div>
+          <div class="chart-wrap" id="trendWrap"><canvas id="trendChart" aria-label="Part B 每月趨勢圖"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h2>年內各月</h2>
+          <div class="sub" id="monthSub">柱狀 · ${esc(selectedYear)} 年</div>
+          <div class="chart-wrap bar-h" id="monthWrap"><canvas id="monthChart" aria-label="${esc(selectedYear)} 年各月完成次數"></canvas></div>
+        </div>
+      </div>
+      <p class="stats-note">${esc(metaLine)}</p>
+    </div>`;
 
   const ys=$('statsYearSelect');
   if(ys) ys.onchange=()=>{ statsYearFilter=ys.value; render(); };
 
   if(typeof Chart==='undefined'){
-    console.warn('Chart.js missing');
+    $('trendWrap').innerHTML=`<div class="chart-empty">圖表庫載入失敗，請重新整理。</div>`;
+    $('monthWrap').innerHTML=`<div class="chart-empty">圖表庫載入失敗，請重新整理。</div>`;
     return;
   }
-  Chart.defaults.color='#6A736C';
-  Chart.defaults.borderColor='rgba(221,213,200,.7)';
-  Chart.defaults.font.family='"Noto Sans TC","PingFang TC",sans-serif';
-  const accent='rgba(92,138,114,.9)';
-  const soft='rgba(92,138,114,.28)';
-  const clay='rgba(194,122,98,.92)';
 
-  // Monthly trend line across all months that have data (chronological)
+  Chart.defaults.color='#5C6B61';
+  Chart.defaults.borderColor='rgba(220,224,217,.9)';
+  Chart.defaults.font.family='"Noto Sans TC","PingFang TC",sans-serif';
+
+  // trend months
   let trendMonths=st.months.slice();
+  let trendNote='';
   if(!trendMonths.length){
-    // still show empty 12 months of current year for axis
-    for(let i=1;i<=12;i++) trendMonths.push(yNow+'-'+String(i).padStart(2,'0'));
+    destroyStatsCharts();
+    $('trendWrap').innerHTML=`<div class="chart-empty">此期間尚無資料</div>`;
   }else{
-    // fill gaps between first and last month for smoother trend reading
+    if(trendMonths.length===1){
+      trendNote='目前僅有 1 個月份資料';
+    }
     const start=trendMonths[0], end=trendMonths[trendMonths.length-1];
     const filled=[];
     let [sy,sm]=start.split('-').map(Number);
@@ -1585,37 +1633,65 @@ function renderStatsView(){
       sm++; if(sm>12){ sm=1; sy++; }
     }
     trendMonths=filled;
+    const trendLabels=trendMonths.map(m=>m);
+    const trendData=trendMonths.map(m=>st.map[m]||0);
+    destroyStatsCharts();
+    const reduceMotion=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    yearChart=new Chart($('trendChart'),{
+      type:'line',
+      data:{labels:trendLabels, datasets:[{
+        label:'完成次數', data:trendData,
+        borderColor:'#2A5A3B', backgroundColor:'rgba(42,90,59,.12)',
+        fill:true, tension:reduceMotion?0:.28, pointRadius:0, pointHoverRadius:4,
+        pointBackgroundColor:'#2A5A3B', borderWidth:2
+      }]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{mode:'index', intersect:false},
+        plugins:{
+          legend:{display:false},
+          tooltip:{callbacks:{label:c=>' '+c.parsed.y+' 次'}},
+          title: trendNote?{display:true, text:trendNote, color:'#5C6B61', font:{size:12, weight:'500'}, padding:{bottom:8}}:undefined
+        },
+        scales:{
+          y:{beginAtZero:true, ticks:{precision:0}, grid:{color:'rgba(26,44,34,.08)', borderDash:[4,4], drawBorder:false}},
+          x:{grid:{display:false}, ticks:{maxRotation:45, autoSkip:true, maxTicksLimit:12}}
+        }
+      }
+    });
   }
-  const trendLabels=trendMonths.map(m=>{
-    const [y,mo]=m.split('-');
-    return y+'-'+mo;
-  });
-  const trendData=trendMonths.map(m=>st.map[m]||0);
-
-  destroyStatsCharts();
-  yearChart=new Chart($('trendChart'),{
-    type:'line',
-    data:{labels:trendLabels, datasets:[{
-      label:'完成次數', data:trendData, borderColor:accent, backgroundColor:'rgba(92,138,114,.18)',
-      fill:true, tension:.28, pointRadius:3.5, pointBackgroundColor:accent, borderWidth:2.5
-    }]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.parsed.y+' 次'}}},
-      scales:{y:{beginAtZero:true,ticks:{precision:0},grid:{color:'rgba(44,66,54,.08)',borderDash:[4,4],drawBorder:false}},x:{grid:{display:false},ticks:{maxRotation:45,minRotation:0,autoSkip:true,maxTicksLimit:12}}}}
-  });
 
   const monthLabels=[], monthData=[], monthColors=[];
+  let yearHasData=false;
   for(let i=1;i<=12;i++){
     const m=selectedYear+'-'+String(i).padStart(2,'0');
     monthLabels.push(i+'月');
-    monthData.push(st.map[m]||0);
-    monthColors.push(m===ym?clay:soft);
+    const v=st.map[m]||0;
+    if(v) yearHasData=true;
+    monthData.push(v);
+    monthColors.push(m===ym?'#C27A62':'#A0B4A6');
   }
-  monthChart=new Chart($('monthChart'),{
-    type:'bar',
-    data:{labels:monthLabels, datasets:[{label:'完成次數', data:monthData, backgroundColor:monthColors, borderRadius:8, maxBarThickness:36}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.parsed.y+' 次'}}},
-      scales:{y:{beginAtZero:true,ticks:{precision:0},grid:{color:'rgba(44,66,54,.08)',borderDash:[4,4],drawBorder:false}},x:{grid:{display:false}}}}
-  });
+  if(!yearHasData){
+    if(monthChart){ try{monthChart.destroy()}catch(_){} monthChart=null; }
+    $('monthWrap').innerHTML=`<div class="chart-empty">${esc(selectedYear)} 年尚無資料</div>`;
+  }else{
+    if(!$('monthChart')){
+      $('monthWrap').innerHTML=`<canvas id="monthChart" aria-label="${esc(selectedYear)} 年各月完成次數"></canvas>`;
+    }
+    if(monthChart){ try{monthChart.destroy()}catch(_){} monthChart=null; }
+    monthChart=new Chart($('monthChart'),{
+      type:'bar',
+      data:{labels:monthLabels, datasets:[{label:'完成次數', data:monthData, backgroundColor:monthColors, borderRadius:6, maxBarThickness:36}]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>' '+c.parsed.y+' 次'}}},
+        scales:{
+          y:{beginAtZero:true, ticks:{precision:0}, grid:{color:'rgba(26,44,34,.08)', borderDash:[4,4], drawBorder:false}},
+          x:{grid:{display:false}}
+        }
+      }
+    });
+  }
 }
 
 function syncViewTabs(){
