@@ -1,0 +1,1264 @@
+{
+  "sourceFile": "FSI suspension list 20251219.xlsx",
+  "snapshotDate": "2025-12-19",
+  "note": "Read-only snapshot from local download. Online SharePoint Excel is never modified.",
+  "sharePointUrl": "https://polyuit-my.sharepoint.com/:x:/g/personal/fmjeff_polyu_edu_hk/IQCO-aXSlv1_TLQZ3sChGMh6Ac3JMEOmXePBEMX41gVYo5s?e=Eb8oqF",
+  "cases": [
+    {
+      "dept": "CFSO",
+      "location": "VA P/F Hang Seng Bank (V207)",
+      "commence": "2025-12-05",
+      "planned_resume": "2025-12-31",
+      "pm": "Jeff Wu",
+      "ref": "F202557559",
+      "contractor": "Premier Design and Contracting / \nHang Da Fire Engineering",
+      "fsi": [
+        "Sprinkler"
+      ],
+      "spot": {
+        "FE": "P",
+        "detector": "O",
+        "notice": "O",
+        "by": "Ranork",
+        "date": "2025-12-15"
+      },
+      "joint": {
+        "attendees": "",
+        "date": ""
+      },
+      "remarks": "CFSO requested HSB to provide a standalone detector to enhance monitoring and confirm if extension is required on 05/12 and 18/12. Will consider suspending their work if no update on 19/12/2025\nExtension form received on 19/12/2025\nSprinkler system resumed on 22/12/2025\nReceived completion form from Chung on 05/01/2026",
+      "extended": "",
+      "extensions": [
+        {
+          "type": "extension",
+          "planned_resume": "2025-12-31",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Extension form received on 19/12/2025\nSprinkler system resumed on 22/12/2025\nReceived completion form from Chung on 05/01/2026",
+          "extended": ""
+        }
+      ]
+    },
+    {
+      "dept": "CDO",
+      "location": "U502",
+      "commence": "2025-12-02",
+      "planned_resume": "2026-03-25",
+      "pm": "Devon Tsui",
+      "ref": "F202556840",
+      "contractor": "Hon Fung Engg. Ltd. / \nRNB",
+      "fsi": [
+        "Sprinkler"
+      ],
+      "spot": {
+        "FE": "P",
+        "detector": "P",
+        "notice": "O",
+        "by": "Ranork & Billy",
+        "date": "2025-12-12"
+      },
+      "joint": {
+        "attendees": "",
+        "date": ""
+      },
+      "remarks": "Please consider relocating the standalone detector to a ceiling mount position to enhance its coverage\nReminded CDO to submit updated shutdown notice on 15/12/2025\nExtension form received on 15/12/2025\nReminded CDO to submit updated shutdown notice on 29/12/2025\nExtension form received on 30/12/2025\nReminded CDO to submit updated shutdown notice on 12/01/2026\nExtension form received on 12/1/2026\nReminded CDO to submit updated shutdown notice on 26/01/2026\nExtension form received on 28/1/2026\nReminded CDO to submit updated shutdown notice on 9/02/2026\nExtension form received on 10/02/2026\nReminded CDO to submit updated shutdown notice on 23/02/2026\nExtension form received on 24/02/2026\nExtension form received on 10/03/2026\nExtension form received on 09/04/2026\nReceived completion form on 09/04/2026",
+      "extended": "23/03/2026 to 06/04/2026",
+      "extensions": [
+        {
+          "type": "extension",
+          "planned_resume": "2025-12-29",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Reminded CDO to submit updated shutdown notice on 15/12/2025\nExtension form received on 15/12/2025",
+          "extended": "15/12/2025 to 29/12/2025"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-01-12",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "P",
+            "detector": "P",
+            "notice": "P",
+            "by": "Billy Chan",
+            "date": "2026-01-07"
+          },
+          "joint": {
+            "attendees": "Ivan Tsui, Tobi Tsang, Billy Chan",
+            "date": "2026-01-07"
+          },
+          "remarks": "Reminded CDO to submit updated shutdown notice on 29/12/2025\nExtension form received on 30/12/2025",
+          "extended": "30/12/2025 to 12/01/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-01-26",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Reminded CDO to submit updated shutdown notice on 12/01/2026\nExtension form received on 12/1/2026",
+          "extended": "13/01/2026 to 26/01/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-02-09",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Reminded CDO to submit updated shutdown notice on 26/01/2026\nExtension form received on 28/1/2026",
+          "extended": "27/01/2026 to 09/02/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-02-23",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Reminded CDO to submit updated shutdown notice on 9/02/2026\nExtension form received on 10/02/2026",
+          "extended": "10/02/2026 to 23/02/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-03-09",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Reminded CDO to submit updated shutdown notice on 23/02/2026\nExtension form received on 24/02/2026",
+          "extended": "24/02/2026 to 09/03/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-03-23",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Extension form received on 10/03/2026",
+          "extended": "9/03/2026 to 23/03/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-04-06",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Extension form received on 09/04/2026",
+          "extended": "23/03/2026 to 06/04/2026"
+        },
+        {
+          "type": "System Resume Normal",
+          "planned_resume": "2026-03-25",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Received completion form on 09/04/2026",
+          "extended": ""
+        }
+      ]
+    },
+    {
+      "dept": "CDO",
+      "location": "Y511",
+      "commence": "2025-12-02",
+      "planned_resume": "2026-02-14",
+      "pm": "Ar. Yin Yeung",
+      "ref": "F202556774",
+      "contractor": "KAN Construction (HK) Co. Ltd. / \nHang Da Fire Engineering",
+      "fsi": [
+        "Sprinkler"
+      ],
+      "spot": {
+        "FE": "P",
+        "detector": "P",
+        "notice": "P",
+        "by": "Ranork",
+        "date": "2025-12-15"
+      },
+      "joint": {
+        "attendees": "",
+        "date": ""
+      },
+      "remarks": "A set of standalone detector has been installed at the ceiling level. The PM should review if additional detectors are needed to enhance coverage suitable for the site by e-mail on 18/12/2025.\nReminded CDO to submit updated shutdown notice on 15/12/2025\nExtension form received on 15/12/2025\nReminded CDO to submit updated shutdown notice on 29/12/2025\nExtension form received on 29/12/2025\nReminded CDO to submit updated shutdown notice on 12/01/2026\nExtension form received on 12/01/2026\nReminded CDO to submit updated shutdown notice on 26/01/2026\nExtension form received on 29/01/2026\nReminded CDO to submit updated shutdown notice on 09/02/2026\nExtension form received on 10/02/2026\nReminded CDO to submit updated shutdown notice on 23/02/2026\nReceived completion form on 16/02/2026",
+      "extended": "N/A",
+      "extensions": [
+        {
+          "type": "extension",
+          "planned_resume": "2025-12-29",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "P",
+            "detector": "P",
+            "notice": "P",
+            "by": "Ranork & Billy",
+            "date": "2025-12-31"
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Reminded CDO to submit updated shutdown notice on 15/12/2025\nExtension form received on 15/12/2025",
+          "extended": "15/12/2025 to 29/12/2025"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-01-12",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "P",
+            "detector": "P",
+            "notice": "P",
+            "by": "Billy Chan",
+            "date": "2025-12-31"
+          },
+          "joint": {
+            "attendees": "Billy Chan (CSFO)\nYeung Yan Yin (CDO)\nRaiko Kwok (HSO)",
+            "date": "2025-12-31"
+          },
+          "remarks": "Reminded CDO to submit updated shutdown notice on 29/12/2025\nExtension form received on 29/12/2025",
+          "extended": "30/12/2025 to 12/01/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-01-26",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Reminded CDO to submit updated shutdown notice on 12/01/2026\nExtension form received on 12/01/2026",
+          "extended": "13/01/2026 to 26/01/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-02-09",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Reminded CDO to submit updated shutdown notice on 26/01/2026\nExtension form received on 29/01/2026",
+          "extended": "27/01/2026 to 09/02/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-02-23",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Reminded CDO to submit updated shutdown notice on 09/02/2026\nExtension form received on 10/02/2026",
+          "extended": "10/02/2026 to 23/02/2026"
+        },
+        {
+          "type": "System Resume Normal",
+          "planned_resume": "2026-02-14",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Reminded CDO to submit updated shutdown notice on 23/02/2026\nReceived completion form on 16/02/2026",
+          "extended": "N/A"
+        }
+      ]
+    },
+    {
+      "dept": "CDO",
+      "location": "W201 to W203",
+      "commence": "2025-12-09",
+      "planned_resume": "2026-05-27",
+      "pm": "Calvin",
+      "ref": "F202558603",
+      "contractor": "NA / \nHang Da Fire Engineering",
+      "fsi": [
+        "Sprinkler"
+      ],
+      "spot": {
+        "FE": "P",
+        "detector": "O",
+        "notice": "P",
+        "by": "Ranork",
+        "date": "2025-12-15"
+      },
+      "joint": {
+        "attendees": "",
+        "date": ""
+      },
+      "remarks": "No standalone detector has been provided. CDO suggested a further review on 18/12/2025\nReminded CDO to submit updated shutdown notice on 05/01/2026\nExtension form received on 07/01/2026\nReminded CDO to submit updated shutdown notice on 16/01/2026\nExtension form received on 23/01/2026\nshutdown notice expire and sent reminder on 16/01/2026 & 23/01/2026.  Extension received on 23/01/2026\nExtension form received on 04/02/2026\nReminded CDO to submit updated shutdown notice on 16/02/2026\nExtension form received on 16/02/2026\nExtension form received on 02/03/2026\n'Reminded CDO to submit updated shutdown notice on 18/03/2026\n'Extension form received on 19/03/2026\nExtension form received on 31/03/2026\nExtension form received on 15/04/2026\nExtension form received on 04/05/2026\nExtension form received on 14/05/2026\nReceived completion form on 04/06/2026",
+      "extended": "N/A",
+      "extensions": [
+        {
+          "type": "extension",
+          "planned_resume": "2026-01-05",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Reminded CDO to submit updated shutdown notice on 05/01/2026\nExtension form received on 07/01/2026",
+          "extended": "06/01/2026 to 20/01/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-01-20",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Reminded CDO to submit updated shutdown notice on 16/01/2026\nExtension form received on 23/01/2026",
+          "extended": "21/01/2026 to 03/02/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-02-03",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "P",
+            "detector": "P",
+            "notice": "P",
+            "by": "Ranork, Simon, Muse",
+            "date": "2026-01-23"
+          },
+          "joint": {
+            "attendees": "Ranork, John, Sunny, Muse, Simon, Toco",
+            "date": "2026-01-23"
+          },
+          "remarks": "shutdown notice expire and sent reminder on 16/01/2026 & 23/01/2026.  Extension received on 23/01/2026",
+          "extended": "N/A"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-02-17",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Extension form received on 04/02/2026",
+          "extended": "04/02/2026 to 17/02/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-03-03",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Reminded CDO to submit updated shutdown notice on 16/02/2026\nExtension form received on 16/02/2026",
+          "extended": "18/02/2026 to 03/03/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-03-17",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Extension form received on 02/03/2026",
+          "extended": "04/03/2026 to 17/03/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-03-31",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "'Reminded CDO to submit updated shutdown notice on 18/03/2026\n'Extension form received on 19/03/2026",
+          "extended": "17/03/2026 to 31/03/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-04-14",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Extension form received on 31/03/2026",
+          "extended": "31/03/2026 to 14/04/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-04-28",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Extension form received on 15/04/2026",
+          "extended": "15/04/2026 to 28/04/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-05-12",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Extension form received on 04/05/2026",
+          "extended": "28/04/2026 to 12/05/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-05-26",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Extension form received on 14/05/2026",
+          "extended": "12/05/2026 to 26/05/2026"
+        },
+        {
+          "type": "System Resume Normal",
+          "planned_resume": "2026-05-27",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Received completion form on 04/06/2026",
+          "extended": "N/A"
+        }
+      ]
+    },
+    {
+      "dept": "CDO",
+      "location": "YY503",
+      "commence": "2025-01-06",
+      "planned_resume": "2026-02-14",
+      "pm": "Ar. Yin Yeung",
+      "ref": "F202612",
+      "contractor": "KAN Construction (HK) Co. Ltd. / \nHang Da Fire Engineering",
+      "fsi": [
+        "Sprinkler"
+      ],
+      "spot": {
+        "FE": "O",
+        "detector": "O",
+        "notice": "P",
+        "by": "Billy, Simon, Muse, Ranork",
+        "date": "2026-01-07"
+      },
+      "joint": {
+        "attendees": "Yin Yeung, Tobi Tsang, Billy, Simon, Muse, Ranork",
+        "date": "2026-01-07"
+      },
+      "remarks": "Suspension notice received on 02/01/2026\nReminded CDO to submit updated shutdown notice on 03/02/2026\nExtension form received on 6/02/2026\nN/A\nReminded CDO to submit updated shutdown notice on 16/02/2026\nReceived completion form on 16/02/2026",
+      "extended": "N/A",
+      "extensions": [
+        {
+          "type": "extension",
+          "planned_resume": "2026-02-03",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Reminded CDO to submit updated shutdown notice on 03/02/2026\nExtension form received on 6/02/2026",
+          "extended": "04/02/2026 to 17/02/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-02-17",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "N/A",
+          "extended": "N/A"
+        },
+        {
+          "type": "System Resume Normal",
+          "planned_resume": "2026-02-14",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Reminded CDO to submit updated shutdown notice on 16/02/2026\nReceived completion form on 16/02/2026",
+          "extended": "N/A"
+        }
+      ]
+    },
+    {
+      "dept": "CDO",
+      "location": "TU 4/F",
+      "commence": "2026-01-30",
+      "planned_resume": "2026-03-20",
+      "pm": "Ar. Yin Yeung",
+      "ref": "F2026541",
+      "contractor": "Hanison Constrictopm Cp, Ltd / \nPyrofoe Engingineer Ltd",
+      "fsi": [
+        "Sprinkler"
+      ],
+      "spot": {
+        "FE": "P",
+        "detector": "P",
+        "notice": "P",
+        "by": "Ranork",
+        "date": "2026-01-30"
+      },
+      "joint": {
+        "attendees": "Yin, Tobi, Ranork, Simon",
+        "date": "2026-01-29"
+      },
+      "remarks": "TS8 form and suspension notice received on 29/01/2026, photos record and emergency plan received from the contractor.\nReminded CDO to submit updated shutdown notice on 12/02/2026\nExtension form received on 13/02/2026\nReminded CDO to submit updated shutdown notice on 26/02/2026\nExtension form received on 26/02/2026\nReminded CDO to submit updated shutdown notice on 13/03/2026\nReceived completion form on 20/03/2026",
+      "extended": "N/A",
+      "extensions": [
+        {
+          "type": "extension",
+          "planned_resume": "2026-02-26",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Reminded CDO to submit updated shutdown notice on 12/02/2026\nExtension form received on 13/02/2026",
+          "extended": "13/02/2026 to 26/02/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-03-12",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Reminded CDO to submit updated shutdown notice on 26/02/2026\nExtension form received on 26/02/2026",
+          "extended": "27/02/2026 to 12/03/2026"
+        },
+        {
+          "type": "System Resume Normal",
+          "planned_resume": "2026-03-20",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Reminded CDO to submit updated shutdown notice on 13/03/2026\nReceived completion form on 20/03/2026",
+          "extended": "N/A"
+        }
+      ]
+    },
+    {
+      "dept": "CDO",
+      "location": "TU 4/F",
+      "commence": "2026-04-02",
+      "planned_resume": "2026-07-07",
+      "pm": "Yin Yeung",
+      "ref": "F202616566",
+      "contractor": "Kan Construction (HK) Co Ltd / \nHang Da Fire Engineering",
+      "fsi": [
+        "Sprinkler"
+      ],
+      "spot": {
+        "FE": "P",
+        "detector": "O",
+        "notice": "P",
+        "by": "Ranork, Muse, Simon",
+        "date": "2026-04-01"
+      },
+      "joint": {
+        "attendees": "Tobi, Ranork, Sharon",
+        "date": "2026-04-01"
+      },
+      "remarks": "Suspension notice received on 19/03/2026\nExtension form received on 15/04/2026\nExtension form received on 29/04/2026\nExtension form received on 14/05/2026\nExtension form received on 01/06/2026\nReceived completion form on 10/06/2026\nSuspension notice received on 23/06/2026\nReceived completion form on 07/07/2026",
+      "extended": "N/A",
+      "extensions": [
+        {
+          "type": "extension",
+          "planned_resume": "2026-04-29",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Extension form received on 15/04/2026",
+          "extended": "16/04/2026 to 29/04/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-05-13",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Extension form received on 29/04/2026",
+          "extended": "30/04/2026 to 13/05/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-05-27",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Extension form received on 14/05/2026",
+          "extended": "14/05/2026 to 27/05/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-06-10",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Extension form received on 01/06/2026",
+          "extended": "27/05/2026 to 10/06/2026"
+        },
+        {
+          "type": "System Resume Normal",
+          "planned_resume": "2026-06-10",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Received completion form on 10/06/2026",
+          "extended": "N/A"
+        },
+        {
+          "type": "2026-06-24",
+          "planned_resume": "2026-07-07",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "P",
+            "detector": "P",
+            "notice": "P",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "Tobi, Ranork, Yin",
+            "date": "2026-06-26"
+          },
+          "remarks": "Suspension notice received on 23/06/2026",
+          "extended": "24/06/2026 to 07/07/2026"
+        },
+        {
+          "type": "System Resume Normal",
+          "planned_resume": "2026-07-07",
+          "fsi": [],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Received completion form on 07/07/2026",
+          "extended": "N/A"
+        }
+      ]
+    },
+    {
+      "dept": "CDO",
+      "location": "Block V 3/F",
+      "commence": "2026-05-11",
+      "planned_resume": "2026-06-18",
+      "pm": "Rachel Tang",
+      "ref": "F202622283 & F202622765",
+      "contractor": "Kan Construction (HK) Co Ltd / \nHang Da Fire Engineering",
+      "fsi": [
+        "AFA",
+        "Sprinkler",
+        "Others"
+      ],
+      "spot": {
+        "FE": "O",
+        "detector": "O",
+        "notice": "O",
+        "by": "Ranork, Simon",
+        "date": "2026-05-07"
+      },
+      "joint": {
+        "attendees": "Tobi, Ranork, Rachel",
+        "date": "2026-05-07"
+      },
+      "remarks": "Suspension notice received on 05/05/2026\nSuspension notice received on 26/05/2026\n'Suspension notice received on 09/06/2026\nReceived completion form on 22/06/2026",
+      "extended": "N/A",
+      "extensions": [
+        {
+          "type": "extension",
+          "planned_resume": "2026-06-06",
+          "fsi": [
+            "AFA",
+            "Sprinkler",
+            "Others"
+          ],
+          "spot": {
+            "FE": "P",
+            "detector": "P",
+            "notice": "P",
+            "by": "Ranork",
+            "date": "2026-05-12"
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Suspension notice received on 26/05/2026",
+          "extended": "25/05/2026 to 06/06/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-06-19",
+          "fsi": [
+            "AFA",
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "'Suspension notice received on 09/06/2026",
+          "extended": "07/06/2026 to 19/06/2026"
+        },
+        {
+          "type": "System Resume Normal",
+          "planned_resume": "2026-06-18",
+          "fsi": [
+            "AFA",
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Received completion form on 22/06/2026",
+          "extended": "N/A"
+        }
+      ]
+    },
+    {
+      "dept": "CDO",
+      "location": "PQ 3/F",
+      "commence": "2026-05-11",
+      "planned_resume": "2026-06-30",
+      "pm": "Rachel Tang",
+      "ref": "F202622764",
+      "contractor": "Kan Construction (HK) Co Ltd / \nHang Da Fire Engineering",
+      "fsi": [
+        "AFA",
+        "Sprinkler"
+      ],
+      "spot": {
+        "FE": "O",
+        "detector": "O",
+        "notice": "O",
+        "by": "Ranork, Simon",
+        "date": "2026-05-07"
+      },
+      "joint": {
+        "attendees": "Tobi, Ranork, Rachel",
+        "date": "2026-05-07"
+      },
+      "remarks": "Suspension notice received on 05/05/2026\nSuspension notice received on 26/05/2026\nReceived completion form on 09/06/2026\nSuspension notice received on 22/06/2026\nReceived completion form on 07/07/2026",
+      "extended": "N/A",
+      "extensions": [
+        {
+          "type": "extension",
+          "planned_resume": "2026-06-06",
+          "fsi": [
+            "AFA",
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "P",
+            "detector": "P",
+            "notice": "P",
+            "by": "Ranork",
+            "date": "2026-05-12"
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Suspension notice received on 26/05/2026",
+          "extended": "25/05/2026 to 06/06/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-06-19",
+          "fsi": [
+            "AFA",
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Received completion form on 09/06/2026",
+          "extended": "07/06/2026 to 19/06/2026"
+        },
+        {
+          "type": "extension",
+          "planned_resume": "2026-07-02",
+          "fsi": [
+            "AFA",
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Suspension notice received on 22/06/2026",
+          "extended": "20/06/2026 to 02/07/2026"
+        },
+        {
+          "type": "System Resume Normal",
+          "planned_resume": "2026-06-30",
+          "fsi": [],
+          "spot": {
+            "FE": "",
+            "detector": "",
+            "notice": "",
+            "by": "",
+            "date": ""
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Received completion form on 07/07/2026",
+          "extended": "N/A"
+        }
+      ]
+    },
+    {
+      "dept": "CDO",
+      "location": "Y409, Y410",
+      "commence": "2026-08-26",
+      "planned_resume": "2026-09-22",
+      "pm": "Devon",
+      "ref": "F202645224",
+      "contractor": "Shun Yip Construction Co Ltd. / \nHang Da Fire Engineering",
+      "fsi": [
+        "Sprinkler"
+      ],
+      "spot": {
+        "FE": "P",
+        "detector": "O",
+        "notice": "O",
+        "by": "Ranork, Simon",
+        "date": "2026-08-24"
+      },
+      "joint": {
+        "attendees": "Tobi, Ranork, Christine",
+        "date": "2026-08-24"
+      },
+      "remarks": "Suspension notice received on 25/08/2026\nExtension form received on 8/09/2026",
+      "extended": "08/09/2026 to 22/09/2026",
+      "extensions": [
+        {
+          "type": "extension",
+          "planned_resume": "2026-09-22",
+          "fsi": [
+            "Sprinkler"
+          ],
+          "spot": {
+            "FE": "P",
+            "detector": "",
+            "notice": "P",
+            "by": "Ranork",
+            "date": "2026-08-26"
+          },
+          "joint": {
+            "attendees": "",
+            "date": ""
+          },
+          "remarks": "Extension form received on 8/09/2026",
+          "extended": "08/09/2026 to 22/09/2026"
+        }
+      ]
+    }
+  ]
+}
