@@ -5,42 +5,107 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache">
 <title>FSI 暫停管理 · 工作頁面集</title>
-<link rel="stylesheet" href="./css/site.css?v=20260914fsi5">
+<link rel="stylesheet" href="./css/site.css?v=20260914fsi6">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="./config.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&display=swap');
 :root{
-  --ink:#0F1612;--cream:#F3EEE4;--cream-2:#EAE3D6;--paper:#FAF7F1;--line:#DDD5C8;--line-soft:#E8E1D4;
-  --text:#1E2622;--mute:#6A736C;--accent:#5C8A72;--accent-d:#3F6B56;--ok:#2F7A55;--okb:#E6F4EC;
-  --warn:#9A6B2F;--warnb:#F8F0E4;--info:#3A6E8C;--infob:#E8F1F6;--danger:#A33B3B;--dangerb:#FBEAEA;
+  --ink:#0F1612;--ink-2:#16201A;--cream:#F3EEE4;--cream-2:#EAE3D6;--paper:#FAF7F1;--line:#DDD5C8;--line-soft:#E8E1D4;
+  --text:#1E2622;--mute:#6A736C;--accent:#5C8A72;--accent-d:#3F6B56;--accent-glow:rgba(92,138,114,.22);
+  --ok:#2F7A55;--okb:#E6F4EC;--warn:#9A6B2F;--warnb:#F8F0E4;--info:#3A6E8C;--infob:#E8F1F6;--danger:#A33B3B;--dangerb:#FBEAEA;
   --font-display:"Noto Serif TC",serif;--font-body:"Noto Sans TC","PingFang TC",sans-serif;--font-ui:"Instrument Sans","Noto Sans TC",sans-serif;
-  --radius:18px;--shadow:0 1px 2px rgba(15,22,18,.04),0 10px 28px rgba(15,22,18,.06);
+  --radius:18px;--shadow:0 1px 2px rgba(15,22,18,.04),0 10px 28px rgba(15,22,18,.06);--side:280px;--nav-h:64px;
 }
 *{box-sizing:border-box}
-body.has-site-chrome .app{min-height:calc(100vh - 64px)}
-.app{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 64px)}
-@media(max-width:900px){.app{grid-template-columns:1fr}}
-.sidebar{background:rgba(15,22,18,.92);color:#E8EDE9;padding:22px 18px;border-right:1px solid rgba(255,255,255,.06)}
-@media(max-width:900px){.sidebar{border-right:0;border-bottom:1px solid rgba(255,255,255,.06)}}
-.side-eyebrow{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(232,237,233,.55);font-weight:700;margin-bottom:8px}
-.sidebar h1{font-family:var(--font-display);font-size:1.35rem;margin:0 0 6px;font-weight:600}
-.sidebar .side-desc{font-size:.82rem;color:rgba(232,237,233,.65);line-height:1.45;margin-bottom:18px}
-.side-kpi{display:grid;gap:8px;margin-bottom:18px}
-.side-kpi .k{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 12px}
-.side-kpi .lab{font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(232,237,233,.5);font-weight:700}
-.side-kpi .num{font-family:var(--font-display);font-size:1.45rem;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums}
-.side-kpi .sub{font-size:.72rem;color:rgba(232,237,233,.55);margin-top:2px}
-.side-kpi .k.alert .num{color:#F0C9A0}
-.main{display:flex;flex-direction:column;min-width:0;background:transparent}
-.topbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line-soft);background:rgba(250,247,241,.72);backdrop-filter:blur(10px)}
-.view-tabs{display:flex;gap:28px;flex-wrap:wrap;margin-right:auto;border-bottom:1px solid transparent;padding-bottom:0}
+body.has-site-chrome .app{min-height:calc(100vh - var(--nav-h))}
+.app{display:grid;grid-template-columns:var(--side) 1fr;min-height:calc(100vh - var(--nav-h));flex:1}
+@media(max-width:900px){
+  .app{grid-template-columns:1fr}
+  .sidebar{position:sticky;top:0;z-index:5;max-height:44vh;overflow:auto;border-right:none;border-bottom:1px solid rgba(255,255,255,.06)}
+}
+.sidebar{
+  background:linear-gradient(165deg, rgba(92,138,114,.18) 0%, transparent 42%),linear-gradient(180deg, var(--ink) 0%, var(--ink-2) 100%);
+  color:#E4EBE6;display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.05);box-shadow:8px 0 32px rgba(15,22,18,.12);
+}
+.side-head{padding:28px 22px 18px;border-bottom:1px solid rgba(255,255,255,.07);position:relative}
+.side-head::after{content:"";position:absolute;left:22px;right:22px;bottom:0;height:2px;background:linear-gradient(90deg, var(--accent), rgba(196,138,90,.7), transparent);border-radius:2px}
+.side-eyebrow{font-family:var(--font-ui);font-size:.62rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(196,210,200,.55);margin-bottom:10px}
+.side-head h1{font-family:var(--font-display);font-size:1.28rem;color:#F7FBF8;font-weight:600;margin:0;line-height:1.35}
+.side-head p{font-size:.74rem;color:rgba(228,235,230,.5);margin:10px 0 0;line-height:1.55;font-weight:300}
+.side-tools{padding:14px 14px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid rgba(255,255,255,.06)}
+.side-tools input{width:100%;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:11px 14px;font:inherit;font-size:.84rem;background:rgba(255,255,255,.05);color:#F2F7F4}
+.side-tools input::placeholder{color:rgba(255,255,255,.35)}
+.side-tools input:focus{outline:none;border-color:rgba(92,138,114,.7);background:rgba(255,255,255,.08);box-shadow:0 0 0 3px var(--accent-glow)}
+.side-tools .btn-primary{width:100%;justify-content:center;border-radius:12px;padding:11px 14px}
+.job-list{flex:1;overflow:auto;padding:10px 8px 20px}
+.job-item{width:100%;text-align:left;border:none;border-left:3px solid transparent;background:transparent;border-radius:0 14px 14px 0;padding:12px 12px;cursor:pointer;font:inherit;margin-bottom:3px;color:rgba(228,235,230,.7);transition:background .15s,border-color .15s,color .15s}
+.job-item:hover{background:rgba(255,255,255,.05);color:#fff}
+.job-item.active{background:rgba(92,138,114,.2);border-left-color:var(--accent);color:#fff}
+.job-item.needs-pm{border-left-color:var(--warn)}
+.job-item.active.needs-pm{border-left-color:#F0C9A0}
+.job-item .name{font-family:var(--font-display);font-weight:500;font-size:.9rem;display:block;line-height:1.4}
+.job-item .meta{font-family:var(--font-ui);font-size:.68rem;color:rgba(228,235,230,.38);margin-top:6px;letter-spacing:.03em;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.job-item.active .meta{color:rgba(228,235,230,.58)}
+.job-chip{display:inline-block;font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:999px;background:rgba(255,255,255,.08);color:rgba(228,235,230,.7)}
+.job-chip.warn{background:rgba(154,107,47,.35);color:#F0C9A0}
+.job-chip.ok{background:rgba(47,122,85,.35);color:#B8E0C8}
+.job-chip.idle{background:rgba(92,138,114,.25);color:#C8DCCF}
+.job-list .hint{color:rgba(228,235,230,.4)!important;padding:12px;font-size:.82rem}
+.side-mini{padding:10px 16px 16px;font-size:.68rem;color:rgba(228,235,230,.4);border-top:1px solid rgba(255,255,255,.06)}
+
+.main{display:flex;flex-direction:column;min-width:0;min-height:calc(100vh - var(--nav-h));background:transparent}
+.topbar{background:rgba(250,247,241,.55);backdrop-filter:blur(12px);border-bottom:1px solid rgba(221,213,200,.65);padding:14px 24px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.view-tabs{display:flex;gap:24px;flex-wrap:wrap;margin-right:auto}
 .view-tab{appearance:none;background:none;border:0;border-bottom:2px solid transparent;padding:6px 2px 10px;font:inherit;font-family:var(--font-ui);font-size:.9rem;font-weight:600;color:var(--mute);cursor:pointer}
 .view-tab:hover{color:var(--ink)}
 .view-tab.active{color:var(--ink);border-bottom-color:var(--accent-d)}
-.crumb{font-size:.9rem;color:var(--mute);min-width:120px}
+.crumb{font-size:.88rem;color:var(--mute);min-width:120px}
 .crumb strong{color:var(--ink)}
-.content{padding:18px 20px 40px;flex:1}
+.content{padding:18px 24px 40px;flex:1}
+.empty{padding:48px 24px;text-align:center;color:var(--mute)}
+.empty .hint-lg{font-family:var(--font-display);font-size:1.15rem;color:var(--ink);margin-bottom:10px;line-height:1.5}
+.header-card{background:var(--paper);border:1px solid var(--line-soft);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);margin-bottom:14px;position:relative;overflow:hidden}
+.header-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent)}
+.header-card.needs-pm::before{background:var(--warn)}
+.header-card.is-resumed::before{background:var(--ok)}
+.header-card .row{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;position:relative}
+.header-eyebrow{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:700;margin-bottom:6px}
+.header-card h2{font-family:var(--font-display);font-size:1.35rem;margin:0 0 8px;color:var(--ink);font-weight:600}
+.header-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.header-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:.72rem;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--cream-2);color:var(--mute)}
+.chip code{font-size:.72rem;background:transparent;padding:0}
+.badge{display:inline-block;font-size:.68rem;font-weight:700;padding:3px 9px;border-radius:999px}
+.badge.b-active{background:var(--infob);color:var(--info)}
+.badge.b-warn{background:var(--warnb);color:var(--warn)}
+.badge.b-ok{background:var(--okb);color:var(--ok)}
+.section{background:var(--paper);border:1px solid var(--line-soft);border-radius:16px;margin-bottom:12px;box-shadow:var(--shadow);overflow:hidden}
+.section-head{display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer;user-select:none}
+.section-title{font-family:var(--font-display);font-size:1rem;margin:0;color:var(--ink);flex:1}
+.section-body{padding:0 16px 16px;border-top:1px solid var(--line-soft)}
+.section-collapsible:not(.is-open) .section-body{display:none}
+.section-collapsible .sec-chevron{color:var(--mute);transition:transform .15s;display:inline-block;width:1em}
+.section-collapsible.is-open .sec-chevron{transform:rotate(90deg);color:var(--accent)}
+.sec-hint{font-size:.72rem;font-weight:600;color:var(--info);background:var(--infob);padding:2px 8px;border-radius:999px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-top:12px}
+@media(max-width:720px){.detail-grid{grid-template-columns:1fr}}
+.detail-grid dt{font-size:.65rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:700}
+.detail-grid dd{margin:2px 0 0;font-size:.88rem;line-height:1.45;white-space:pre-wrap}
+.ext-item{font-size:.8rem;color:var(--mute);padding:8px 10px;border-radius:10px;background:var(--cream-2);margin-bottom:6px}
+.ext-item strong{color:var(--ink)}
+.history-body{font-size:.8rem;line-height:1.5;color:var(--text);white-space:pre-wrap;padding-top:10px}
+.po-badge{display:inline-block;min-width:1.4em;text-align:center;font-weight:700;font-size:.75rem;padding:1px 6px;border-radius:6px;background:var(--cream-2);color:var(--mute)}
+.po-badge.p{background:var(--okb);color:var(--ok)}
+.po-badge.o{background:var(--warnb);color:var(--warn)}
+.remark-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.remark-row{display:grid;grid-template-columns:110px 1fr auto;gap:8px;align-items:start;background:var(--cream-2);border:1px solid var(--line-soft);border-radius:12px;padding:8px}
+@media(max-width:560px){.remark-row{grid-template-columns:1fr auto}}
+.remark-row input[type="date"],.remark-row input[type="text"],.remark-row textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;font-size:.85rem;background:#fff}
+.remark-row textarea{min-height:40px;resize:vertical}
+.remark-row .btn-icon{border:0;background:transparent;color:var(--mute);cursor:pointer;padding:6px 8px;border-radius:8px;font-size:1rem;line-height:1}
+.remark-row .btn-icon:hover{background:var(--dangerb);color:var(--danger)}
+.remark-add{margin-top:10px}
 .alert-banner{background:var(--warnb);border:1px solid #E6D2B0;border-left:4px solid var(--warn);border-radius:14px;padding:14px 16px;margin-bottom:16px}
 .alert-banner h3{margin:0 0 6px;font-family:var(--font-display);font-size:1rem;color:var(--warn)}
 .alert-banner p{margin:0 0 10px;font-size:.85rem;color:var(--text);line-height:1.45}
@@ -64,12 +129,8 @@ body.has-site-chrome .app{min-height:calc(100vh - 64px)}
 .chart-card h3{font-family:var(--font-display);font-size:1rem;margin:0 0 4px;color:var(--ink)}
 .chart-card .sub{font-size:.75rem;color:var(--mute);margin-bottom:8px}
 .chart-wrap{height:220px;position:relative}
-.day-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:14px;padding:14px 16px;background:var(--cream-2);border:1px solid var(--line-soft);border-radius:14px}
-.day-toolbar .field{margin:0;min-width:120px;flex:1}
-.day-toolbar .field label{display:block;font-size:.68rem;color:var(--mute);margin-bottom:4px;font-weight:600}
-.day-toolbar input,.day-toolbar select{width:100%;padding:8px 10px;border:1px solid var(--line-soft);border-radius:10px;background:var(--paper);font:inherit;font-size:.85rem;color:var(--ink)}
-.day-toolbar-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.btn{border:0;border-radius:10px;padding:8px 12px;font:inherit;font-size:.82rem;font-weight:600;cursor:pointer;font-family:var(--font-ui)}
+.stats-shell{max-width:1100px}
+.btn{border:0;border-radius:10px;padding:8px 12px;font:inherit;font-size:.82rem;font-weight:600;cursor:pointer;font-family:var(--font-ui);display:inline-flex;align-items:center;gap:4px}
 .btn-sm{padding:6px 10px;font-size:.78rem}
 .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
 .btn-ghost:hover{background:rgba(92,138,114,.1)}
@@ -78,35 +139,6 @@ body.has-site-chrome .app{min-height:calc(100vh - 64px)}
 .btn-warn{background:var(--warn);color:#fff}
 .btn-danger{background:var(--danger);color:#fff}
 .btn-ok{background:var(--ok);color:#fff}
-.day-count{font-size:.78rem;color:var(--mute);margin:0 0 12px}
-.day-card{background:var(--paper);border:1px solid var(--line-soft);border-radius:var(--radius);padding:0;box-shadow:var(--shadow);margin-bottom:12px;border-left:3px solid var(--accent);overflow:hidden}
-.day-card.needs-pm{border-left-color:var(--warn);box-shadow:0 0 0 1px #E6D2B0,var(--shadow)}
-.day-card.is-resumed{border-left-color:var(--ok);opacity:.92}
-.day-card .day-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:14px 18px;cursor:pointer;user-select:none}
-.day-card.is-open .day-head{border-bottom:1px solid var(--line-soft)}
-.day-chevron{width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;color:var(--mute);transition:transform .18s}
-.day-card.is-open .day-chevron{transform:rotate(90deg);color:var(--accent)}
-.day-date{font-family:var(--font-display);font-weight:600;font-size:1.05rem;color:var(--ink);flex:1;min-width:140px}
-.day-sub{font-size:.78rem;color:var(--mute)}
-.day-dots{display:flex;gap:6px;flex-wrap:wrap}
-.day-dot{font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--cream-2);color:var(--mute)}
-.day-dot.on{background:var(--okb);color:var(--ok)}
-.day-dot.warn{background:var(--warnb);color:var(--warn)}
-.day-dot.info{background:var(--infob);color:var(--info)}
-.day-dot.danger{background:var(--dangerb);color:var(--danger)}
-.day-body{display:none;padding:4px 18px 18px}
-.day-card.is-open .day-body{display:block}
-.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-top:12px}
-@media(max-width:720px){.detail-grid{grid-template-columns:1fr}}
-.detail-grid dt{font-size:.65rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:700}
-.detail-grid dd{margin:2px 0 0;font-size:.88rem;line-height:1.45;white-space:pre-wrap}
-.ext-list{margin-top:14px;border-top:1px solid var(--line-soft);padding-top:12px}
-.ext-list h4{margin:0 0 8px;font-size:.82rem;color:var(--ink)}
-.ext-item{font-size:.8rem;color:var(--mute);padding:8px 10px;border-radius:10px;background:var(--cream-2);margin-bottom:6px}
-.ext-item strong{color:var(--ink)}
-.card-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line-soft)}
-.section-title{font-family:var(--font-display);font-size:1.05rem;margin:8px 0 12px;color:var(--ink)}
-.empty{padding:40px;text-align:center;color:var(--mute)}
 .foot-bar{padding:10px 20px;border-top:1px solid var(--line-soft);font-size:.75rem;color:var(--mute);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;background:rgba(250,247,241,.4)}
 .sync-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ok);margin-right:8px;vertical-align:middle;animation:pulse 2s ease infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
@@ -118,17 +150,6 @@ body.has-site-chrome .app{min-height:calc(100vh - 64px)}
 .form-section .hint{font-size:.72rem;color:var(--mute);font-weight:500;text-transform:none;letter-spacing:0;margin-left:6px}
 .form-section.fill{background:var(--infob);border-color:#C9DCE8}
 .form-section.fill h3{color:var(--info)}
-.history-block{margin-top:12px;border:1px solid var(--line-soft);border-radius:10px;background:var(--cream-2);overflow:hidden}
-.history-block summary{cursor:pointer;padding:8px 12px;font-size:.78rem;font-weight:700;color:var(--mute);list-style:none;user-select:none}
-.history-block summary::-webkit-details-marker{display:none}
-.history-block summary::before{content:'▸';display:inline-block;margin-right:6px;transition:transform .15s;color:var(--accent)}
-.history-block[open] summary::before{transform:rotate(90deg)}
-.history-block .history-body{padding:0 12px 12px;font-size:.8rem;line-height:1.5;color:var(--text);white-space:pre-wrap;border-top:1px solid var(--line-soft);margin:0 0 0;padding-top:10px}
-.card-subsec{margin-top:12px;padding-top:10px;border-top:1px solid var(--line-soft)}
-.card-subsec h4{margin:0 0 8px;font-size:.78rem;font-weight:700;color:var(--ink)}
-.po-badge{display:inline-block;min-width:1.4em;text-align:center;font-weight:700;font-size:.75rem;padding:1px 6px;border-radius:6px;background:var(--cream-2);color:var(--mute)}
-.po-badge.p{background:var(--okb);color:var(--ok)}
-.po-badge.o{background:var(--warnb);color:var(--warn)}
 .modal-h{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line-soft)}
 .modal-h h2{margin:0;font-family:var(--font-display);font-size:1.15rem}
 .modal-x{border:0;background:transparent;font-size:1.2rem;cursor:pointer;color:var(--mute);padding:4px 8px}
@@ -151,9 +172,10 @@ body.has-site-chrome .app{min-height:calc(100vh - 64px)}
 .toast{position:fixed;bottom:28px;right:28px;background:var(--ink);color:#F2F7F4;padding:13px 18px;border-radius:14px;font-size:.85rem;opacity:0;transition:opacity .2s;z-index:80;pointer-events:none;max-width:min(360px,90vw)}
 .toast.show{opacity:1}
 .toast.err{background:#7A2A2A}
-.stats-shell{max-width:1100px}
+.section-title-plain{font-family:var(--font-display);font-size:1.05rem;margin:8px 0 12px;color:var(--ink)}
 </style>
 </head>
+
 <body class="site-body has-site-chrome">
 <header class="site-nav" id="siteNav">
   <a class="site-brand" href="./">
@@ -173,22 +195,25 @@ body.has-site-chrome .app{min-height:calc(100vh - 64px)}
 
 <div class="app">
   <aside class="sidebar">
-    <div class="side-eyebrow">FSI Management</div>
-    <h1>暫停管理</h1>
-    <p class="side-desc">可編輯管理工具 · Shutdown Notice 最多 14 日 · 逾期提醒 PM 更新</p>
-    <div class="side-kpi" id="sideKpis"></div>
-    <div class="side-desc" id="sideMeta" style="margin-top:8px"></div>
+    <div class="side-head">
+      <div class="side-eyebrow">FSI Management</div>
+      <h1>暫停管理</h1>
+      <p>每單工程獨立管理 · Shutdown Notice 最多 14 日</p>
+    </div>
+    <div class="side-tools">
+      <input type="search" id="sideSearch" placeholder="搜尋位置 / 編號 / PM…" autocomplete="off">
+      <button type="button" class="btn btn-primary" id="btnNewCase">＋ 新工程</button>
+    </div>
+    <div class="job-list" id="jobList"></div>
+    <div class="side-mini" id="sideMeta"></div>
   </aside>
   <section class="main">
     <div class="topbar">
       <div class="view-tabs" id="viewTabs">
-        <button type="button" class="view-tab" data-view="stats">統計總結</button>
         <button type="button" class="view-tab active" data-view="cases">項目記錄</button>
+        <button type="button" class="view-tab" data-view="stats">統計總結</button>
       </div>
       <div class="crumb" id="crumb"><strong>FSI</strong> · 載入中…</div>
-      <button type="button" class="btn btn-primary btn-sm" id="btnNewCase">＋ 新增個案</button>
-      <button type="button" class="btn btn-ghost btn-sm" id="btnExpandAll">全部展開</button>
-      <button type="button" class="btn btn-ghost btn-sm" id="btnCollapseAll">全部收合</button>
     </div>
     <div class="content" id="content"></div>
     <div class="foot-bar">
@@ -216,15 +241,17 @@ const UPLOAD_SECRET=CFG.UPLOAD_SECRET||'';
 const SYNC_URL=UPLOAD_WEBAPP_URL;
 const SEED_URL='./data/fsi-suspension-20251219.json?v=1';
 const MAX_DAYS=14;
+const OPEN_SECTIONS_KEY='fsi_open_sections_v1';
 
 let db={projects:[], meta:{}, fsi:{cases:[], meta:{}}};
 let mainView=(location.hash==='#stats')?'stats':'cases';
-let openMap={};
+let selectedCaseId=null;
+let sideQ='';
+let openSectionIds=loadOpenSet(OPEN_SECTIONS_KEY);
 let deptChart=null, fsiChart=null, statusChart=null;
 let _pushTimer=null, _pullBusy=false, _pushBusy=false, _lastCloudUpdatedAt='';
 let _seedDone=false;
 let modalState=null;
-let filterState={q:'', dept:'', status:'', alert:''};
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -246,9 +273,9 @@ function addDays(iso, n){
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
 function daysBetween(a,b){
-  const da=parseDate(a), db=parseDate(b);
-  if(!da||!db) return null;
-  return Math.round((db-da)/86400000);
+  const da=parseDate(a), db_=parseDate(b);
+  if(!da||!db_) return null;
+  return Math.round((db_-da)/86400000);
 }
 function clientMeta(){
   try{
@@ -264,6 +291,18 @@ function toast(msg, err){
   clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove('show'), 2800);
 }
 function setSyncText(t){ const el=$('syncText'); if(el) el.textContent=t; }
+
+function loadOpenSet(key){
+  try{
+    const raw=sessionStorage.getItem(key);
+    if(!raw) return new Set();
+    const arr=JSON.parse(raw);
+    return new Set(Array.isArray(arr)?arr:[]);
+  }catch(_){ return new Set(); }
+}
+function saveOpenSet(key, set){
+  try{ sessionStorage.setItem(key, JSON.stringify([...set])); }catch(_){}
+}
 
 function migrateDb(raw){
   const data=JSON.parse(JSON.stringify(raw||{projects:[]}));
@@ -283,7 +322,6 @@ function emptyJoint(){
 }
 function normalizeSpotCheck(s){
   s=s||{};
-  // accept legacy seed keys: FE/detector/notice/by/date
   return {
     fe:s.fe!=null?String(s.fe):(s.FE!=null?String(s.FE):''),
     detector:s.detector!=null?String(s.detector):'',
@@ -296,22 +334,42 @@ function normalizeJoint(j){
   j=j||{};
   return { attendees:j.attendees!=null?String(j.attendees):'', date:j.date!=null?String(j.date):'' };
 }
-/** True if remarks looks like imported Excel narrative (not a short working note). */
 function looksLikeImportedRemarks(s){
   s=String(s||'');
   if(!s.trim()) return false;
   if(s.length>=120) return true;
   return /Extension form|Reminded|Received|completion form|resumed on|Will consider|requested|standalone detector/i.test(s);
 }
-function normalizeCase(c){
-  c=c||{};
+function normalizeRemarkItem(r){
+  r=r||{};
+  return {
+    id:r.id||uid('rm'),
+    text:r.text!=null?String(r.text):(r.note!=null?String(r.note):''),
+    at:r.at!=null?String(r.at).slice(0,10):(r.date!=null?String(r.date).slice(0,10):'')
+  };
+}
+function migrateRemarksList(c){
+  let list=Array.isArray(c.remarksList)?c.remarksList.map(normalizeRemarkItem):[];
   let remarks=c.remarks||'';
   let historyLog=c.historyLog||'';
-  // one-time soft migrate: imported blob was dumped into remarks
   if(!historyLog && looksLikeImportedRemarks(remarks)){
     historyLog=remarks;
     remarks='';
   }
+  if(!list.length && remarks && String(remarks).trim()){
+    const lines=String(remarks).split(/\n+/).map(s=>s.trim()).filter(Boolean);
+    if(lines.length>1){
+      list=lines.map(t=>normalizeRemarkItem({text:t, at:''}));
+    } else {
+      list=[normalizeRemarkItem({text:String(remarks).trim(), at:''})];
+    }
+  }
+  const joined=list.map(x=>x.text).filter(Boolean).join('\n');
+  return { remarksList:list, remarks:joined, historyLog };
+}
+function normalizeCase(c){
+  c=c||{};
+  const rm=migrateRemarksList(c);
   let spotCheck=normalizeSpotCheck(c.spotCheck||c.spot||emptySpotCheck());
   let jointInspection=normalizeJoint(c.jointInspection||c.joint||emptyJoint());
   return {
@@ -329,8 +387,9 @@ function normalizeCase(c){
     status:(c.status==='resumed')?'resumed':'active',
     spotCheck,
     jointInspection,
-    remarks:remarks||'',
-    historyLog:historyLog||'',
+    remarks:rm.remarks,
+    remarksList:rm.remarksList,
+    historyLog:rm.historyLog,
     extensions:Array.isArray(c.extensions)?c.extensions.map(normalizeExt):[],
     updatedAt:c.updatedAt||new Date().toISOString(),
     reminderSentAt:c.reminderSentAt||''
@@ -347,8 +406,10 @@ function normalizeExt(e){
     createdAt:e.createdAt||new Date().toISOString()
   };
 }
+function syncRemarksString(c){
+  c.remarks=(c.remarksList||[]).map(x=>x.text).filter(Boolean).join('\n');
+}
 
-/** Effective period start = latest extension.periodStart, else case.periodStart */
 function effectivePeriodStart(c){
   const exts=c.extensions||[];
   if(exts.length){
@@ -368,31 +429,25 @@ function needsPmUpdate(c){
   const t0=new Date(today.getFullYear(), today.getMonth(), today.getDate());
   return t0>limit;
 }
-function windowDays(c){
-  const start=effectivePeriodStart(c);
-  if(!start||!c.plannedResume) return null;
-  return daysBetween(start, c.plannedResume);
-}
 
 function cases(){ return (db.fsi&&db.fsi.cases)||[]; }
 function findCase(id){ return cases().find(c=>c.id===id)||null; }
+function selectedCase(){ return selectedCaseId?findCase(selectedCaseId):null; }
 
 function mapSeedCase(raw, i){
   const historyLog=raw.remarks||'';
-  const resumed=/resumed|completion form|已恢復|已恢復/i.test(historyLog);
+  const resumed=/resumed|completion form|已恢復/i.test(historyLog);
   const commence=raw.commence||'';
   const planned=raw.planned_resume||'';
-  const exts=(raw.extensions||[]).map((e,j)=>{
+  const exts=(raw.extensions||[]).map((e)=>{
     let periodStart='', plannedResume=e.planned_resume||'';
     const extStr=e.extended||'';
-    // "15/12/2025 to 29/12/2025" or "23/03/2026 to 06/04/2026"
     const m=String(extStr).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s*to\s*(\d{1,2})\/(\d{1,2})\/(\d{4})/i);
     if(m){
       periodStart=m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
       if(!plannedResume) plannedResume=m[6]+'-'+m[5].padStart(2,'0')+'-'+m[4].padStart(2,'0');
     }
     if(!periodStart && plannedResume) periodStart=addDays(plannedResume, -MAX_DAYS);
-    // imported extension narrative stays on note as history; UI labels new notes clearly
     return normalizeExt({
       id:uid('ext'),
       noticeDate:periodStart,
@@ -418,6 +473,7 @@ function mapSeedCase(raw, i){
     spotCheck:normalizeSpotCheck(raw.spot||{}),
     jointInspection:normalizeJoint(raw.joint||{}),
     remarks:'',
+    remarksList:[],
     historyLog:historyLog,
     extensions:exts,
     updatedAt:new Date().toISOString()
@@ -468,6 +524,7 @@ function applyCloudDb(shared){
   saveLocalOnly();
   const at=(db.meta&&db.meta.updatedAt)||'';
   if(at) _lastCloudUpdatedAt=at;
+  if(selectedCaseId && !findCase(selectedCaseId)) selectedCaseId=null;
   return {changed: before!==JSON.stringify(db)};
 }
 async function fetchSharedDb(){
@@ -568,7 +625,6 @@ async function ensureSeeded(){
       seededAt:new Date().toISOString(),
       note:'Seeded once from GitHub snapshot; SharePoint Excel never modified.'
     };
-    // Preserve projects from cloud if we have them
     touchMeta();
     saveLocalOnly();
     await pushShared(true);
@@ -592,18 +648,16 @@ function summarize(list){
   return {total:list.length, active, resumed, alert, ext, byDept, byFsi};
 }
 
-function filtered(){
-  const q=(filterState.q||'').trim().toLowerCase();
-  const dept=filterState.dept||'';
-  const st=filterState.status||'';
-  const al=filterState.alert||'';
-  return cases().filter(c=>{
-    if(dept && c.dept!==dept) return false;
-    if(st==='active' && c.status==='resumed') return false;
-    if(st==='resumed' && c.status!=='resumed') return false;
-    if(al==='needsPm' && !needsPmUpdate(c)) return false;
-    if(al==='ok' && needsPmUpdate(c)) return false;
-    if(!q) return true;
+function filteredJobs(){
+  const q=(sideQ||'').trim().toLowerCase();
+  const list=cases().slice().sort((a,b)=>{
+    const aa=needsPmUpdate(a)?0:1, bb=needsPmUpdate(b)?0:1;
+    if(aa!==bb) return aa-bb;
+    if((a.status==='resumed')!==(b.status==='resumed')) return a.status==='resumed'?1:-1;
+    return String(a.location||'').localeCompare(String(b.location||''),'zh-Hant');
+  });
+  if(!q) return list;
+  return list.filter(c=>{
     const sc=c.spotCheck||{}, ji=c.jointInspection||{};
     const hay=[c.location,c.dept,c.ref,c.pm,c.pmEmail,c.contractor,c.remarks,c.historyLog,
       sc.fe,sc.detector,sc.noticeOnSite,sc.inspectedBy,sc.inspectionDate,
@@ -612,15 +666,42 @@ function filtered(){
   });
 }
 
-function renderSide(sum){
-  $('sideKpis').innerHTML=`
-    <div class="k"><div class="lab">全部個案</div><div class="num">${sum.total}</div></div>
-    <div class="k"><div class="lab">進行中</div><div class="num">${sum.active}</div><div class="sub">未標記已恢復</div></div>
-    <div class="k ${sum.alert?'alert':''}"><div class="lab">需提醒 PM</div><div class="num">${sum.alert}</div><div class="sub">超過 14 日未更新</div></div>
-    <div class="k"><div class="lab">已恢復</div><div class="num">${sum.resumed}</div></div>
-    <div class="k"><div class="lab">延期紀錄</div><div class="num">${sum.ext}</div></div>`;
+function statusBadge(c){
+  if(c.status==='resumed') return '<span class="badge b-ok">已恢復</span>';
+  if(needsPmUpdate(c)) return '<span class="badge b-warn">需更新 Notice</span>';
+  return '<span class="badge b-active">進行中</span>';
+}
+function jobChip(c){
+  if(c.status==='resumed') return '<span class="job-chip ok">已恢復</span>';
+  if(needsPmUpdate(c)) return '<span class="job-chip warn">需提醒</span>';
+  return '<span class="job-chip idle">進行中</span>';
+}
+function poBadge(v){
+  const t=String(v||'').trim().toUpperCase();
+  if(!t) return '<span class="po-badge">—</span>';
+  const cls=t==='P'?'p':(t==='O'?'o':'');
+  return `<span class="po-badge ${cls}">${esc(t)}</span>`;
+}
+
+function renderSidebar(){
+  const list=filteredJobs();
+  const all=cases();
+  const sum=summarize(all);
+  const el=$('jobList');
+  if(!list.length){
+    el.innerHTML=`<div class="hint">${all.length?'沒有符合搜尋的工程':'尚未有工程 · 按上方新增'}</div>`;
+  } else {
+    el.innerHTML=list.map(c=>{
+      const alert=needsPmUpdate(c);
+      const cls=['job-item', c.id===selectedCaseId?'active':'', alert?'needs-pm':''].filter(Boolean).join(' ');
+      return `<button type="button" class="${cls}" data-cid="${esc(c.id)}">
+        <span class="name">${esc(c.location||'（無位置）')}</span>
+        <span class="meta">${jobChip(c)}<span>${esc(c.ref||'無編號')}</span>${c.pm?`<span>PM ${esc(c.pm)}</span>`:''}${alert?'<span>⚠</span>':''}</span>
+      </button>`;
+    }).join('');
+  }
   const meta=db.fsi&&db.fsi.meta||{};
-  $('sideMeta').textContent=meta.snapshotDate?`種子快照 ${meta.snapshotDate}`:'共用 DB · db.fsi';
+  $('sideMeta').textContent=`${sum.total} 單工程 · 需提醒 ${sum.alert}`+(meta.snapshotDate?` · 快照 ${meta.snapshotDate}`:'');
 }
 
 function alertBannerHtml(list){
@@ -628,131 +709,143 @@ function alertBannerHtml(list){
   if(!overdue.length) return '';
   return `<div class="alert-banner" id="pmAlertBanner">
     <h3>⚠ 需提醒 PM 更新 Shutdown Notice</h3>
-    <p>以下 ${overdue.length} 宗已超過單一暫停期 14 日上限，請要求 PM 提交延期／新通知，或標記已恢復。</p>
+    <p>以下 ${overdue.length} 單已超過單一暫停期 14 日上限，請要求 PM 提交延期／新通知，或標記已恢復。</p>
     <div class="alert-list">
       ${overdue.map(c=>{
         const start=effectivePeriodStart(c);
         const due=addDays(start, MAX_DAYS);
         return `<div class="alert-row">
           <div class="info"><strong>${esc(c.location||'（無位置）')}</strong><br>${esc(c.ref||'')} · PM ${esc(c.pm||'—')} · 期起 ${esc(start||'—')} · 14日屆滿 ${esc(due||'—')}</div>
-          <button type="button" class="btn btn-warn btn-sm" data-act="remind" data-id="${esc(c.id)}">提醒 PM</button>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button type="button" class="btn btn-ghost btn-sm" data-act="select" data-id="${esc(c.id)}">開啟工程</button>
+            <button type="button" class="btn btn-warn btn-sm" data-act="remind" data-id="${esc(c.id)}">提醒 PM</button>
+          </div>
         </div>`;
       }).join('')}
     </div>
   </div>`;
 }
 
-function poBadge(v){
-  const t=String(v||'').trim().toUpperCase();
-  if(!t) return '<span class="po-badge">—</span>';
-  const cls=t==='P'?'p':(t==='O'?'o':'');
-  return `<span class="po-badge ${cls}">${esc(t)}</span>`;
+function sectionOpen(key, defaultOpen){
+  if(openSectionIds.has(key)) return true;
+  if(openSectionIds.has('!'+key)) return false;
+  return !!defaultOpen;
 }
-function cardHtml(c){
-  const open=!!openMap[c.id];
+function collapsible(key, title, bodyHtml, opts){
+  opts=opts||{};
+  const open=sectionOpen(key, opts.defaultOpen);
+  const hint=opts.hint?`<span class="sec-hint">${esc(opts.hint)}</span>`:'';
+  return `<div class="section section-collapsible ${open?'is-open':''}" data-section="${esc(key)}">
+    <div class="section-head" data-act="toggle-section" data-section="${esc(key)}">
+      <span class="sec-chevron">▸</span>
+      <div class="section-title">${title}</div>
+      ${hint}
+    </div>
+    <div class="section-body">${bodyHtml}</div>
+  </div>`;
+}
+
+function remarksListHtml(c){
+  const list=c.remarksList||[];
+  const rows=list.length?list.map((r)=>`
+    <div class="remark-row" data-rid="${esc(r.id)}">
+      <input type="date" data-rf="at" value="${esc(r.at||'')}" title="日期（可選）" aria-label="備註日期">
+      <textarea data-rf="text" rows="1" placeholder="工作備註…">${esc(r.text||'')}</textarea>
+      <button type="button" class="btn-icon" data-act="rm-del" data-rid="${esc(r.id)}" title="刪除此列" aria-label="刪除">×</button>
+    </div>`).join(''):`<div class="hint" style="font-size:.82rem;color:var(--mute);padding:4px 0">尚未有備註 · 按下方 ＋ 新增一列</div>`;
+  return `<div class="remark-list" id="remarkList">${rows}</div>
+    <button type="button" class="btn btn-ghost btn-sm remark-add" data-act="rm-add">＋ 新增備註列</button>`;
+}
+
+function renderJobDetail(c){
   const alert=needsPmUpdate(c);
   const start=effectivePeriodStart(c);
   const due=start?addDays(start, MAX_DAYS):'';
-  const stLabel=c.status==='resumed'?'已恢復':(alert?'需更新 Notice':'進行中');
-  const stDot=c.status==='resumed'?'on':(alert?'danger':'warn');
   const fsi=(c.fsi&&c.fsi.length)?c.fsi.join(' · '):'—';
   const ext=c.extensions||[];
   const sc=c.spotCheck||emptySpotCheck();
   const ji=c.jointInspection||emptyJoint();
-  const cls=['day-card', open?'is-open':'', alert?'needs-pm':'', c.status==='resumed'?'is-resumed':''].filter(Boolean).join(' ');
-  return `<div class="${cls}" data-id="${esc(c.id)}">
-    <div class="day-head" data-act="toggle">
-      <span class="day-chevron">▸</span>
-      <div class="day-date">${esc(c.location||'（無位置）')}</div>
-      <div class="day-sub">${esc(c.ref||'無編號')} · ${esc(c.dept||'')} · PM ${esc(c.pm||'—')}</div>
-      <div class="day-dots">
-        <span class="day-dot ${stDot}">${esc(stLabel)}</span>
-        <span class="day-dot">Notice ${esc(c.noticeDate||'—')}</span>
-        <span class="day-dot">恢復 ${esc(c.plannedResume||'—')}</span>
-        <span class="day-dot">${ext.length?ext.length+' 次延期':'無延期'}</span>
+  const hCls=['header-card', alert?'needs-pm':'', c.status==='resumed'?'is-resumed':''].filter(Boolean).join(' ');
+
+  $('crumb').innerHTML=`<strong>${esc(c.location||'工程')}</strong>${c.ref?` · ${esc(c.ref)}`:''}${c.pm?` · ${esc(c.pm)}`:''}`;
+
+  let html=`<div class="${hCls}"><div class="row">
+    <div style="flex:1;min-width:200px">
+      <div class="header-eyebrow">FSI · 一單工程</div>
+      <h2>${esc(c.location||'（無位置）')}</h2>
+      <div class="header-meta">
+        ${c.ref?`<span class="chip">編號 <code>${esc(c.ref)}</code></span>`:`<span class="chip">無編號</span>`}
+        ${c.dept?`<span class="chip">${esc(c.dept)}</span>`:''}
+        ${c.pm?`<span class="chip">PM ${esc(c.pm)}</span>`:''}
+        ${statusBadge(c)}
       </div>
     </div>
-    <div class="day-body">
-      <dl class="detail-grid">
-        <div><dt>Shutdown Notice 日期</dt><dd>${esc(c.noticeDate||'—')}</dd></div>
-        <div><dt>本期開始</dt><dd>${esc(start||'—')}${due?`（14日屆滿 ${esc(due)}）`:''}</dd></div>
-        <div><dt>計劃恢復</dt><dd>${esc(c.plannedResume||'—')}</dd></div>
-        <div><dt>狀態</dt><dd>${esc(stLabel)}</dd></div>
-        <div><dt>PM / Email</dt><dd>${esc(c.pm||'—')}${c.pmEmail?` · ${esc(c.pmEmail)}`:' · <span style="color:var(--mute)">待填 email</span>'}</dd></div>
-        <div><dt>承辦商</dt><dd>${esc(c.contractor||'—')}</dd></div>
-        <div><dt>暫停 FSI</dt><dd>${esc(fsi)}</dd></div>
-        <div><dt>上次提醒</dt><dd>${esc(c.reminderSentAt?new Date(c.reminderSentAt).toLocaleString('zh-HK',{timeZone:'Asia/Hong_Kong'}):'—')}</dd></div>
-      </dl>
-      <div class="card-subsec">
-        <h4>Spot Check（請填）</h4>
-        <dl class="detail-grid">
-          <div><dt>FE</dt><dd>${poBadge(sc.fe)}</dd></div>
-          <div><dt>獨立探測器</dt><dd>${poBadge(sc.detector)}</dd></div>
-          <div><dt>現場 Shutdown Notice</dt><dd>${poBadge(sc.noticeOnSite)}</dd></div>
-          <div><dt>巡查人</dt><dd>${esc(sc.inspectedBy||'—')}</dd></div>
-          <div><dt>巡查日期</dt><dd>${esc(sc.inspectionDate||'—')}</dd></div>
-        </dl>
-      </div>
-      <div class="card-subsec">
-        <h4>聯合巡查（請填）</h4>
-        <dl class="detail-grid">
-          <div><dt>出席者</dt><dd>${esc(ji.attendees||'—')}</dd></div>
-          <div><dt>日期</dt><dd>${esc(ji.date||'—')}</dd></div>
-        </dl>
-      </div>
-      <div class="card-subsec">
-        <h4>工作備註（你填）</h4>
-        <div style="font-size:.88rem;line-height:1.45;white-space:pre-wrap;color:var(--text)">${esc(c.remarks||'—')}</div>
-      </div>
-      ${c.historyLog?`<details class="history-block"><summary>匯入歷程（唯讀）</summary><div class="history-body">${esc(c.historyLog)}</div></details>`:''}
-      ${ext.length?`<div class="ext-list"><h4>延期紀錄（${ext.length}）</h4>
-        ${ext.map((e,i)=>`<div class="ext-item"><strong>#${i+1}</strong> Notice ${esc(e.noticeDate||'—')} · 期起 ${esc(e.periodStart||'—')} → 恢復 ${esc(e.plannedResume||'—')}${e.note?`<br>${esc(e.note)}`:''}</div>`).join('')}
-      </div>`:''}
-      <div class="card-actions">
-        <button type="button" class="btn btn-ghost btn-sm" data-act="edit" data-id="${esc(c.id)}">編輯</button>
-        <button type="button" class="btn btn-ghost btn-sm" data-act="notice" data-id="${esc(c.id)}">標記 Shutdown Notice</button>
-        <button type="button" class="btn btn-ghost btn-sm" data-act="extend" data-id="${esc(c.id)}">新增延期（新 14 日）</button>
-        ${c.status!=='resumed'?`<button type="button" class="btn btn-ok btn-sm" data-act="resume" data-id="${esc(c.id)}">標記已恢復</button>`:''}
-        ${alert?`<button type="button" class="btn btn-warn btn-sm" data-act="remind" data-id="${esc(c.id)}">提醒 PM</button>`:''}
-        <button type="button" class="btn btn-danger btn-sm" data-act="delete" data-id="${esc(c.id)}">刪除</button>
-      </div>
+    <div class="header-actions">
+      <button type="button" class="btn btn-ghost btn-sm" data-act="edit" data-id="${esc(c.id)}">編輯</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-act="notice" data-id="${esc(c.id)}">標記 Notice</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-act="extend" data-id="${esc(c.id)}">延期</button>
+      ${c.status!=='resumed'?`<button type="button" class="btn btn-ok btn-sm" data-act="resume" data-id="${esc(c.id)}">已恢復</button>`:''}
+      ${alert?`<button type="button" class="btn btn-warn btn-sm" data-act="remind" data-id="${esc(c.id)}">提醒 PM</button>`:''}
+      <button type="button" class="btn btn-danger btn-sm" data-act="delete" data-id="${esc(c.id)}">刪除</button>
     </div>
-  </div>`;
+  </div></div>`;
+
+  html+=collapsible('shutdown:'+c.id, 'Shutdown 時段', `
+    <dl class="detail-grid">
+      <div><dt>Shutdown Notice 日期</dt><dd>${esc(c.noticeDate||'—')}</dd></div>
+      <div><dt>本期開始</dt><dd>${esc(start||'—')}${due?`（14日屆滿 ${esc(due)}）`:''}</dd></div>
+      <div><dt>計劃恢復</dt><dd>${esc(c.plannedResume||'—')}</dd></div>
+      <div><dt>狀態</dt><dd>${c.status==='resumed'?'已恢復':(alert?'需更新 Notice':'進行中')}</dd></div>
+      <div><dt>PM / Email</dt><dd>${esc(c.pm||'—')}${c.pmEmail?` · ${esc(c.pmEmail)}`:' · <span style="color:var(--mute)">待填 email</span>'}</dd></div>
+      <div><dt>承辦商</dt><dd>${esc(c.contractor||'—')}</dd></div>
+      <div><dt>暫停 FSI</dt><dd>${esc(fsi)}</dd></div>
+      <div><dt>上次提醒</dt><dd>${esc(c.reminderSentAt?new Date(c.reminderSentAt).toLocaleString('zh-HK',{timeZone:'Asia/Hong_Kong'}):'—')}</dd></div>
+    </dl>`, {defaultOpen:true});
+
+  html+=collapsible('spot:'+c.id, 'Spot Check', `
+    <dl class="detail-grid">
+      <div><dt>FE</dt><dd>${poBadge(sc.fe)}</dd></div>
+      <div><dt>獨立探測器</dt><dd>${poBadge(sc.detector)}</dd></div>
+      <div><dt>現場 Shutdown Notice</dt><dd>${poBadge(sc.noticeOnSite)}</dd></div>
+      <div><dt>巡查人</dt><dd>${esc(sc.inspectedBy||'—')}</dd></div>
+      <div><dt>巡查日期</dt><dd>${esc(sc.inspectionDate||'—')}</dd></div>
+    </dl>
+    <div style="margin-top:10px"><button type="button" class="btn btn-ghost btn-sm" data-act="edit" data-id="${esc(c.id)}">編輯填寫</button></div>`, {defaultOpen:true, hint:'請填'});
+
+  html+=collapsible('joint:'+c.id, '聯合巡查', `
+    <dl class="detail-grid">
+      <div><dt>出席者</dt><dd>${esc(ji.attendees||'—')}</dd></div>
+      <div><dt>日期</dt><dd>${esc(ji.date||'—')}</dd></div>
+    </dl>
+    <div style="margin-top:10px"><button type="button" class="btn btn-ghost btn-sm" data-act="edit" data-id="${esc(c.id)}">編輯填寫</button></div>`, {defaultOpen:true, hint:'請填'});
+
+  html+=collapsible('remarks:'+c.id, '工作備註', remarksListHtml(c), {defaultOpen:true, hint:'你填'});
+
+  html+=collapsible('ext:'+c.id, '延期紀錄'+(ext.length?`（${ext.length}）`:''), ext.length
+    ? ext.map((e,i)=>`<div class="ext-item"><strong>#${i+1}</strong> Notice ${esc(e.noticeDate||'—')} · 期起 ${esc(e.periodStart||'—')} → 恢復 ${esc(e.plannedResume||'—')}${e.note?`<br>${esc(e.note)}`:''}</div>`).join('')
+    : `<div style="font-size:.85rem;color:var(--mute);padding-top:10px">尚無延期紀錄</div>`, {defaultOpen:!!ext.length});
+
+  html+=collapsible('hist:'+c.id, '匯入歷程', c.historyLog
+    ? `<div class="history-body">${esc(c.historyLog)}</div>`
+    : `<div style="font-size:.85rem;color:var(--mute);padding-top:10px">無匯入歷程</div>`, {defaultOpen:false, hint:'唯讀'});
+
+  $('content').innerHTML=html;
+  bindMainActions();
+  bindRemarkEditors(c.id);
+}
+
+function renderEmptyJob(){
+  $('crumb').innerHTML=`<strong>項目記錄</strong> · 選擇左側工程`;
+  $('content').innerHTML=`<div class="empty"><div class="hint-lg">選擇左側工程</div>
+    <p style="margin:0 0 16px">每單工程獨立管理 Shutdown Notice、巡查與備註。</p>
+    <button type="button" class="btn btn-primary" id="btnNewCase2">＋ 新工程</button></div>`;
+  const b=$('btnNewCase2'); if(b) b.onclick=()=>openCaseModal(null);
 }
 
 function renderCasesView(){
-  const list=filtered();
-  const all=cases();
-  const allSum=summarize(all);
-  const viewSum=summarize(list);
-  const depts=[...new Set(all.map(c=>c.dept).filter(Boolean))].sort();
-  $('crumb').innerHTML=`<strong>項目記錄</strong> · 顯示 ${list.length} / ${all.length}`;
-  renderSide(allSum);
-
-  $('content').innerHTML=`
-    ${alertBannerHtml(all)}
-    <div class="day-toolbar">
-      <div class="field"><label>搜尋</label><input type="search" id="fsiSearch" placeholder="位置 / 編號 / PM / 承辦商…" value="${esc(filterState.q)}"></div>
-      <div class="field"><label>部門</label><select id="fsiDept"><option value="">全部</option>${depts.map(d=>`<option value="${esc(d)}" ${filterState.dept===d?'selected':''}>${esc(d)}</option>`).join('')}</select></div>
-      <div class="field"><label>狀態</label><select id="fsiStatus">
-        <option value="" ${!filterState.status?'selected':''}>全部</option>
-        <option value="active" ${filterState.status==='active'?'selected':''}>進行中</option>
-        <option value="resumed" ${filterState.status==='resumed'?'selected':''}>已恢復</option>
-      </select></div>
-      <div class="field"><label>提醒</label><select id="fsiAlert">
-        <option value="" ${!filterState.alert?'selected':''}>全部</option>
-        <option value="needsPm" ${filterState.alert==='needsPm'?'selected':''}>需提醒 PM</option>
-        <option value="ok" ${filterState.alert==='ok'?'selected':''}>未逾期</option>
-      </select></div>
-      <div class="day-toolbar-actions">
-        <button type="button" class="btn btn-ghost btn-sm" id="btnResetFilters">重設篩選</button>
-      </div>
-    </div>
-    <p class="day-count">篩選後 ${list.length} 宗（進行中 ${viewSum.active} · 需提醒 ${viewSum.alert}）</p>
-    <div id="caseList">${list.length?list.map(cardHtml).join(''):'<div class="empty">沒有符合篩選的個案</div>'}</div>`;
-
-  bindFilters();
-  bindCaseActions();
+  const c=selectedCase();
+  if(!c){ renderEmptyJob(); return; }
+  renderJobDetail(c);
 }
 
 function destroyCharts(){
@@ -764,20 +857,19 @@ function renderStatsView(){
   const all=cases();
   const sum=summarize(all);
   const overdue=all.filter(needsPmUpdate);
-  $('crumb').innerHTML=`<strong>統計總結</strong> · ${all.length} 宗`;
-  renderSide(sum);
+  $('crumb').innerHTML=`<strong>統計總結</strong> · ${all.length} 單工程`;
 
   $('content').innerHTML=`
     <div class="stats-shell">
       ${alertBannerHtml(all)}
       <div class="kpi-row">
-        <div class="kpi"><div class="lab">全部個案</div><div class="num">${sum.total}</div><div class="delta">延期紀錄 ${sum.ext}</div></div>
+        <div class="kpi"><div class="lab">全部工程</div><div class="num">${sum.total}</div><div class="delta">延期紀錄 ${sum.ext}</div></div>
         <div class="kpi accent"><div class="lab">進行中</div><div class="num">${sum.active}</div><div class="delta">未標記已恢復</div></div>
         <div class="kpi warn"><div class="lab">需提醒 PM</div><div class="num">${sum.alert}</div><div class="delta">超過 14 日上限</div></div>
         <div class="kpi"><div class="lab">已恢復</div><div class="num">${sum.resumed}</div><div class="delta">status = resumed</div></div>
       </div>
       <div class="chart-row">
-        <div class="chart-card"><h3>按部門</h3><div class="sub">個案數</div><div class="chart-wrap"><canvas id="deptChart"></canvas></div></div>
+        <div class="chart-card"><h3>按部門</h3><div class="sub">工程數</div><div class="chart-wrap"><canvas id="deptChart"></canvas></div></div>
         <div class="chart-card"><h3>暫停 FSI 類型</h3><div class="sub">可重疊</div><div class="chart-wrap"><canvas id="fsiChart"></canvas></div></div>
       </div>
       <div class="chart-row">
@@ -787,14 +879,14 @@ function renderStatsView(){
           <div class="sub">管理守則摘要</div>
           <p style="font-size:.88rem;line-height:1.55;color:var(--text);margin-top:8px">
             每一段 Shutdown Notice 期間最多 <strong>14 日</strong>。<br>
-            以最近一次延期嘅 periodStart（無延期則用個案 periodStart）起計。<br>
+            以最近一次延期嘅 periodStart（無延期則用工程 periodStart）起計。<br>
             若狀態未恢復且今日已過 periodStart＋14 日 → 標示「需提醒 PM」。<br>
             請 PM 提交延期（新 14 日）或新通知，或標記已恢復。
           </p>
-          <p style="font-size:.82rem;color:var(--mute);margin-top:10px">目前逾期 ${overdue.length} 宗 · 唔改線上 SharePoint Excel</p>
+          <p style="font-size:.82rem;color:var(--mute);margin-top:10px">目前逾期 ${overdue.length} 單 · 唔改線上 SharePoint Excel</p>
         </div>
       </div>
-      ${overdue.length?`<div class="section-title">逾期個案一覽</div>
+      ${overdue.length?`<div class="section-title-plain">逾期工程一覽</div>
         <div class="alert-list" style="margin-bottom:16px">
           ${overdue.map(c=>{
             const start=effectivePeriodStart(c);
@@ -802,14 +894,14 @@ function renderStatsView(){
               <div class="info"><strong>${esc(c.location||'')}</strong> · ${esc(c.ref||'')} · PM ${esc(c.pm||'—')}<br>期起 ${esc(start||'—')} · 計劃恢復 ${esc(c.plannedResume||'—')}</div>
               <div style="display:flex;gap:6px;flex-wrap:wrap">
                 <button type="button" class="btn btn-warn btn-sm" data-act="remind" data-id="${esc(c.id)}">提醒 PM</button>
-                <button type="button" class="btn btn-ghost btn-sm" data-act="goto" data-id="${esc(c.id)}">查看記錄</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-act="select" data-id="${esc(c.id)}">開啟工程</button>
               </div>
             </div>`;
           }).join('')}
         </div>`:''}
     </div>`;
 
-  bindCaseActions();
+  bindMainActions();
   if(typeof Chart==='undefined') return;
   Chart.defaults.color='#6A736C';
   Chart.defaults.font.family='"Noto Sans TC","PingFang TC",sans-serif';
@@ -835,13 +927,12 @@ function syncViewTabs(){
   document.querySelectorAll('#viewTabs .view-tab').forEach(btn=>{
     btn.classList.toggle('active', btn.getAttribute('data-view')===mainView);
   });
-  const showCases=mainView==='cases';
-  ['btnExpandAll','btnCollapseAll'].forEach(id=>{ const el=$(id); if(el) el.style.display=showCases?'':'none'; });
 }
 
 function render(){
   syncViewTabs();
   destroyCharts();
+  renderSidebar();
   if(mainView==='stats') renderStatsView();
   else renderCasesView();
   const at=(db.meta&&db.meta.updatedAt)||'';
@@ -854,47 +945,82 @@ function render(){
   }
 }
 
-function bindFilters(){
-  const s=$('fsiSearch');
-  if(s){
-    let t=null;
-    s.oninput=()=>{ clearTimeout(t); t=setTimeout(()=>{ filterState.q=s.value; render(); const n=$('fsiSearch'); if(n){ n.focus(); try{n.setSelectionRange(n.value.length,n.value.length);}catch(_){}} }, 120); };
-  }
-  ['fsiDept','fsiStatus','fsiAlert'].forEach(id=>{
-    const el=$(id); if(!el) return;
-    el.onchange=()=>{
-      if(id==='fsiDept') filterState.dept=el.value;
-      if(id==='fsiStatus') filterState.status=el.value;
-      if(id==='fsiAlert') filterState.alert=el.value;
-      render();
-    };
-  });
-  const reset=$('btnResetFilters');
-  if(reset) reset.onclick=()=>{ filterState={q:'',dept:'',status:'',alert:''}; render(); };
+function selectCase(id){
+  selectedCaseId=id||null;
+  mainView='cases';
+  if(location.hash==='#stats') history.replaceState(null,'',location.pathname+location.search+'#cases');
+  else if(location.hash!=='#cases') location.hash='cases';
+  render();
 }
 
-function bindCaseActions(){
-  document.querySelectorAll('[data-act]').forEach(el=>{
+function bindRemarkEditors(caseId){
+  const c=findCase(caseId); if(!c) return;
+  const listEl=$('remarkList');
+  if(!listEl) return;
+  let saveT=null;
+  function persist(){
+    syncRemarksString(c);
+    c.updatedAt=new Date().toISOString();
+    clearTimeout(saveT);
+    saveT=setTimeout(()=>{ save(); renderSidebar(); }, 400);
+  }
+  listEl.querySelectorAll('.remark-row').forEach(row=>{
+    const rid=row.getAttribute('data-rid');
+    const item=(c.remarksList||[]).find(x=>x.id===rid);
+    if(!item) return;
+    const at=row.querySelector('[data-rf="at"]');
+    const tx=row.querySelector('[data-rf="text"]');
+    if(at) at.addEventListener('change', ()=>{ item.at=at.value||''; persist(); });
+    if(tx){
+      tx.addEventListener('input', ()=>{ item.text=tx.value; persist(); });
+      tx.addEventListener('blur', ()=>{ item.text=tx.value; syncRemarksString(c); save(); });
+    }
+  });
+}
+
+function bindMainActions(){
+  document.querySelectorAll('#content [data-act]').forEach(el=>{
     el.addEventListener('click', e=>{
       const act=el.getAttribute('data-act');
       const id=el.getAttribute('data-id');
-      if(act==='toggle'){
-        if(e.target.closest('button,a,input,select')) return;
-        const card=el.closest('.day-card');
-        if(!card) return;
-        const cid=card.getAttribute('data-id');
-        openMap[cid]=!openMap[cid];
-        card.classList.toggle('is-open', !!openMap[cid]);
+      if(act==='toggle-section'){
+        const key=el.getAttribute('data-section');
+        const sec=document.querySelector('.section-collapsible[data-section="'+CSS.escape(key)+'"]');
+        if(!sec) return;
+        const open=!sec.classList.contains('is-open');
+        sec.classList.toggle('is-open', open);
+        if(open){ openSectionIds.add(key); openSectionIds.delete('!'+key); }
+        else { openSectionIds.delete(key); openSectionIds.add('!'+key); }
+        saveOpenSet(OPEN_SECTIONS_KEY, openSectionIds);
         return;
       }
       e.preventDefault(); e.stopPropagation();
+      if(act==='select'){ selectCase(id); return; }
       if(act==='edit') openCaseModal(id);
       else if(act==='notice') openNoticeModal(id);
       else if(act==='extend') openExtendModal(id);
       else if(act==='resume') markResumed(id);
       else if(act==='delete') deleteCase(id);
       else if(act==='remind') openRemindModal(id);
-      else if(act==='goto'){ openMap[id]=true; mainView='cases'; location.hash='cases'; render(); }
+      else if(act==='rm-add'){
+        const c=selectedCase(); if(!c) return;
+        c.remarksList=c.remarksList||[];
+        c.remarksList.push(normalizeRemarkItem({text:'', at:todayStr()}));
+        syncRemarksString(c);
+        c.updatedAt=new Date().toISOString();
+        openSectionIds.add('remarks:'+c.id);
+        save(); render();
+        const last=document.querySelector('#remarkList .remark-row:last-child textarea');
+        if(last) last.focus();
+      }
+      else if(act==='rm-del'){
+        const c=selectedCase(); if(!c) return;
+        const rid=el.getAttribute('data-rid');
+        c.remarksList=(c.remarksList||[]).filter(x=>x.id!==rid);
+        syncRemarksString(c);
+        c.updatedAt=new Date().toISOString();
+        save(); render();
+      }
     });
   });
 }
@@ -918,6 +1044,7 @@ function poSelect(id, val){
     <option value="O" ${v==='O'?'selected':''}>O</option>
   </select>`;
 }
+
 function openCaseModal(id){
   const c=id?findCase(id):null;
   modalState={kind:'case', id:id||null};
@@ -925,7 +1052,7 @@ function openCaseModal(id){
   const sc=(c&&c.spotCheck)||emptySpotCheck();
   const ji=(c&&c.jointInspection)||emptyJoint();
   const hist=c&&c.historyLog?c.historyLog:'';
-  openModalShell(c?'編輯個案':'新增個案', `
+  openModalShell(c?'編輯工程':'新工程', `
     <div class="form-section">
       <h3>基本資料</h3>
       <div class="grid">
@@ -965,13 +1092,8 @@ function openCaseModal(id){
         <div class="field"><label>日期</label><input type="date" id="m_ji_date" value="${esc(ji.date||'')}"></div>
       </div>
     </div>
-    <div class="form-section fill">
-      <h3>工作備註（你填）<span class="hint">短註 · 唔好貼匯入文字</span></h3>
-      <div class="grid">
-        <div class="field span2"><label>工作備註</label><textarea id="m_remarks" placeholder="你嘅跟進短註…">${esc(c?c.remarks:'')}</textarea></div>
-      </div>
-    </div>
-    ${hist?`<details class="history-block"><summary>匯入歷程（唯讀）</summary><div class="history-body">${esc(hist)}</div></details>`:''}
+    <p style="font-size:.78rem;color:var(--mute);margin:0 0 8px">工作備註請於工程頁以「一列一則」方式新增；此處不另設大文字框。</p>
+    ${hist?`<details style="margin-top:8px;border:1px solid var(--line-soft);border-radius:10px;background:var(--cream-2);padding:8px 12px"><summary style="cursor:pointer;font-size:.78rem;font-weight:700;color:var(--mute)">匯入歷程（唯讀）</summary><div style="white-space:pre-wrap;font-size:.8rem;margin-top:8px">${esc(hist)}</div></details>`:''}
   `, `
     <button type="button" class="btn btn-ghost" id="m_cancel">取消</button>
     <button type="button" class="btn btn-primary" id="m_save">儲存</button>
@@ -984,7 +1106,7 @@ function openCaseModal(id){
       const d=daysBetween(p, resume.value);
       if(d!==null && d>MAX_DAYS){
         warn.style.display='block';
-        warn.textContent=`注意：計劃恢復距離本期開始為 ${d} 日，超過 ${MAX_DAYS} 日上限。建議縮短，或改用「新增延期」。`;
+        warn.textContent=`注意：計劃恢復距離本期開始為 ${d} 日，超過 ${MAX_DAYS} 日上限。建議縮短，或改用「延期」。`;
       } else { warn.style.display='none'; }
     } else warn.style.display='none';
   }
@@ -1032,15 +1154,23 @@ function openCaseModal(id){
       jointInspection:normalizeJoint({
         attendees:$('m_ji_attendees').value.trim(),
         date:$('m_ji_date').value
-      }),
-      remarks:$('m_remarks').value
+      })
     };
     if(id){
       const cur=findCase(id);
-      // preserve historyLog (read-only); do not overwrite from form
-      Object.assign(cur, payload, {historyLog:cur.historyLog||'', updatedAt:new Date().toISOString()});
+      Object.assign(cur, payload, {
+        historyLog:cur.historyLog||'',
+        remarksList:cur.remarksList||[],
+        remarks:cur.remarks||'',
+        updatedAt:new Date().toISOString()
+      });
+      syncRemarksString(cur);
+      selectedCaseId=id;
     } else {
-      db.fsi.cases.push(normalizeCase(Object.assign({id:uid('fsi'), extensions:[], historyLog:''}, payload)));
+      const neu=normalizeCase(Object.assign({id:uid('fsi'), extensions:[], historyLog:'', remarksList:[], remarks:''}, payload));
+      db.fsi.cases.push(neu);
+      selectedCaseId=neu.id;
+      mainView='cases';
     }
     save(); closeModal(); render(); toast('已儲存');
   };
@@ -1128,10 +1258,10 @@ function buildRemindDraft(c){
   const due=start?addDays(start, MAX_DAYS):'—';
   const to=c.pmEmail||'';
   const toDisplay=c.pmEmail||`（待填 email）${c.pm?` · ${c.pm}`:''}`;
-  const subject=`[FSI] 請更新 Shutdown Notice — ${c.location||c.ref||'個案'}`;
+  const subject=`[FSI] 請更新 Shutdown Notice — ${c.location||c.ref||'工程'}`;
   const body=`您好${c.pm?' '+c.pm:''}，
 
-以下 FSI 暫停個案已超過單一 Shutdown Notice 14 日上限，請提交延期／新通知，或確認已恢復：
+以下 FSI 暫停工程已超過單一 Shutdown Notice 14 日上限，請提交延期／新通知，或確認已恢復：
 
 位置：${c.location||'—'}
 參考編號：${c.ref||'—'}
@@ -1186,24 +1316,19 @@ function openRemindModal(id){
 
 function markResumed(id){
   const c=findCase(id); if(!c) return;
-  if(!confirm('標記此個案為已恢復？')) return;
+  if(!confirm('標記此工程為已恢復？')) return;
   c.status='resumed';
   c.updatedAt=new Date().toISOString();
   save(); render(); toast('已標記為已恢復');
 }
 function deleteCase(id){
   const c=findCase(id); if(!c) return;
-  if(!confirm('刪除此個案？')) return;
+  if(!confirm('刪除此工程？')) return;
   db.fsi.cases=db.fsi.cases.filter(x=>x.id!==id);
+  if(selectedCaseId===id) selectedCaseId=null;
   save(); render(); toast('已刪除');
 }
 
-function expandAll(open){
-  filtered().forEach(c=>{ openMap[c.id]=open; });
-  render();
-}
-
-// —— UI wiring ——
 document.querySelectorAll('#viewTabs .view-tab').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     const v=btn.getAttribute('data-view');
@@ -1219,11 +1344,27 @@ window.addEventListener('hashchange', ()=>{
   if(next!==mainView){ mainView=next; render(); }
 });
 $('btnNewCase').onclick=()=>openCaseModal(null);
-$('btnExpandAll').onclick=()=>expandAll(true);
-$('btnCollapseAll').onclick=()=>expandAll(false);
 $('modalClose').onclick=closeModal;
 $('modalBg').addEventListener('click', e=>{ if(e.target===$('modalBg')) closeModal(); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+const sideSearch=$('sideSearch');
+if(sideSearch){
+  let t=null;
+  sideSearch.oninput=()=>{
+    clearTimeout(t);
+    t=setTimeout(()=>{
+      sideQ=sideSearch.value;
+      renderSidebar();
+      const n=$('sideSearch'); if(n){ n.focus(); try{n.setSelectionRange(n.value.length,n.value.length);}catch(_){}}
+    }, 120);
+  };
+}
+$('jobList').addEventListener('click', e=>{
+  const btn=e.target.closest('.job-item');
+  if(!btn) return;
+  selectCase(btn.getAttribute('data-cid'));
+});
 
 const nav=document.getElementById('siteNav');
 const btn=document.getElementById('navToggle');
@@ -1238,7 +1379,6 @@ if(nav&&btn) btn.addEventListener('click',()=>{
   try{
     const pulled=await pullShared(true);
     if(pulled && pulled.shared){
-      // if cloud has no fsi cases, seed
       if(!cases().length) await ensureSeeded();
     } else if(!cases().length){
       await ensureSeeded();
