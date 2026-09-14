@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache">
 <title>FSI 暫停管理 · 工作頁面集</title>
-<link rel="stylesheet" href="./css/site.css?v=20260914fsi6">
+<link rel="stylesheet" href="./css/site.css?v=20260914fsi7">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="./config.js"></script>
 <style>
@@ -172,6 +172,37 @@ body.has-site-chrome .app{min-height:calc(100vh - var(--nav-h))}
 .toast{position:fixed;bottom:28px;right:28px;background:var(--ink);color:#F2F7F4;padding:13px 18px;border-radius:14px;font-size:.85rem;opacity:0;transition:opacity .2s;z-index:80;pointer-events:none;max-width:min(360px,90vw)}
 .toast.show{opacity:1}
 .toast.err{background:#7A2A2A}
+
+.flow-banner{background:linear-gradient(135deg, rgba(232,241,246,.9), rgba(230,244,236,.55));border:1px solid #C9DCE8;border-radius:14px;padding:12px 14px;margin-bottom:14px;font-size:.8rem;line-height:1.55;color:var(--text)}
+.flow-banner strong{color:var(--info)}
+.flow-steps{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.flow-step{font-size:.68rem;font-weight:700;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.7);color:var(--info);border:1px solid #C9DCE8}
+.section-head.static{cursor:default}
+.sec-hint.warn{background:var(--warnb);color:var(--warn)}
+.sec-hint.ok{background:var(--okb);color:var(--ok)}
+.inline-form{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;margin-top:12px}
+@media(max-width:720px){.inline-form{grid-template-columns:1fr}}
+.inline-form .span2{grid-column:span 2}
+@media(max-width:720px){.inline-form .span2{grid-column:span 1}}
+.muted-note{font-size:.76rem;color:var(--mute);margin-top:8px;line-height:1.45}
+.pdf-box{margin-top:12px;padding:12px;border:1px dashed var(--line);border-radius:12px;background:rgba(250,247,241,.7)}
+.pdf-box.has-file{border-style:solid;border-color:#C9DCE8;background:var(--infob)}
+.pdf-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pdf-name{font-size:.85rem;font-weight:600;color:var(--ink);flex:1;min-width:140px}
+.upload-status{font-size:.75rem;color:var(--mute);margin-top:8px}
+.upload-status.busy{color:var(--info)}
+.upload-status.ok{color:var(--ok)}
+.upload-status.err{color:var(--danger)}
+.upload-status.warn{color:var(--warn)}
+.ext-timeline{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+.ext-card{border:1px solid var(--line-soft);border-radius:12px;padding:12px;background:var(--cream-2)}
+.ext-card .ext-idx{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-d);margin-bottom:6px}
+.ext-card .ext-meta{font-size:.82rem;color:var(--text);line-height:1.45}
+.ext-card .ext-note{font-size:.78rem;color:var(--mute);margin-top:6px;white-space:pre-wrap}
+.ext-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ext-empty{font-size:.85rem;color:var(--mute);padding:8px 0}
+.complete-box{margin-top:12px;padding:12px;border-radius:12px;background:var(--okb);border:1px solid #B8DCC8}
+.complete-box.pending{background:var(--cream-2);border-color:var(--line-soft)}
 .section-title-plain{font-family:var(--font-display);font-size:1.05rem;margin:8px 0 12px;color:var(--ink)}
 </style>
 </head>
@@ -196,12 +227,12 @@ body.has-site-chrome .app{min-height:calc(100vh - var(--nav-h))}
 <div class="app">
   <aside class="sidebar">
     <div class="side-head">
-      <div class="side-eyebrow">FSI Management</div>
-      <h1>暫停管理</h1>
-      <p>每單工程獨立管理 · Shutdown Notice 最多 14 日</p>
+      <div class="side-eyebrow">FSD · CFSO</div>
+      <h1>FSI 暫停管理</h1>
+      <p>一單工程一紀錄 · 關閉通知書／延期／完結</p>
     </div>
     <div class="side-tools">
-      <input type="search" id="sideSearch" placeholder="搜尋位置 / 編號 / PM…" autocomplete="off">
+      <input type="search" id="sideSearch" placeholder="搜尋位置 / 檔案編號 / PM…" autocomplete="off">
       <button type="button" class="btn btn-primary" id="btnNewCase">＋ 新工程</button>
     </div>
     <div class="job-list" id="jobList"></div>
@@ -238,10 +269,11 @@ const KEY='ts8_project_link_manager_v6';
 const CFG=(typeof window!=='undefined'&&window.TS8_CONFIG)||{};
 const UPLOAD_WEBAPP_URL=CFG.UPLOAD_WEBAPP_URL||'';
 const UPLOAD_SECRET=CFG.UPLOAD_SECRET||'';
+const DRIVE_FOLDER_ID=CFG.DRIVE_FOLDER_ID||'';
 const SYNC_URL=UPLOAD_WEBAPP_URL;
 const SEED_URL='./data/fsi-suspension-20251219.json?v=1';
 const MAX_DAYS=14;
-const OPEN_SECTIONS_KEY='fsi_open_sections_v1';
+const OPEN_SECTIONS_KEY='fsi_open_sections_v2';
 
 let db={projects:[], meta:{}, fsi:{cases:[], meta:{}}};
 let mainView=(location.hash==='#stats')?'stats':'cases';
@@ -372,6 +404,11 @@ function normalizeCase(c){
   const rm=migrateRemarksList(c);
   let spotCheck=normalizeSpotCheck(c.spotCheck||c.spot||emptySpotCheck());
   let jointInspection=normalizeJoint(c.jointInspection||c.joint||emptyJoint());
+  // Prefer single remarks string for UX; keep remarksList in data for backward compat
+  let remarks=rm.remarks||'';
+  if(!remarks && (rm.remarksList||[]).length){
+    remarks=(rm.remarksList||[]).map(x=>x&&x.text?String(x.text):'').filter(Boolean).join('\n');
+  }
   return {
     id:c.id||uid('fsi'),
     dept:c.dept||'',
@@ -384,10 +421,13 @@ function normalizeCase(c){
     noticeDate:c.noticeDate||'',
     periodStart:c.periodStart||c.noticeDate||'',
     plannedResume:c.plannedResume||'',
+    noticePdf:normalizePdf(c.noticePdf||c.suspensionPdf||null),
     status:(c.status==='resumed')?'resumed':'active',
+    completedAt:c.completedAt||'',
+    completionNote:c.completionNote||'',
     spotCheck,
     jointInspection,
-    remarks:rm.remarks,
+    remarks:remarks,
     remarksList:rm.remarksList,
     historyLog:rm.historyLog,
     extensions:Array.isArray(c.extensions)?c.extensions.map(normalizeExt):[],
@@ -395,14 +435,28 @@ function normalizeCase(c){
     reminderSentAt:c.reminderSentAt||''
   };
 }
+function normalizePdf(p){
+  if(!p) return null;
+  if(typeof p==='string'){
+    const s=p.trim(); if(!s) return null;
+    return { url:s, driveFileId:'', name:s.split('/').pop()||'PDF' };
+  }
+  const url=p.url||p.webViewLink||'';
+  const driveFileId=p.driveFileId||p.id||p.fileId||'';
+  const name=p.name||p.filename||'';
+  if(!url && !driveFileId) return null;
+  return { url:url||(driveFileId?('https://drive.google.com/file/d/'+driveFileId+'/view'):''), driveFileId, name:name||'PDF' };
+}
 function normalizeExt(e){
   e=e||{};
   return {
     id:e.id||uid('ext'),
+    receivedAt:e.receivedAt||e.received||'',
     noticeDate:e.noticeDate||'',
     periodStart:e.periodStart||e.noticeDate||'',
-    plannedResume:e.plannedResume||'',
-    note:e.note||'',
+    plannedResume:e.plannedResume||e.planned_resume||'',
+    pdf:normalizePdf(e.pdf||e.noticePdf||null),
+    note:e.note!=null?String(e.note):(e.remarks!=null?String(e.remarks):''),
     createdAt:e.createdAt||new Date().toISOString()
   };
 }
@@ -410,14 +464,20 @@ function syncRemarksString(c){
   c.remarks=(c.remarksList||[]).map(x=>x.text).filter(Boolean).join('\n');
 }
 
-function effectivePeriodStart(c){
+function effectiveWindow(c){
   const exts=c.extensions||[];
   if(exts.length){
     const last=exts[exts.length-1];
-    return last.periodStart||last.noticeDate||c.periodStart||c.noticeDate||'';
+    return {
+      start:last.periodStart||last.noticeDate||c.periodStart||c.noticeDate||'',
+      resume:last.plannedResume||c.plannedResume||'',
+      source:'extension',
+      ext:last
+    };
   }
-  return c.periodStart||c.noticeDate||'';
+  return { start:c.periodStart||c.noticeDate||'', resume:c.plannedResume||'', source:'initial', ext:null };
 }
+function effectivePeriodStart(c){ return effectiveWindow(c).start; }
 function needsPmUpdate(c){
   if(!c || c.status==='resumed') return false;
   const start=effectivePeriodStart(c);
@@ -448,12 +508,17 @@ function mapSeedCase(raw, i){
       if(!plannedResume) plannedResume=m[6]+'-'+m[5].padStart(2,'0')+'-'+m[4].padStart(2,'0');
     }
     if(!periodStart && plannedResume) periodStart=addDays(plannedResume, -MAX_DAYS);
+    const note=e.remarks||extStr||'';
+    const receivedM=String(note).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    let receivedAt='';
+    if(receivedM) receivedAt=receivedM[3]+'-'+receivedM[2].padStart(2,'0')+'-'+receivedM[1].padStart(2,'0');
     return normalizeExt({
       id:uid('ext'),
+      receivedAt:receivedAt,
       noticeDate:periodStart,
       periodStart:periodStart,
       plannedResume:plannedResume,
-      note:e.remarks||extStr||'',
+      note:note,
       createdAt:new Date().toISOString()
     });
   });
@@ -636,6 +701,48 @@ async function ensureSeeded(){
   }
 }
 
+function fileToBase64(file){
+  return new Promise((resolve,reject)=>{
+    const r=new FileReader();
+    r.onload=()=>{ const s=String(r.result||''); const i=s.indexOf(','); resolve(i>=0?s.slice(i+1):s); };
+    r.onerror=()=>reject(r.error||new Error('讀取失敗'));
+    r.readAsDataURL(file);
+  });
+}
+async function uploadPdfToDrive(file){
+  if(!UPLOAD_WEBAPP_URL) throw new Error('上傳端點尚未設定');
+  const base64=await fileToBase64(file);
+  const res=await fetch(UPLOAD_WEBAPP_URL,{
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify(Object.assign({
+      secret:UPLOAD_SECRET,
+      filename:file.name,
+      mimeType:file.type||'application/pdf',
+      base64,
+      folderId:DRIVE_FOLDER_ID
+    }, clientMeta()))
+  });
+  const text=await res.text();
+  let data;
+  try{ data=JSON.parse(text); }catch{ throw new Error('伺服器回應無效'); }
+  if(!res.ok || !data || !data.ok) throw new Error((data&&(data.error||data.message))||('上傳失敗'));
+  const id=data.id||data.fileId||'';
+  const url=data.url||data.webViewLink||(id?('https://drive.google.com/file/d/'+id+'/view'):'');
+  if(!url) throw new Error('回應缺少檔案連結');
+  return { driveFileId:id, url, name:data.name||file.name };
+}
+function pdfLinkHtml(pdf){
+  if(!pdf||!pdf.url) return '<span style="color:var(--mute)">尚未上載 PDF</span>';
+  return `<a href="${esc(pdf.url)}" target="_blank" rel="noopener">${esc(pdf.name||'開啟 PDF')}</a>`;
+}
+function windowWarnHtml(start, resume){
+  const d=daysBetween(start, resume);
+  if(d===null) return '';
+  if(d>MAX_DAYS) return `<div class="warn-note">計劃恢復距離本期開始為 ${d} 日，超過建議 ${MAX_DAYS} 日窗口。請盡量縮短，或以 Extension Form 分期管理。</div>`;
+  return '';
+}
+
 function summarize(list){
   const byDept={}, byFsi={}; let active=0, resumed=0, alert=0, ext=0;
   list.forEach(c=>{
@@ -667,12 +774,12 @@ function filteredJobs(){
 }
 
 function statusBadge(c){
-  if(c.status==='resumed') return '<span class="badge b-ok">已恢復</span>';
-  if(needsPmUpdate(c)) return '<span class="badge b-warn">需更新 Notice</span>';
+  if(c.status==='resumed') return '<span class="badge b-ok">完結</span>';
+  if(needsPmUpdate(c)) return '<span class="badge b-warn">需延期／更新</span>';
   return '<span class="badge b-active">進行中</span>';
 }
 function jobChip(c){
-  if(c.status==='resumed') return '<span class="job-chip ok">已恢復</span>';
+  if(c.status==='resumed') return '<span class="job-chip ok">完結</span>';
   if(needsPmUpdate(c)) return '<span class="job-chip warn">需提醒</span>';
   return '<span class="job-chip idle">進行中</span>';
 }
@@ -696,7 +803,7 @@ function renderSidebar(){
       const cls=['job-item', c.id===selectedCaseId?'active':'', alert?'needs-pm':''].filter(Boolean).join(' ');
       return `<button type="button" class="${cls}" data-cid="${esc(c.id)}">
         <span class="name">${esc(c.location||'（無位置）')}</span>
-        <span class="meta">${jobChip(c)}<span>${esc(c.ref||'無編號')}</span>${c.pm?`<span>PM ${esc(c.pm)}</span>`:''}${alert?'<span>⚠</span>':''}</span>
+        <span class="meta">${jobChip(c)}<span>${esc(c.ref||'無檔案編號')}</span>${c.pm?`<span>PM ${esc(c.pm)}</span>`:''}${alert?'<span>⚠</span>':''}</span>
       </button>`;
     }).join('');
   }
@@ -708,14 +815,14 @@ function alertBannerHtml(list){
   const overdue=list.filter(needsPmUpdate);
   if(!overdue.length) return '';
   return `<div class="alert-banner" id="pmAlertBanner">
-    <h3>⚠ 需提醒 PM 更新 Shutdown Notice</h3>
-    <p>以下 ${overdue.length} 單已超過單一暫停期 14 日上限，請要求 PM 提交延期／新通知，或標記已恢復。</p>
+    <h3>⚠ 需提醒 PM 更新關閉通知</h3>
+    <p>以下 ${overdue.length} 單已超過現行約 ${MAX_DAYS} 日窗口。請於屆滿前遞交延期通知（Extension Form），或標記完結。</p>
     <div class="alert-list">
       ${overdue.map(c=>{
         const start=effectivePeriodStart(c);
         const due=addDays(start, MAX_DAYS);
         return `<div class="alert-row">
-          <div class="info"><strong>${esc(c.location||'（無位置）')}</strong><br>${esc(c.ref||'')} · PM ${esc(c.pm||'—')} · 期起 ${esc(start||'—')} · 14日屆滿 ${esc(due||'—')}</div>
+          <div class="info"><strong>${esc(c.location||'（無位置）')}</strong><br>${esc(c.ref||'')} · PM ${esc(c.pm||'—')} · 窗口起 ${esc(start||'—')} · 屆滿 ${esc(due||'—')}</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
             <button type="button" class="btn btn-ghost btn-sm" data-act="select" data-id="${esc(c.id)}">開啟工程</button>
             <button type="button" class="btn btn-warn btn-sm" data-act="remind" data-id="${esc(c.id)}">提醒 PM</button>
@@ -734,7 +841,7 @@ function sectionOpen(key, defaultOpen){
 function collapsible(key, title, bodyHtml, opts){
   opts=opts||{};
   const open=sectionOpen(key, opts.defaultOpen);
-  const hint=opts.hint?`<span class="sec-hint">${esc(opts.hint)}</span>`:'';
+  const hint=opts.hint?`<span class="sec-hint${opts.hintClass?' '+opts.hintClass:''}">${esc(opts.hint)}</span>`:'';
   return `<div class="section section-collapsible ${open?'is-open':''}" data-section="${esc(key)}">
     <div class="section-head" data-act="toggle-section" data-section="${esc(key)}">
       <span class="sec-chevron">▸</span>
@@ -744,100 +851,201 @@ function collapsible(key, title, bodyHtml, opts){
     <div class="section-body">${bodyHtml}</div>
   </div>`;
 }
-
-function remarksListHtml(c){
-  const list=c.remarksList||[];
-  const rows=list.length?list.map((r)=>`
-    <div class="remark-row" data-rid="${esc(r.id)}">
-      <input type="date" data-rf="at" value="${esc(r.at||'')}" title="日期（可選）" aria-label="備註日期">
-      <textarea data-rf="text" rows="1" placeholder="工作備註…">${esc(r.text||'')}</textarea>
-      <button type="button" class="btn-icon" data-act="rm-del" data-rid="${esc(r.id)}" title="刪除此列" aria-label="刪除">×</button>
-    </div>`).join(''):`<div class="hint" style="font-size:.82rem;color:var(--mute);padding:4px 0">尚未有備註 · 按下方 ＋ 新增一列</div>`;
-  return `<div class="remark-list" id="remarkList">${rows}</div>
-    <button type="button" class="btn btn-ghost btn-sm remark-add" data-act="rm-add">＋ 新增備註列</button>`;
+function solidSection(title, bodyHtml, hint, hintClass){
+  const h=hint?`<span class="sec-hint${hintClass?' '+hintClass:''}">${esc(hint)}</span>`:'';
+  return `<div class="section">
+    <div class="section-head static">
+      <div class="section-title">${title}</div>${h}
+    </div>
+    <div class="section-body">${bodyHtml}</div>
+  </div>`;
 }
 
 function renderJobDetail(c){
   const alert=needsPmUpdate(c);
-  const start=effectivePeriodStart(c);
-  const due=start?addDays(start, MAX_DAYS):'';
+  const win=effectiveWindow(c);
+  const due=win.start?addDays(win.start, MAX_DAYS):'';
   const fsi=(c.fsi&&c.fsi.length)?c.fsi.join(' · '):'—';
   const ext=c.extensions||[];
   const sc=c.spotCheck||emptySpotCheck();
   const ji=c.jointInspection||emptyJoint();
+  const pdf=c.noticePdf;
   const hCls=['header-card', alert?'needs-pm':'', c.status==='resumed'?'is-resumed':''].filter(Boolean).join(' ');
 
   $('crumb').innerHTML=`<strong>${esc(c.location||'工程')}</strong>${c.ref?` · ${esc(c.ref)}`:''}${c.pm?` · ${esc(c.pm)}`:''}`;
 
   let html=`<div class="${hCls}"><div class="row">
     <div style="flex:1;min-width:200px">
-      <div class="header-eyebrow">FSI · 一單工程</div>
+      <div class="header-eyebrow">消防裝置關閉 · 一單工程</div>
       <h2>${esc(c.location||'（無位置）')}</h2>
       <div class="header-meta">
-        ${c.ref?`<span class="chip">編號 <code>${esc(c.ref)}</code></span>`:`<span class="chip">無編號</span>`}
+        ${c.ref?`<span class="chip">FSD／暫停編號 <code>${esc(c.ref)}</code></span>`:`<span class="chip">待填檔案編號</span>`}
         ${c.dept?`<span class="chip">${esc(c.dept)}</span>`:''}
         ${c.pm?`<span class="chip">PM ${esc(c.pm)}</span>`:''}
         ${statusBadge(c)}
       </div>
     </div>
     <div class="header-actions">
-      <button type="button" class="btn btn-ghost btn-sm" data-act="edit" data-id="${esc(c.id)}">編輯</button>
-      <button type="button" class="btn btn-ghost btn-sm" data-act="notice" data-id="${esc(c.id)}">標記 Notice</button>
-      <button type="button" class="btn btn-ghost btn-sm" data-act="extend" data-id="${esc(c.id)}">延期</button>
-      ${c.status!=='resumed'?`<button type="button" class="btn btn-ok btn-sm" data-act="resume" data-id="${esc(c.id)}">已恢復</button>`:''}
+      <button type="button" class="btn btn-ghost btn-sm" data-act="edit" data-id="${esc(c.id)}">編輯基本</button>
       ${alert?`<button type="button" class="btn btn-warn btn-sm" data-act="remind" data-id="${esc(c.id)}">提醒 PM</button>`:''}
       <button type="button" class="btn btn-danger btn-sm" data-act="delete" data-id="${esc(c.id)}">刪除</button>
     </div>
   </div></div>`;
 
-  html+=collapsible('shutdown:'+c.id, 'Shutdown 時段', `
+  html+=`<div class="flow-banner">
+    <strong>FSD／CFSO 流程（通告 1/2021 App.I）</strong>
+    <div>過夜或超過 24 小時須遞交《消防裝置關閉通知書》→ 取得 FSD 檔案編號並保存 PDF。核准期通常以約 ${MAX_DAYS} 日窗口管理，PM 應盡量縮短。延期須於屆滿前遞交新／更新通知（記為 Extension Form）。完工後通知 FSD、保存完結紀錄並標記完結。</div>
+    <div class="flow-steps">
+      <span class="flow-step">1 關閉通知</span>
+      <span class="flow-step">2 約 ${MAX_DAYS} 日窗口</span>
+      <span class="flow-step">3 Extension Form</span>
+      <span class="flow-step">4 完結</span>
+    </div>
+  </div>`;
+
+  if(alert){
+    html+=`<div class="alert-banner" style="margin-bottom:12px">
+      <h3>⚠ 現行窗口已逾 ${MAX_DAYS} 日</h3>
+      <p>窗口起 ${esc(win.start||'—')} · 屆滿 ${esc(due||'—')}。請新增 Extension Form，或標記完結。</p>
+      <button type="button" class="btn btn-warn btn-sm" data-act="remind" data-id="${esc(c.id)}">提醒 PM</button>
+      <button type="button" class="btn btn-primary btn-sm" data-act="extend" data-id="${esc(c.id)}" style="margin-left:6px">＋ 新增 Extension Form</button>
+    </div>`;
+  }
+
+  html+=solidSection('A · 基本資料', `
     <dl class="detail-grid">
-      <div><dt>Shutdown Notice 日期</dt><dd>${esc(c.noticeDate||'—')}</dd></div>
-      <div><dt>本期開始</dt><dd>${esc(start||'—')}${due?`（14日屆滿 ${esc(due)}）`:''}</dd></div>
-      <div><dt>計劃恢復</dt><dd>${esc(c.plannedResume||'—')}</dd></div>
-      <div><dt>狀態</dt><dd>${c.status==='resumed'?'已恢復':(alert?'需更新 Notice':'進行中')}</dd></div>
-      <div><dt>PM / Email</dt><dd>${esc(c.pm||'—')}${c.pmEmail?` · ${esc(c.pmEmail)}`:' · <span style="color:var(--mute)">待填 email</span>'}</dd></div>
+      <div><dt>位置</dt><dd>${esc(c.location||'—')}</dd></div>
+      <div><dt>部門</dt><dd>${esc(c.dept||'—')}</dd></div>
+      <div><dt>PM</dt><dd>${esc(c.pm||'—')}</dd></div>
+      <div><dt>PM Email</dt><dd>${esc(c.pmEmail||'待填')}</dd></div>
       <div><dt>承辦商</dt><dd>${esc(c.contractor||'—')}</dd></div>
       <div><dt>暫停 FSI</dt><dd>${esc(fsi)}</dd></div>
-      <div><dt>上次提醒</dt><dd>${esc(c.reminderSentAt?new Date(c.reminderSentAt).toLocaleString('zh-HK',{timeZone:'Asia/Hong_Kong'}):'—')}</dd></div>
-    </dl>`, {defaultOpen:true});
-
-  html+=collapsible('spot:'+c.id, 'Spot Check', `
-    <dl class="detail-grid">
-      <div><dt>FE</dt><dd>${poBadge(sc.fe)}</dd></div>
-      <div><dt>獨立探測器</dt><dd>${poBadge(sc.detector)}</dd></div>
-      <div><dt>現場 Shutdown Notice</dt><dd>${poBadge(sc.noticeOnSite)}</dd></div>
-      <div><dt>巡查人</dt><dd>${esc(sc.inspectedBy||'—')}</dd></div>
-      <div><dt>巡查日期</dt><dd>${esc(sc.inspectionDate||'—')}</dd></div>
+      <div><dt>FSD／暫停編號</dt><dd>${esc(c.ref||'—')}</dd></div>
+      <div><dt>狀態</dt><dd>${c.status==='resumed'?'完結':(alert?'需延期／更新':'進行中')}</dd></div>
     </dl>
-    <div style="margin-top:10px"><button type="button" class="btn btn-ghost btn-sm" data-act="edit" data-id="${esc(c.id)}">編輯填寫</button></div>`, {defaultOpen:true, hint:'請填'});
+    <div style="margin-top:10px"><button type="button" class="btn btn-ghost btn-sm" data-act="edit" data-id="${esc(c.id)}">編輯</button></div>
+  `, c.status==='resumed'?'完結':'進行中', c.status==='resumed'?'ok':(alert?'warn':''));
 
-  html+=collapsible('joint:'+c.id, '聯合巡查', `
-    <dl class="detail-grid">
-      <div><dt>出席者</dt><dd>${esc(ji.attendees||'—')}</dd></div>
-      <div><dt>日期</dt><dd>${esc(ji.date||'—')}</dd></div>
-    </dl>
-    <div style="margin-top:10px"><button type="button" class="btn btn-ghost btn-sm" data-act="edit" data-id="${esc(c.id)}">編輯填寫</button></div>`, {defaultOpen:true, hint:'請填'});
+  html+=solidSection('B · 關閉通知（初始）', `
+    <p class="muted-note">對應《消防裝置關閉通知書》（FSD Circular 1/2021 App.I）。計劃恢復預設 +${MAX_DAYS} 日；超過請改用延期。</p>
+    <div class="inline-form" id="noticeForm">
+      <div class="field"><label>通知書日期</label><input type="date" data-nf="noticeDate" value="${esc(c.noticeDate||'')}"></div>
+      <div class="field"><label>本期開始</label><input type="date" data-nf="periodStart" value="${esc(c.periodStart||'')}"></div>
+      <div class="field"><label>計劃恢復（預設 +${MAX_DAYS}）</label><input type="date" data-nf="plannedResume" value="${esc(c.plannedResume||'')}"></div>
+      <div class="field"><label>FSD／暫停編號</label><input type="text" data-nf="ref" value="${esc(c.ref||'')}" placeholder="取得後填入"></div>
+    </div>
+    <div id="noticeWarn">${windowWarnHtml(c.periodStart||c.noticeDate, c.plannedResume)}</div>
+    <div class="pdf-box ${pdf&&pdf.url?'has-file':''}" id="noticePdfBox">
+      <div class="pdf-row">
+        <div class="pdf-name">${pdf&&pdf.url?pdfLinkHtml(pdf):'關閉通知書 PDF（未上載）'}</div>
+        <button type="button" class="btn btn-ghost btn-sm" data-act="upload-notice-pdf" data-id="${esc(c.id)}">上載 PDF</button>
+        ${pdf&&pdf.url?`<button type="button" class="btn btn-ghost btn-sm" data-act="clear-notice-pdf" data-id="${esc(c.id)}">清除</button>`:''}
+        <input type="file" id="noticePdfInput" accept="application/pdf,.pdf" hidden>
+      </div>
+      <div class="upload-status" id="noticePdfStatus">${UPLOAD_WEBAPP_URL?'準備就緒 · 上載至 Drive 並寫入 noticePdf':'上傳端點未設定'}</div>
+    </div>
+    <div style="margin-top:10px"><button type="button" class="btn btn-primary btn-sm" data-act="save-notice" data-id="${esc(c.id)}">儲存關閉通知</button></div>
+  `, pdf&&pdf.url?'已存 PDF':'待上載 PDF', pdf&&pdf.url?'ok':'');
 
-  html+=collapsible('remarks:'+c.id, '工作備註', remarksListHtml(c), {defaultOpen:true, hint:'你填'});
+  const extHtml = ext.length
+    ? `<div class="ext-timeline">${ext.map((e,i)=>`
+        <div class="ext-card" data-eid="${esc(e.id)}">
+          <div class="ext-idx">Extension Form #${i+1}</div>
+          <div class="ext-meta">
+            收件／記錄：${esc(e.receivedAt||'—')} · 通知日期：${esc(e.noticeDate||'—')}<br>
+            新窗口：${esc(e.periodStart||'—')} → ${esc(e.plannedResume||'—')}
+            ${e.pdf&&e.pdf.url?`<br>PDF：${pdfLinkHtml(e.pdf)}`:''}
+          </div>
+          ${e.note?`<div class="ext-note">${esc(e.note)}</div>`:''}
+          <div class="ext-actions">
+            <button type="button" class="btn btn-ghost btn-sm" data-act="ext-edit" data-id="${esc(c.id)}" data-eid="${esc(e.id)}">編輯</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-act="ext-del" data-id="${esc(c.id)}" data-eid="${esc(e.id)}">刪除</button>
+          </div>
+        </div>`).join('')}</div>`
+    : `<div class="ext-empty">尚無延期。若需延長暫停，請於屆滿前遞交新／更新關閉通知，並在此新增 Extension Form。</div>`;
 
-  html+=collapsible('ext:'+c.id, '延期紀錄'+(ext.length?`（${ext.length}）`:''), ext.length
-    ? ext.map((e,i)=>`<div class="ext-item"><strong>#${i+1}</strong> Notice ${esc(e.noticeDate||'—')} · 期起 ${esc(e.periodStart||'—')} → 恢復 ${esc(e.plannedResume||'—')}${e.note?`<br>${esc(e.note)}`:''}</div>`).join('')
-    : `<div style="font-size:.85rem;color:var(--mute);padding-top:10px">尚無延期紀錄</div>`, {defaultOpen:!!ext.length});
+  html+=solidSection('C · 延期 Extension', `
+    <p class="muted-note">「＋」只用於新增 Extension Form（非備註列）。每段新窗口建議 ≤ ${MAX_DAYS} 日。</p>
+    ${extHtml}
+    <div style="margin-top:12px">
+      <button type="button" class="btn btn-primary btn-sm" data-act="extend" data-id="${esc(c.id)}">＋ 新增 Extension Form</button>
+    </div>
+    <p class="muted-note">現行有效窗口：${esc(win.start||'—')} → ${esc(win.resume||'—')}（來源：${win.source==='extension'?'最近 Extension':'初始通知'}）${due?` · ${MAX_DAYS} 日屆滿 ${esc(due)}`:''}</p>
+  `, ext.length?`${ext.length} 則`:'尚未延期', ext.length?'':'');
 
-  html+=collapsible('hist:'+c.id, '匯入歷程', c.historyLog
+  html+=solidSection('D · 完結', `
+    <div class="complete-box ${c.status==='resumed'?'':'pending'}">
+      ${c.status==='resumed'
+        ? `<strong>已標記完結</strong><br>完結日期：${esc(c.completedAt||'—')}<br>備註：${esc(c.completionNote||'—')}`
+        : `<p style="margin:0 0 10px;font-size:.85rem">完工後通知 FSD、保存完結紀錄，然後標記完結。</p>
+           <div class="inline-form">
+             <div class="field"><label>完結／恢復日期</label><input type="date" id="m_completedAt" value="${esc(todayStr())}"></div>
+             <div class="field span2"><label>完結備註（可選）</label><textarea id="m_completionNote" placeholder="已通知 FSD／完結表格編號…"></textarea></div>
+           </div>
+           <div style="margin-top:10px"><button type="button" class="btn btn-ok btn-sm" data-act="resume" data-id="${esc(c.id)}">標記完結</button></div>`}
+      ${c.status==='resumed'?`<div style="margin-top:10px"><button type="button" class="btn btn-ghost btn-sm" data-act="reopen" data-id="${esc(c.id)}">重新開啟</button></div>`:''}
+    </div>
+  `, c.status==='resumed'?'完結':'進行中', c.status==='resumed'?'ok':'');
+
+  html+=collapsible('remarks:'+c.id, '工作備註（可選）', `
+    <div class="field" style="margin-top:10px">
+      <label>單欄備註</label>
+      <textarea id="workRemarks" rows="3" placeholder="短備註…">${esc(c.remarks||'')}</textarea>
+    </div>
+    <div style="margin-top:8px"><button type="button" class="btn btn-ghost btn-sm" data-act="save-remarks" data-id="${esc(c.id)}">儲存備註</button></div>
+  `, {defaultOpen:!!(c.remarks&&c.remarks.trim())});
+
+  html+=collapsible('hist:'+c.id, '匯入歷程（唯讀）', c.historyLog
     ? `<div class="history-body">${esc(c.historyLog)}</div>`
     : `<div style="font-size:.85rem;color:var(--mute);padding-top:10px">無匯入歷程</div>`, {defaultOpen:false, hint:'唯讀'});
 
+  html+=collapsible('patrol:'+c.id, '現場巡查／聯合（營運欄）', `
+    <p class="muted-note">輔助欄位，非主流程。P＝Pass／O＝Outstanding。</p>
+    <div class="inline-form" id="patrolForm">
+      <div class="field"><label>FE ${poBadge(sc.fe)}</label><select data-pf="fe"><option value="">（未填）</option><option value="P" ${sc.fe==='P'?'selected':''}>P</option><option value="O" ${sc.fe==='O'?'selected':''}>O</option></select></div>
+      <div class="field"><label>獨立探測器 ${poBadge(sc.detector)}</label><select data-pf="detector"><option value="">（未填）</option><option value="P" ${sc.detector==='P'?'selected':''}>P</option><option value="O" ${sc.detector==='O'?'selected':''}>O</option></select></div>
+      <div class="field"><label>現場通知書 ${poBadge(sc.noticeOnSite)}</label><select data-pf="noticeOnSite"><option value="">（未填）</option><option value="P" ${sc.noticeOnSite==='P'?'selected':''}>P</option><option value="O" ${sc.noticeOnSite==='O'?'selected':''}>O</option></select></div>
+      <div class="field"><label>巡查人</label><input data-pf="inspectedBy" value="${esc(sc.inspectedBy||'')}"></div>
+      <div class="field"><label>巡查日期</label><input type="date" data-pf="inspectionDate" value="${esc(sc.inspectionDate||'')}"></div>
+      <div class="field"><label>聯合巡查日期</label><input type="date" data-pf="jiDate" value="${esc(ji.date||'')}"></div>
+      <div class="field span2"><label>聯合出席者</label><input data-pf="jiAttendees" value="${esc(ji.attendees||'')}"></div>
+    </div>
+    <div style="margin-top:10px"><button type="button" class="btn btn-ghost btn-sm" data-act="save-patrol" data-id="${esc(c.id)}">儲存巡查</button></div>
+  `, {defaultOpen:false, hint:'營運'});
+
   $('content').innerHTML=html;
   bindMainActions();
-  bindRemarkEditors(c.id);
+  bindNoticeForm(c.id);
+}
+
+function bindNoticeForm(caseId){
+  const c=findCase(caseId); if(!c) return;
+  const form=$('noticeForm'); if(!form) return;
+  const notice=form.querySelector('[data-nf="noticeDate"]');
+  const period=form.querySelector('[data-nf="periodStart"]');
+  const resume=form.querySelector('[data-nf="plannedResume"]');
+  function refreshWarn(){
+    const w=$('noticeWarn');
+    if(w) w.innerHTML=windowWarnHtml(period.value||notice.value, resume.value);
+  }
+  if(notice) notice.addEventListener('change', ()=>{
+    if(notice.value){
+      if(period && !period.value) period.value=notice.value;
+      if(resume && !resume.value) resume.value=addDays(notice.value, MAX_DAYS);
+    }
+    refreshWarn();
+  });
+  if(period) period.addEventListener('change', ()=>{
+    if(period.value && resume && !resume.dataset.touched) resume.value=addDays(period.value, MAX_DAYS);
+    refreshWarn();
+  });
+  if(resume) resume.addEventListener('change', ()=>{ resume.dataset.touched='1'; refreshWarn(); });
 }
 
 function renderEmptyJob(){
   $('crumb').innerHTML=`<strong>項目記錄</strong> · 選擇左側工程`;
   $('content').innerHTML=`<div class="empty"><div class="hint-lg">選擇左側工程</div>
-    <p style="margin:0 0 16px">每單工程獨立管理 Shutdown Notice、巡查與備註。</p>
+    <p style="margin:0 0 16px;max-width:420px;margin-left:auto;margin-right:auto;line-height:1.55">每單工程跟進關閉通知書、約 ${MAX_DAYS} 日窗口、Extension Form 與完結。唔改線上 SharePoint。</p>
     <button type="button" class="btn btn-primary" id="btnNewCase2">＋ 新工程</button></div>`;
   const b=$('btnNewCase2'); if(b) b.onclick=()=>openCaseModal(null);
 }
@@ -863,25 +1071,25 @@ function renderStatsView(){
     <div class="stats-shell">
       ${alertBannerHtml(all)}
       <div class="kpi-row">
-        <div class="kpi"><div class="lab">全部工程</div><div class="num">${sum.total}</div><div class="delta">延期紀錄 ${sum.ext}</div></div>
-        <div class="kpi accent"><div class="lab">進行中</div><div class="num">${sum.active}</div><div class="delta">未標記已恢復</div></div>
-        <div class="kpi warn"><div class="lab">需提醒 PM</div><div class="num">${sum.alert}</div><div class="delta">超過 14 日上限</div></div>
-        <div class="kpi"><div class="lab">已恢復</div><div class="num">${sum.resumed}</div><div class="delta">status = resumed</div></div>
+        <div class="kpi"><div class="lab">全部工程</div><div class="num">${sum.total}</div><div class="delta">Extension ${sum.ext}</div></div>
+        <div class="kpi accent"><div class="lab">進行中</div><div class="num">${sum.active}</div><div class="delta">未完結</div></div>
+        <div class="kpi warn"><div class="lab">需提醒 PM</div><div class="num">${sum.alert}</div><div class="delta">超過 ${MAX_DAYS} 日窗口</div></div>
+        <div class="kpi"><div class="lab">完結</div><div class="num">${sum.resumed}</div><div class="delta">已標記完結</div></div>
       </div>
       <div class="chart-row">
         <div class="chart-card"><h3>按部門</h3><div class="sub">工程數</div><div class="chart-wrap"><canvas id="deptChart"></canvas></div></div>
         <div class="chart-card"><h3>暫停 FSI 類型</h3><div class="sub">可重疊</div><div class="chart-wrap"><canvas id="fsiChart"></canvas></div></div>
       </div>
       <div class="chart-row">
-        <div class="chart-card"><h3>狀態分佈</h3><div class="sub">進行中 / 已恢復 / 需提醒</div><div class="chart-wrap"><canvas id="statusChart"></canvas></div></div>
+        <div class="chart-card"><h3>狀態分佈</h3><div class="sub">進行中 / 完結 / 需提醒</div><div class="chart-wrap"><canvas id="statusChart"></canvas></div></div>
         <div class="chart-card">
-          <h3>14 日規則</h3>
-          <div class="sub">管理守則摘要</div>
+          <h3>關閉通知流程</h3>
+          <div class="sub">FSD Circular 1/2021 App.I</div>
           <p style="font-size:.88rem;line-height:1.55;color:var(--text);margin-top:8px">
-            每一段 Shutdown Notice 期間最多 <strong>14 日</strong>。<br>
-            以最近一次延期嘅 periodStart（無延期則用工程 periodStart）起計。<br>
-            若狀態未恢復且今日已過 periodStart＋14 日 → 標示「需提醒 PM」。<br>
-            請 PM 提交延期（新 14 日）或新通知，或標記已恢復。
+            1. 過夜／&gt;24h：遞交關閉通知書 → 取得檔案編號 → 保存 PDF<br>
+            2. 核准期通常以約 <strong>${MAX_DAYS} 日</strong>窗口管理，盡量縮短<br>
+            3. 延期：屆滿前新／更新通知 → 記為 Extension Form<br>
+            4. 完工：通知 FSD → 保存完結 → 標記完結
           </p>
           <p style="font-size:.82rem;color:var(--mute);margin-top:10px">目前逾期 ${overdue.length} 單 · 唔改線上 SharePoint Excel</p>
         </div>
@@ -891,7 +1099,7 @@ function renderStatsView(){
           ${overdue.map(c=>{
             const start=effectivePeriodStart(c);
             return `<div class="alert-row" style="background:var(--paper);border:1px solid var(--line-soft)">
-              <div class="info"><strong>${esc(c.location||'')}</strong> · ${esc(c.ref||'')} · PM ${esc(c.pm||'—')}<br>期起 ${esc(start||'—')} · 計劃恢復 ${esc(c.plannedResume||'—')}</div>
+              <div class="info"><strong>${esc(c.location||'')}</strong> · ${esc(c.ref||'')} · PM ${esc(c.pm||'—')}<br>窗口起 ${esc(start||'—')} · 計劃恢復 ${esc(c.plannedResume||'—')}</div>
               <div style="display:flex;gap:6px;flex-wrap:wrap">
                 <button type="button" class="btn btn-warn btn-sm" data-act="remind" data-id="${esc(c.id)}">提醒 PM</button>
                 <button type="button" class="btn btn-ghost btn-sm" data-act="select" data-id="${esc(c.id)}">開啟工程</button>
@@ -918,7 +1126,7 @@ function renderStatsView(){
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10}}}}});
   }
   if(el3){
-    statusChart=new Chart(el3,{type:'doughnut',data:{labels:['進行中','已恢復','需提醒 PM'],datasets:[{data:[sum.active, sum.resumed, sum.alert],backgroundColor:['#5C8A72','#2F7A55','#9A6B2F']}]},
+    statusChart=new Chart(el3,{type:'doughnut',data:{labels:['進行中','完結','需提醒 PM'],datasets:[{data:[sum.active, sum.resumed, sum.alert],backgroundColor:['#5C8A72','#2F7A55','#9A6B2F']}]},
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10}}}}});
   }
 }
@@ -953,34 +1161,9 @@ function selectCase(id){
   render();
 }
 
-function bindRemarkEditors(caseId){
-  const c=findCase(caseId); if(!c) return;
-  const listEl=$('remarkList');
-  if(!listEl) return;
-  let saveT=null;
-  function persist(){
-    syncRemarksString(c);
-    c.updatedAt=new Date().toISOString();
-    clearTimeout(saveT);
-    saveT=setTimeout(()=>{ save(); renderSidebar(); }, 400);
-  }
-  listEl.querySelectorAll('.remark-row').forEach(row=>{
-    const rid=row.getAttribute('data-rid');
-    const item=(c.remarksList||[]).find(x=>x.id===rid);
-    if(!item) return;
-    const at=row.querySelector('[data-rf="at"]');
-    const tx=row.querySelector('[data-rf="text"]');
-    if(at) at.addEventListener('change', ()=>{ item.at=at.value||''; persist(); });
-    if(tx){
-      tx.addEventListener('input', ()=>{ item.text=tx.value; persist(); });
-      tx.addEventListener('blur', ()=>{ item.text=tx.value; syncRemarksString(c); save(); });
-    }
-  });
-}
-
 function bindMainActions(){
   document.querySelectorAll('#content [data-act]').forEach(el=>{
-    el.addEventListener('click', e=>{
+    el.addEventListener('click', async e=>{
       const act=el.getAttribute('data-act');
       const id=el.getAttribute('data-id');
       if(act==='toggle-section'){
@@ -997,32 +1180,109 @@ function bindMainActions(){
       e.preventDefault(); e.stopPropagation();
       if(act==='select'){ selectCase(id); return; }
       if(act==='edit') openCaseModal(id);
-      else if(act==='notice') openNoticeModal(id);
-      else if(act==='extend') openExtendModal(id);
+      else if(act==='extend') openExtendModal(id, null);
+      else if(act==='ext-edit') openExtendModal(id, el.getAttribute('data-eid'));
+      else if(act==='ext-del'){
+        const c=findCase(id); if(!c) return;
+        const eid=el.getAttribute('data-eid');
+        if(!confirm('刪除此 Extension Form？')) return;
+        c.extensions=(c.extensions||[]).filter(x=>x.id!==eid);
+        const last=(c.extensions||[])[(c.extensions||[]).length-1];
+        if(last){
+          c.periodStart=last.periodStart||c.periodStart;
+          c.plannedResume=last.plannedResume||c.plannedResume;
+          c.noticeDate=last.noticeDate||c.noticeDate;
+        }
+        c.updatedAt=new Date().toISOString();
+        save(); render(); toast('已刪除 Extension');
+      }
       else if(act==='resume') markResumed(id);
+      else if(act==='reopen'){
+        const c=findCase(id); if(!c) return;
+        c.status='active';
+        c.completedAt='';
+        c.updatedAt=new Date().toISOString();
+        save(); render(); toast('已重新開啟');
+      }
       else if(act==='delete') deleteCase(id);
       else if(act==='remind') openRemindModal(id);
-      else if(act==='rm-add'){
-        const c=selectedCase(); if(!c) return;
-        c.remarksList=c.remarksList||[];
-        c.remarksList.push(normalizeRemarkItem({text:'', at:todayStr()}));
-        syncRemarksString(c);
+      else if(act==='save-notice'){
+        const c=findCase(id); if(!c) return;
+        const form=$('noticeForm'); if(!form) return;
+        const noticeDate=(form.querySelector('[data-nf="noticeDate"]')||{}).value||'';
+        const periodStart=(form.querySelector('[data-nf="periodStart"]')||{}).value||noticeDate;
+        const plannedResume=(form.querySelector('[data-nf="plannedResume"]')||{}).value||'';
+        const ref=(form.querySelector('[data-nf="ref"]')||{}).value||'';
+        const d=daysBetween(periodStart, plannedResume);
+        if(d!==null && d>MAX_DAYS && !confirm(`計劃恢復超過 ${MAX_DAYS} 日（${d} 日）。仍要儲存？`)) return;
+        c.noticeDate=noticeDate;
+        c.periodStart=periodStart;
+        c.plannedResume=plannedResume||(periodStart?addDays(periodStart, MAX_DAYS):'');
+        c.ref=String(ref).trim();
         c.updatedAt=new Date().toISOString();
-        openSectionIds.add('remarks:'+c.id);
-        save(); render();
-        const last=document.querySelector('#remarkList .remark-row:last-child textarea');
-        if(last) last.focus();
+        save(); render(); toast('已儲存關閉通知');
       }
-      else if(act==='rm-del'){
-        const c=selectedCase(); if(!c) return;
-        const rid=el.getAttribute('data-rid');
-        c.remarksList=(c.remarksList||[]).filter(x=>x.id!==rid);
-        syncRemarksString(c);
+      else if(act==='upload-notice-pdf'){
+        const input=$('noticePdfInput');
+        if(!input) return;
+        input.onchange=()=>{
+          const f=input.files&&input.files[0];
+          input.value='';
+          if(f) handleNoticePdfUpload(id, f);
+        };
+        input.click();
+      }
+      else if(act==='clear-notice-pdf'){
+        const c=findCase(id); if(!c) return;
+        if(!confirm('清除已連結的關閉通知書 PDF？')) return;
+        c.noticePdf=null;
         c.updatedAt=new Date().toISOString();
-        save(); render();
+        save(); render(); toast('已清除 PDF');
+      }
+      else if(act==='save-remarks'){
+        const c=findCase(id); if(!c) return;
+        const ta=$('workRemarks');
+        c.remarks=ta?ta.value:'';
+        c.updatedAt=new Date().toISOString();
+        save(); renderSidebar(); toast('已儲存備註');
+      }
+      else if(act==='save-patrol'){
+        const c=findCase(id); if(!c) return;
+        const form=$('patrolForm'); if(!form) return;
+        const g=k=>(form.querySelector('[data-pf="'+k+'"]')||{}).value||'';
+        c.spotCheck=normalizeSpotCheck({
+          fe:g('fe'), detector:g('detector'), noticeOnSite:g('noticeOnSite'),
+          inspectedBy:String(g('inspectedBy')||'').trim(), inspectionDate:g('inspectionDate')
+        });
+        c.jointInspection=normalizeJoint({ attendees:String(g('jiAttendees')||'').trim(), date:g('jiDate') });
+        c.updatedAt=new Date().toISOString();
+        save(); render(); toast('已儲存巡查');
       }
     });
   });
+}
+
+async function handleNoticePdfUpload(caseId, file){
+  const c=findCase(caseId); if(!c||!file) return;
+  const st=$('noticePdfStatus');
+  function setSt(msg, cls){ if(st){ st.className='upload-status'+(cls?' '+cls:''); st.textContent=msg; } }
+  const n=(file.name||'').toLowerCase();
+  if(!(file.type==='application/pdf' || n.endsWith('.pdf'))){ setSt('請選擇 PDF','err'); toast('請選擇 PDF', true); return; }
+  if(!UPLOAD_WEBAPP_URL){ setSt('上傳端點尚未接上','warn'); toast('上傳端點尚未接上', true); return; }
+  setSt('上傳中：'+file.name,'busy');
+  try{
+    const result=await uploadPdfToDrive(file);
+    c.noticePdf={ url:result.url, driveFileId:result.driveFileId, name:result.name };
+    c.updatedAt=new Date().toISOString();
+    save();
+    setSt('已上載','ok');
+    toast('關閉通知書 PDF 已上載');
+    render();
+  }catch(err){
+    console.warn(err);
+    setSt('錯誤：'+(err&&err.message?err.message:String(err)),'err');
+    toast(err&&err.message?err.message:'上傳失敗', true);
+  }
 }
 
 function closeModal(){
@@ -1049,89 +1309,61 @@ function openCaseModal(id){
   const c=id?findCase(id):null;
   modalState={kind:'case', id:id||null};
   const fsiStr=(c&&c.fsi||[]).join(', ');
-  const sc=(c&&c.spotCheck)||emptySpotCheck();
-  const ji=(c&&c.jointInspection)||emptyJoint();
-  const hist=c&&c.historyLog?c.historyLog:'';
-  openModalShell(c?'編輯工程':'新工程', `
+  openModalShell(c?'編輯基本資料':'新工程', `
     <div class="form-section">
       <h3>基本資料</h3>
       <div class="grid">
         <div class="field span2"><label>位置 <span class="req">*</span></label><input id="m_location" value="${esc(c?c.location:'')}"></div>
         <div class="field"><label>部門</label><input id="m_dept" value="${esc(c?c.dept:'')}" placeholder="CDO / CFSO"></div>
-        <div class="field"><label>參考編號</label><input id="m_ref" value="${esc(c?c.ref:'')}"></div>
+        <div class="field"><label>FSD／暫停編號</label><input id="m_ref" value="${esc(c?c.ref:'')}" placeholder="取得檔案編號後填入"></div>
         <div class="field"><label>PM</label><input id="m_pm" value="${esc(c?c.pm:'')}"></div>
-        <div class="field"><label>PM Email（稍後填）</label><input id="m_pmEmail" type="email" value="${esc(c?c.pmEmail:'')}" placeholder="待填 email"></div>
+        <div class="field"><label>PM Email</label><input id="m_pmEmail" type="email" value="${esc(c?c.pmEmail:'')}" placeholder="待填 email"></div>
         <div class="field span2"><label>承辦商</label><input id="m_contractor" value="${esc(c?c.contractor:'')}"></div>
         <div class="field span2"><label>暫停 FSI（逗號分隔）</label><input id="m_fsi" value="${esc(fsiStr)}" placeholder="Sprinkler, Detector"></div>
+        <div class="field"><label>狀態</label><select id="m_status"><option value="active" ${(c?c.status:'active')==='active'?'selected':''}>進行中</option><option value="resumed" ${c&&c.status==='resumed'?'selected':''}>完結</option></select></div>
       </div>
     </div>
-    <div class="form-section">
-      <h3>Shutdown 時段</h3>
+    ${!c?`<div class="form-section">
+      <h3>關閉通知（初始）</h3>
+      <p style="font-size:.78rem;color:var(--mute);margin:0 0 10px">可稍後於工程頁補 PDF。計劃恢復預設 +${MAX_DAYS} 日。</p>
       <div class="grid">
-        <div class="field"><label>Shutdown Notice 日期</label><input type="date" id="m_notice" value="${esc(c?c.noticeDate:'')}"></div>
-        <div class="field"><label>本期開始</label><input type="date" id="m_period" value="${esc(c?c.periodStart:'')}"></div>
-        <div class="field"><label>計劃恢復</label><input type="date" id="m_resume" value="${esc(c?c.plannedResume:'')}"></div>
-        <div class="field"><label>狀態</label><select id="m_status"><option value="active" ${(c?c.status:'active')==='active'?'selected':''}>進行中</option><option value="resumed" ${c&&c.status==='resumed'?'selected':''}>已恢復</option></select></div>
+        <div class="field"><label>通知書日期</label><input type="date" id="m_notice" value=""></div>
+        <div class="field"><label>本期開始</label><input type="date" id="m_period" value=""></div>
+        <div class="field"><label>計劃恢復</label><input type="date" id="m_resume" value=""></div>
       </div>
       <div class="warn-note" id="m_warn" style="display:none"></div>
-    </div>
-    <div class="form-section fill">
-      <h3>Spot Check<span class="hint">請填 · P／O／空白</span></h3>
-      <div class="grid">
-        <div class="field"><label>FE</label>${poSelect('m_sc_fe', sc.fe)}</div>
-        <div class="field"><label>獨立探測器</label>${poSelect('m_sc_detector', sc.detector)}</div>
-        <div class="field"><label>現場 Shutdown Notice</label>${poSelect('m_sc_notice', sc.noticeOnSite)}</div>
-        <div class="field"><label>巡查人</label><input id="m_sc_by" value="${esc(sc.inspectedBy||'')}" placeholder="姓名"></div>
-        <div class="field"><label>巡查日期</label><input type="date" id="m_sc_date" value="${esc(sc.inspectionDate||'')}"></div>
-      </div>
-    </div>
-    <div class="form-section fill">
-      <h3>聯合巡查<span class="hint">請填</span></h3>
-      <div class="grid">
-        <div class="field span2"><label>出席者</label><input id="m_ji_attendees" value="${esc(ji.attendees||'')}" placeholder="姓名／單位"></div>
-        <div class="field"><label>日期</label><input type="date" id="m_ji_date" value="${esc(ji.date||'')}"></div>
-      </div>
-    </div>
-    <p style="font-size:.78rem;color:var(--mute);margin:0 0 8px">工作備註請於工程頁以「一列一則」方式新增；此處不另設大文字框。</p>
-    ${hist?`<details style="margin-top:8px;border:1px solid var(--line-soft);border-radius:10px;background:var(--cream-2);padding:8px 12px"><summary style="cursor:pointer;font-size:.78rem;font-weight:700;color:var(--mute)">匯入歷程（唯讀）</summary><div style="white-space:pre-wrap;font-size:.8rem;margin-top:8px">${esc(hist)}</div></details>`:''}
+    </div>`:''}
   `, `
     <button type="button" class="btn btn-ghost" id="m_cancel">取消</button>
     <button type="button" class="btn btn-primary" id="m_save">儲存</button>
   `);
-  const notice=$('m_notice'), resume=$('m_resume'), warn=$('m_warn');
-  function checkWindow(){
-    const n=notice.value, r=resume.value, p=$('m_period').value||n;
-    if(n && !r){ resume.value=addDays(n, MAX_DAYS); }
-    if(p && resume.value){
-      const d=daysBetween(p, resume.value);
-      if(d!==null && d>MAX_DAYS){
-        warn.style.display='block';
-        warn.textContent=`注意：計劃恢復距離本期開始為 ${d} 日，超過 ${MAX_DAYS} 日上限。建議縮短，或改用「延期」。`;
-      } else { warn.style.display='none'; }
-    } else warn.style.display='none';
-  }
-  notice.addEventListener('change', ()=>{
-    if(notice.value){
-      if(!$('m_period').value) $('m_period').value=notice.value;
-      if(!resume.value) resume.value=addDays(notice.value, MAX_DAYS);
+  if(!c){
+    const notice=$('m_notice'), resume=$('m_resume'), warn=$('m_warn');
+    function checkWindow(){
+      const n=notice.value, r=resume.value, p=$('m_period').value||n;
+      if(n && !r){ resume.value=addDays(n, MAX_DAYS); }
+      if(p && resume.value){
+        const d=daysBetween(p, resume.value);
+        if(d!==null && d>MAX_DAYS){
+          warn.style.display='block';
+          warn.textContent=`注意：計劃恢復距離本期開始為 ${d} 日，超過 ${MAX_DAYS} 日。`;
+        } else { warn.style.display='none'; }
+      } else warn.style.display='none';
     }
-    checkWindow();
-  });
-  resume.addEventListener('change', checkWindow);
-  $('m_period').addEventListener('change', checkWindow);
-  checkWindow();
+    notice.addEventListener('change', ()=>{
+      if(notice.value){
+        if(!$('m_period').value) $('m_period').value=notice.value;
+        if(!resume.value) resume.value=addDays(notice.value, MAX_DAYS);
+      }
+      checkWindow();
+    });
+    resume.addEventListener('change', checkWindow);
+    $('m_period').addEventListener('change', checkWindow);
+  }
   $('m_cancel').onclick=closeModal;
   $('m_save').onclick=()=>{
     const location=$('m_location').value.trim();
     if(!location){ toast('請填位置', true); return; }
-    const period=$('m_period').value||$('m_notice').value;
-    const planned=$('m_resume').value;
-    if(period && planned){
-      const d=daysBetween(period, planned);
-      if(d!==null && d>MAX_DAYS){
-        if(!confirm(`計劃恢復超過 ${MAX_DAYS} 日（${d} 日）。仍要儲存？`)) return;
-      }
-    }
     const payload={
       location,
       dept:$('m_dept').value.trim(),
@@ -1140,34 +1372,31 @@ function openCaseModal(id){
       pmEmail:$('m_pmEmail').value.trim(),
       contractor:$('m_contractor').value.trim(),
       fsi:$('m_fsi').value.split(/[,，]/).map(s=>s.trim()).filter(Boolean),
-      noticeDate:$('m_notice').value,
-      periodStart:period,
-      plannedResume:planned,
-      status:$('m_status').value==='resumed'?'resumed':'active',
-      spotCheck:normalizeSpotCheck({
-        fe:$('m_sc_fe').value,
-        detector:$('m_sc_detector').value,
-        noticeOnSite:$('m_sc_notice').value,
-        inspectedBy:$('m_sc_by').value.trim(),
-        inspectionDate:$('m_sc_date').value
-      }),
-      jointInspection:normalizeJoint({
-        attendees:$('m_ji_attendees').value.trim(),
-        date:$('m_ji_date').value
-      })
+      status:$('m_status').value==='resumed'?'resumed':'active'
     };
     if(id){
       const cur=findCase(id);
-      Object.assign(cur, payload, {
-        historyLog:cur.historyLog||'',
-        remarksList:cur.remarksList||[],
-        remarks:cur.remarks||'',
-        updatedAt:new Date().toISOString()
-      });
-      syncRemarksString(cur);
+      Object.assign(cur, payload, { updatedAt:new Date().toISOString() });
       selectedCaseId=id;
     } else {
-      const neu=normalizeCase(Object.assign({id:uid('fsi'), extensions:[], historyLog:'', remarksList:[], remarks:''}, payload));
+      const notice=$('m_notice')?$('m_notice').value:'';
+      const period=$('m_period')?($('m_period').value||notice):notice;
+      const planned=$('m_resume')?$('m_resume').value:(period?addDays(period, MAX_DAYS):'');
+      if(period && planned){
+        const d=daysBetween(period, planned);
+        if(d!==null && d>MAX_DAYS && !confirm(`計劃恢復超過 ${MAX_DAYS} 日（${d} 日）。仍要儲存？`)) return;
+      }
+      const neu=normalizeCase(Object.assign({
+        id:uid('fsi'),
+        extensions:[],
+        historyLog:'',
+        remarksList:[],
+        remarks:'',
+        noticePdf:null,
+        noticeDate:notice,
+        periodStart:period,
+        plannedResume:planned||(period?addDays(period, MAX_DAYS):'')
+      }, payload));
       db.fsi.cases.push(neu);
       selectedCaseId=neu.id;
       mainView='cases';
@@ -1176,80 +1405,94 @@ function openCaseModal(id){
   };
 }
 
-function openNoticeModal(id){
+function openExtendModal(id, eid){
   const c=findCase(id); if(!c) return;
-  modalState={kind:'notice', id};
-  const def=todayStr();
-  openModalShell('標記 Shutdown Notice 日期', `
-    <p style="font-size:.85rem;color:var(--mute);margin-bottom:12px">設定後，計劃恢復預設為 Notice 日期 + ${MAX_DAYS} 日。</p>
+  const existing=eid?(c.extensions||[]).find(x=>x.id===eid):null;
+  modalState={kind:'extend', id, eid:eid||null};
+  const start=existing?(existing.periodStart||todayStr()):todayStr();
+  const end=existing?(existing.plannedResume||addDays(start, MAX_DAYS)):addDays(start, MAX_DAYS);
+  const received=existing?(existing.receivedAt||todayStr()):todayStr();
+  const notice=existing?(existing.noticeDate||start):start;
+  openModalShell(existing?'編輯 Extension Form':'新增 Extension Form', `
+    <p style="font-size:.85rem;color:var(--mute);margin-bottom:12px">延期須於先前窗口屆滿前遞交新／更新關閉通知。此處記錄為 Extension Form；新窗口建議 ≤ ${MAX_DAYS} 日。</p>
     <div class="grid">
-      <div class="field"><label>Shutdown Notice 日期 <span class="req">*</span></label><input type="date" id="m_notice" value="${esc(c.noticeDate||def)}"></div>
-      <div class="field"><label>計劃恢復</label><input type="date" id="m_resume" value="${esc(c.plannedResume||'')}"></div>
+      <div class="field"><label>收件／記錄日期</label><input type="date" id="m_received" value="${esc(received)}"></div>
+      <div class="field"><label>延期通知日期 <span class="req">*</span></label><input type="date" id="m_notice" value="${esc(notice)}"></div>
+      <div class="field"><label>新本期開始</label><input type="date" id="m_period" value="${esc(start)}"></div>
+      <div class="field"><label>新計劃恢復（≤${MAX_DAYS} 日）</label><input type="date" id="m_resume" value="${esc(end)}"></div>
+      <div class="field span2"><label>短備註（可選）</label><textarea id="m_note" placeholder="表格編號／原因…">${esc(existing?existing.note:'')}</textarea></div>
     </div>
     <div class="warn-note" id="m_warn" style="display:none"></div>
-  `, `<button type="button" class="btn btn-ghost" id="m_cancel">取消</button><button type="button" class="btn btn-primary" id="m_save">儲存</button>`);
-  const notice=$('m_notice'), resume=$('m_resume'), warn=$('m_warn');
-  function sync(){
-    if(notice.value && !resume.dataset.touched) resume.value=addDays(notice.value, MAX_DAYS);
-    const d=daysBetween(notice.value, resume.value);
-    if(d!==null && d>MAX_DAYS){ warn.style.display='block'; warn.textContent=`超過 ${MAX_DAYS} 日（${d} 日）。單一 Notice 期不應超過 ${MAX_DAYS} 日。`; }
-    else warn.style.display='none';
-  }
-  if(!resume.value && notice.value) resume.value=addDays(notice.value, MAX_DAYS);
-  notice.onchange=sync; resume.onchange=()=>{ resume.dataset.touched='1'; sync(); };
-  sync();
-  $('m_cancel').onclick=closeModal;
-  $('m_save').onclick=()=>{
-    if(!notice.value){ toast('請填 Notice 日期', true); return; }
-    const d=daysBetween(notice.value, resume.value);
-    if(d!==null && d>MAX_DAYS && !confirm(`超過 ${MAX_DAYS} 日，仍要儲存？`)) return;
-    c.noticeDate=notice.value;
-    c.periodStart=notice.value;
-    c.plannedResume=resume.value||addDays(notice.value, MAX_DAYS);
-    c.updatedAt=new Date().toISOString();
-    save(); closeModal(); render(); toast('已更新 Notice 日期');
-  };
-}
+    <div class="pdf-box ${existing&&existing.pdf&&existing.pdf.url?'has-file':''}" style="margin-top:12px">
+      <div class="pdf-row">
+        <div class="pdf-name" id="m_extPdfLabel">${existing&&existing.pdf&&existing.pdf.url?pdfLinkHtml(existing.pdf):'延期通知 PDF（可選）'}</div>
+        <button type="button" class="btn btn-ghost btn-sm" id="m_extPdfPick">上載 PDF</button>
+        <input type="file" id="m_extPdfFile" accept="application/pdf,.pdf" hidden>
+      </div>
+      <div class="upload-status" id="m_extPdfStatus">${UPLOAD_WEBAPP_URL?'可選 · 上載後寫入 extensions[].pdf':'上傳端點未設定'}</div>
+    </div>
+  `, `<button type="button" class="btn btn-ghost" id="m_cancel">取消</button><button type="button" class="btn btn-primary" id="m_save">${existing?'儲存':'新增 Extension'}</button>`);
 
-function openExtendModal(id){
-  const c=findCase(id); if(!c) return;
-  modalState={kind:'extend', id};
-  const start=todayStr();
-  const end=addDays(start, MAX_DAYS);
-  openModalShell('新增延期（新 14 日）', `
-    <p style="font-size:.85rem;color:var(--mute);margin-bottom:12px">新增一段 Shutdown 延期；periodStart 起計新的 ${MAX_DAYS} 日窗口。</p>
-    <div class="grid">
-      <div class="field"><label>延期 Notice 日期 <span class="req">*</span></label><input type="date" id="m_notice" value="${esc(start)}"></div>
-      <div class="field"><label>本期開始</label><input type="date" id="m_period" value="${esc(start)}"></div>
-      <div class="field"><label>計劃恢復</label><input type="date" id="m_resume" value="${esc(end)}"></div>
-      <div class="field span2"><label>延期備註（你填）</label><textarea id="m_note" placeholder="延期原因／表格編號…"></textarea></div>
-    </div>
-    <div class="warn-note" id="m_warn" style="display:none"></div>
-  `, `<button type="button" class="btn btn-ghost" id="m_cancel">取消</button><button type="button" class="btn btn-primary" id="m_save">新增延期</button>`);
-  const notice=$('m_notice'), period=$('m_period'), resume=$('m_resume'), warn=$('m_warn');
+  let pendingPdf=existing&&existing.pdf?Object.assign({}, existing.pdf):null;
+  const noticeEl=$('m_notice'), period=$('m_period'), resume=$('m_resume'), warn=$('m_warn');
   function sync(){
-    if(notice.value && !period.value) period.value=notice.value;
+    if(noticeEl.value && !period.value) period.value=noticeEl.value;
     if(period.value && !resume.dataset.touched) resume.value=addDays(period.value, MAX_DAYS);
-    const d=daysBetween(period.value||notice.value, resume.value);
-    if(d!==null && d>MAX_DAYS){ warn.style.display='block'; warn.textContent=`延期窗口 ${d} 日，超過 ${MAX_DAYS} 日上限。`; }
+    const d=daysBetween(period.value||noticeEl.value, resume.value);
+    if(d!==null && d>MAX_DAYS){ warn.style.display='block'; warn.textContent=`延期窗口 ${d} 日，超過建議 ${MAX_DAYS} 日。`; }
     else warn.style.display='none';
   }
-  notice.onchange=sync; period.onchange=sync; resume.onchange=()=>{ resume.dataset.touched='1'; sync(); };
+  noticeEl.onchange=sync; period.onchange=sync; resume.onchange=()=>{ resume.dataset.touched='1'; sync(); };
+  sync();
+
+  $('m_extPdfPick').onclick=()=>$('m_extPdfFile').click();
+  $('m_extPdfFile').onchange=async ()=>{
+    const file=$('m_extPdfFile').files&&$('m_extPdfFile').files[0];
+    $('m_extPdfFile').value='';
+    if(!file) return;
+    const st=$('m_extPdfStatus');
+    const n=(file.name||'').toLowerCase();
+    if(!(file.type==='application/pdf'||n.endsWith('.pdf'))){ st.className='upload-status err'; st.textContent='請選擇 PDF'; return; }
+    if(!UPLOAD_WEBAPP_URL){ st.className='upload-status warn'; st.textContent='上傳端點尚未接上'; return; }
+    st.className='upload-status busy'; st.textContent='上傳中…';
+    try{
+      const result=await uploadPdfToDrive(file);
+      pendingPdf={ url:result.url, driveFileId:result.driveFileId, name:result.name };
+      $('m_extPdfLabel').innerHTML=pdfLinkHtml(pendingPdf);
+      st.className='upload-status ok'; st.textContent='已上載（儲存後一併寫入）';
+    }catch(err){
+      st.className='upload-status err'; st.textContent=err&&err.message?err.message:'上傳失敗';
+      toast(err&&err.message?err.message:'上傳失敗', true);
+    }
+  };
+
   $('m_cancel').onclick=closeModal;
   $('m_save').onclick=()=>{
-    if(!notice.value){ toast('請填 Notice 日期', true); return; }
-    const ps=period.value||notice.value;
+    if(!noticeEl.value){ toast('請填延期通知日期', true); return; }
+    const ps=period.value||noticeEl.value;
     const pr=resume.value||addDays(ps, MAX_DAYS);
     const d=daysBetween(ps, pr);
-    if(d!==null && d>MAX_DAYS && !confirm(`超過 ${MAX_DAYS} 日，仍要新增？`)) return;
+    if(d!==null && d>MAX_DAYS && !confirm(`超過 ${MAX_DAYS} 日，仍要儲存？`)) return;
     c.extensions=c.extensions||[];
-    c.extensions.push(normalizeExt({noticeDate:notice.value, periodStart:ps, plannedResume:pr, note:$('m_note').value.trim()}));
-    c.noticeDate=notice.value;
+    const payload={
+      receivedAt:$('m_received').value||todayStr(),
+      noticeDate:noticeEl.value,
+      periodStart:ps,
+      plannedResume:pr,
+      note:$('m_note').value.trim(),
+      pdf:pendingPdf
+    };
+    if(existing){
+      Object.assign(existing, payload);
+    } else {
+      c.extensions.push(normalizeExt(payload));
+    }
+    c.noticeDate=noticeEl.value;
     c.periodStart=ps;
     c.plannedResume=pr;
     c.status='active';
     c.updatedAt=new Date().toISOString();
-    save(); closeModal(); render(); toast('已新增延期');
+    save(); closeModal(); render(); toast(existing?'已更新 Extension':'已新增 Extension Form');
   };
 }
 
@@ -1258,16 +1501,16 @@ function buildRemindDraft(c){
   const due=start?addDays(start, MAX_DAYS):'—';
   const to=c.pmEmail||'';
   const toDisplay=c.pmEmail||`（待填 email）${c.pm?` · ${c.pm}`:''}`;
-  const subject=`[FSI] 請更新 Shutdown Notice — ${c.location||c.ref||'工程'}`;
+  const subject=`[FSI] 請更新關閉通知／Extension Form — ${c.location||c.ref||'工程'}`;
   const body=`您好${c.pm?' '+c.pm:''}，
 
-以下 FSI 暫停工程已超過單一 Shutdown Notice 14 日上限，請提交延期／新通知，或確認已恢復：
+以下消防裝置關閉工程已超過約 ${MAX_DAYS} 日窗口，請於屆滿前遞交延期通知（Extension Form），或確認已完結：
 
 位置：${c.location||'—'}
-參考編號：${c.ref||'—'}
+FSD／暫停編號：${c.ref||'—'}
 部門：${c.dept||'—'}
-Shutdown Notice / 本期開始：${start||'—'}
-14 日屆滿日：${due}
+現行窗口開始：${start||'—'}
+${MAX_DAYS} 日屆滿日：${due}
 計劃恢復：${c.plannedResume||'—'}
 暫停 FSI：${(c.fsi||[]).join(', ')||'—'}
 
@@ -1316,10 +1559,14 @@ function openRemindModal(id){
 
 function markResumed(id){
   const c=findCase(id); if(!c) return;
-  if(!confirm('標記此工程為已恢復？')) return;
+  const completedAt=($('m_completedAt')&&$('m_completedAt').value)||todayStr();
+  const note=($('m_completionNote')&&$('m_completionNote').value.trim())||'';
+  if(!confirm('標記此工程為完結？請確認已通知 FSD 並保存完結紀錄。')) return;
   c.status='resumed';
+  c.completedAt=completedAt;
+  c.completionNote=note;
   c.updatedAt=new Date().toISOString();
-  save(); render(); toast('已標記為已恢復');
+  save(); render(); toast('已標記完結');
 }
 function deleteCase(id){
   const c=findCase(id); if(!c) return;
