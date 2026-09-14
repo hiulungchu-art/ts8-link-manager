@@ -4,15 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache">
-<title>FSI 暫停名單 · 工作頁面集</title>
-<link rel="stylesheet" href="./css/site.css?v=20260914fsi3">
+<title>FSI 暫停管理 · 工作頁面集</title>
+<link rel="stylesheet" href="./css/site.css?v=20260914fsi4">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="./config.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&display=swap');
 :root{
   --ink:#0F1612;--cream:#F3EEE4;--cream-2:#EAE3D6;--paper:#FAF7F1;--line:#DDD5C8;--line-soft:#E8E1D4;
   --text:#1E2622;--mute:#6A736C;--accent:#5C8A72;--accent-d:#3F6B56;--ok:#2F7A55;--okb:#E6F4EC;
-  --warn:#9A6B2F;--warnb:#F8F0E4;--info:#3A6E8C;--infob:#E8F1F6;--danger:#A33B3B;
+  --warn:#9A6B2F;--warnb:#F8F0E4;--info:#3A6E8C;--infob:#E8F1F6;--danger:#A33B3B;--dangerb:#FBEAEA;
   --font-display:"Noto Serif TC",serif;--font-body:"Noto Sans TC","PingFang TC",sans-serif;--font-ui:"Instrument Sans","Noto Sans TC",sans-serif;
   --radius:18px;--shadow:0 1px 2px rgba(15,22,18,.04),0 10px 28px rgba(15,22,18,.06);
 }
@@ -30,11 +31,22 @@ body.has-site-chrome .app{min-height:calc(100vh - 64px)}
 .side-kpi .lab{font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(232,237,233,.5);font-weight:700}
 .side-kpi .num{font-family:var(--font-display);font-size:1.45rem;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums}
 .side-kpi .sub{font-size:.72rem;color:rgba(232,237,233,.55);margin-top:2px}
+.side-kpi .k.alert .num{color:#F0C9A0}
 .main{display:flex;flex-direction:column;min-width:0;background:transparent}
 .topbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line-soft);background:rgba(250,247,241,.72);backdrop-filter:blur(10px)}
-.crumb{font-size:.9rem;color:var(--mute);flex:1;min-width:160px}
+.view-tabs{display:flex;gap:28px;flex-wrap:wrap;margin-right:auto;border-bottom:1px solid transparent;padding-bottom:0}
+.view-tab{appearance:none;background:none;border:0;border-bottom:2px solid transparent;padding:6px 2px 10px;font:inherit;font-family:var(--font-ui);font-size:.9rem;font-weight:600;color:var(--mute);cursor:pointer}
+.view-tab:hover{color:var(--ink)}
+.view-tab.active{color:var(--ink);border-bottom-color:var(--accent-d)}
+.crumb{font-size:.9rem;color:var(--mute);min-width:120px}
 .crumb strong{color:var(--ink)}
 .content{padding:18px 20px 40px;flex:1}
+.alert-banner{background:var(--warnb);border:1px solid #E6D2B0;border-left:4px solid var(--warn);border-radius:14px;padding:14px 16px;margin-bottom:16px}
+.alert-banner h3{margin:0 0 6px;font-family:var(--font-display);font-size:1rem;color:var(--warn)}
+.alert-banner p{margin:0 0 10px;font-size:.85rem;color:var(--text);line-height:1.45}
+.alert-list{display:grid;gap:8px}
+.alert-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;background:rgba(255,255,255,.55);border-radius:10px;padding:8px 10px}
+.alert-row .info{font-size:.82rem;color:var(--ink);flex:1;min-width:180px}
 .kpi-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
 @media(max-width:900px){.kpi-row{grid-template-columns:1fr 1fr}}
 .kpi{background:var(--paper);border:1px solid var(--line-soft);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
@@ -44,25 +56,32 @@ body.has-site-chrome .app{min-height:calc(100vh - 64px)}
 .kpi.accent{background:#1A3A2B;border-color:#1A3A2B;color:#FAF9F6}
 .kpi.accent .lab,.kpi.accent .delta{color:rgba(250,249,246,.7)}
 .kpi.accent .num{color:#FAF9F6}
+.kpi.warn{background:var(--warnb);border-color:#E6D2B0}
+.kpi.warn .num{color:var(--warn)}
 .chart-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
 @media(max-width:900px){.chart-row{grid-template-columns:1fr}}
 .chart-card{background:var(--paper);border:1px solid var(--line-soft);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow)}
 .chart-card h3{font-family:var(--font-display);font-size:1rem;margin:0 0 4px;color:var(--ink)}
 .chart-card .sub{font-size:.75rem;color:var(--mute);margin-bottom:8px}
-.chart-wrap{height:200px;position:relative}
+.chart-wrap{height:220px;position:relative}
 .day-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:14px;padding:14px 16px;background:var(--cream-2);border:1px solid var(--line-soft);border-radius:14px}
 .day-toolbar .field{margin:0;min-width:120px;flex:1}
 .day-toolbar .field label{display:block;font-size:.68rem;color:var(--mute);margin-bottom:4px;font-weight:600}
 .day-toolbar input,.day-toolbar select{width:100%;padding:8px 10px;border:1px solid var(--line-soft);border-radius:10px;background:var(--paper);font:inherit;font-size:.85rem;color:var(--ink)}
 .day-toolbar-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.btn{border:0;border-radius:10px;padding:8px 12px;font:inherit;font-size:.82rem;font-weight:600;cursor:pointer}
+.btn{border:0;border-radius:10px;padding:8px 12px;font:inherit;font-size:.82rem;font-weight:600;cursor:pointer;font-family:var(--font-ui)}
 .btn-sm{padding:6px 10px;font-size:.78rem}
 .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
 .btn-ghost:hover{background:rgba(92,138,114,.1)}
 .btn-primary{background:var(--accent-d);color:#fff}
+.btn-primary:hover{filter:brightness(1.05)}
+.btn-warn{background:var(--warn);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-ok{background:var(--ok);color:#fff}
 .day-count{font-size:.78rem;color:var(--mute);margin:0 0 12px}
 .day-card{background:var(--paper);border:1px solid var(--line-soft);border-radius:var(--radius);padding:0;box-shadow:var(--shadow);margin-bottom:12px;border-left:3px solid var(--accent);overflow:hidden}
-.day-card.is-hidden{display:none}
+.day-card.needs-pm{border-left-color:var(--warn);box-shadow:0 0 0 1px #E6D2B0,var(--shadow)}
+.day-card.is-resumed{border-left-color:var(--ok);opacity:.92}
 .day-card .day-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:14px 18px;cursor:pointer;user-select:none}
 .day-card.is-open .day-head{border-bottom:1px solid var(--line-soft)}
 .day-chevron{width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;color:var(--mute);transition:transform .18s}
@@ -74,6 +93,7 @@ body.has-site-chrome .app{min-height:calc(100vh - 64px)}
 .day-dot.on{background:var(--okb);color:var(--ok)}
 .day-dot.warn{background:var(--warnb);color:var(--warn)}
 .day-dot.info{background:var(--infob);color:var(--info)}
+.day-dot.danger{background:var(--dangerb);color:var(--danger)}
 .day-body{display:none;padding:4px 18px 18px}
 .day-card.is-open .day-body{display:block}
 .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-top:12px}
@@ -84,9 +104,38 @@ body.has-site-chrome .app{min-height:calc(100vh - 64px)}
 .ext-list h4{margin:0 0 8px;font-size:.82rem;color:var(--ink)}
 .ext-item{font-size:.8rem;color:var(--mute);padding:8px 10px;border-radius:10px;background:var(--cream-2);margin-bottom:6px}
 .ext-item strong{color:var(--ink)}
+.card-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line-soft)}
 .section-title{font-family:var(--font-display);font-size:1.05rem;margin:8px 0 12px;color:var(--ink)}
 .empty{padding:40px;text-align:center;color:var(--mute)}
-.foot-bar{padding:10px 20px;border-top:1px solid var(--line-soft);font-size:.75rem;color:var(--mute);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.foot-bar{padding:10px 20px;border-top:1px solid var(--line-soft);font-size:.75rem;color:var(--mute);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;background:rgba(250,247,241,.4)}
+.sync-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ok);margin-right:8px;vertical-align:middle;animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+.modal-bg{position:fixed;inset:0;background:rgba(15,22,18,.45);z-index:60;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-bg.open{display:flex}
+.modal{background:var(--paper);border-radius:18px;max-width:560px;width:100%;max-height:90vh;overflow:auto;box-shadow:var(--shadow);border:1px solid var(--line-soft)}
+.modal-h{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line-soft)}
+.modal-h h2{margin:0;font-family:var(--font-display);font-size:1.15rem}
+.modal-x{border:0;background:transparent;font-size:1.2rem;cursor:pointer;color:var(--mute);padding:4px 8px}
+.modal-b{padding:16px 18px}
+.modal-f{padding:12px 18px 16px;border-top:1px solid var(--line-soft);display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.span2{grid-column:span 2}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.span2{grid-column:span 1}}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:.75rem;font-weight:600;color:var(--mute)}
+.req{color:var(--accent)}
+.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font:inherit;font-size:.88rem;background:#fff}
+.field textarea{min-height:72px;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(92,138,114,.14)}
+.warn-note{font-size:.78rem;color:var(--warn);background:var(--warnb);padding:8px 10px;border-radius:8px;margin-top:4px}
+.mail-preview{background:var(--cream-2);border-radius:12px;padding:12px 14px;font-size:.85rem;line-height:1.5}
+.mail-preview .row{margin-bottom:8px}
+.mail-preview .lab{font-size:.68rem;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.06em}
+.mail-preview .body{white-space:pre-wrap;background:var(--paper);border-radius:8px;padding:10px;margin-top:4px;border:1px solid var(--line-soft)}
+.toast{position:fixed;bottom:28px;right:28px;background:var(--ink);color:#F2F7F4;padding:13px 18px;border-radius:14px;font-size:.85rem;opacity:0;transition:opacity .2s;z-index:80;pointer-events:none;max-width:min(360px,90vw)}
+.toast.show{opacity:1}
+.toast.err{background:#7A2A2A}
+.stats-shell{max-width:1100px}
 </style>
 </head>
 <body class="site-body has-site-chrome">
@@ -101,264 +150,961 @@ body.has-site-chrome .app{min-height:calc(100vh - 64px)}
   <button class="site-nav-toggle" type="button" id="navToggle" aria-label="開啟選單" aria-expanded="false"><span></span><span></span><span></span></button>
   <ul class="site-nav-links">
     <li><a href="./">首頁</a></li>
-    <li><a href="./fsi.html" class="is-active" aria-current="page">FSI 暫停名單</a></li>
+    <li><a href="./fsi.html" class="is-active" aria-current="page">FSI 暫停管理</a></li>
     <li><a href="./ts8.html">TS8 連結管理</a></li>
   </ul>
 </header>
 
 <div class="app">
   <aside class="sidebar">
-    <div class="side-eyebrow">FSI Workspace</div>
-    <h1>暫停名單</h1>
-    <p class="side-desc">GitHub 站內資料（Excel 快照匯入）。可篩選、收合、睇總結。</p>
+    <div class="side-eyebrow">FSI Management</div>
+    <h1>暫停管理</h1>
+    <p class="side-desc">可編輯管理工具 · Shutdown Notice 最多 14 日 · 逾期提醒 PM 更新</p>
     <div class="side-kpi" id="sideKpis"></div>
     <div class="side-desc" id="sideMeta" style="margin-top:8px"></div>
   </aside>
   <section class="main">
     <div class="topbar">
+      <div class="view-tabs" id="viewTabs">
+        <button type="button" class="view-tab" data-view="stats">統計總結</button>
+        <button type="button" class="view-tab active" data-view="cases">項目記錄</button>
+      </div>
       <div class="crumb" id="crumb"><strong>FSI</strong> · 載入中…</div>
+      <button type="button" class="btn btn-primary btn-sm" id="btnNewCase">＋ 新增個案</button>
       <button type="button" class="btn btn-ghost btn-sm" id="btnExpandAll">全部展開</button>
       <button type="button" class="btn btn-ghost btn-sm" id="btnCollapseAll">全部收合</button>
     </div>
     <div class="content" id="content"></div>
     <div class="foot-bar">
-      <span>FSI snapshot · 唔改線上 Excel</span>
+      <span><span class="sync-dot" id="syncDot"></span><span id="syncText">自動同步中</span></span>
       <span id="footMeta"></span>
     </div>
   </section>
 </div>
 
+<div class="modal-bg" id="modalBg" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-h"><h2 id="modalTitle">—</h2><button type="button" class="modal-x" id="modalClose" aria-label="關閉">×</button></div>
+    <div class="modal-b" id="modalBody"></div>
+    <div class="modal-f" id="modalFoot"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
 <script>
 (function(){
-  const DATA_URL='./data/fsi-suspension-20251219.json?v=1';
-  const TODAY=new Date();
-  let payload=null;
-  let cases=[];
-  let openMap={};
-  let deptChart=null, fsiChart=null;
-  const $=id=>document.getElementById(id);
-  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const KEY='ts8_project_link_manager_v6';
+const CFG=(typeof window!=='undefined'&&window.TS8_CONFIG)||{};
+const UPLOAD_WEBAPP_URL=CFG.UPLOAD_WEBAPP_URL||'';
+const UPLOAD_SECRET=CFG.UPLOAD_SECRET||'';
+const SYNC_URL=UPLOAD_WEBAPP_URL;
+const SEED_URL='./data/fsi-suspension-20251219.json?v=1';
+const MAX_DAYS=14;
 
-  function parseDate(s){
-    if(!s) return null;
-    const m=String(s).slice(0,10).match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if(!m) return null;
-    return new Date(+m[1], +m[2]-1, +m[3]);
+let db={projects:[], meta:{}, fsi:{cases:[], meta:{}}};
+let mainView=(location.hash==='#stats')?'stats':'cases';
+let openMap={};
+let deptChart=null, fsiChart=null, statusChart=null;
+let _pushTimer=null, _pullBusy=false, _pushBusy=false, _lastCloudUpdatedAt='';
+let _seedDone=false;
+let modalState=null;
+let filterState={q:'', dept:'', status:'', alert:''};
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function uid(p){ return (p||'id')+'-'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4); }
+function todayStr(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function parseDate(s){
+  if(!s) return null;
+  const m=String(s).slice(0,10).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!m) return null;
+  return new Date(+m[1], +m[2]-1, +m[3]);
+}
+function addDays(iso, n){
+  const d=parseDate(iso);
+  if(!d) return '';
+  d.setDate(d.getDate()+n);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function daysBetween(a,b){
+  const da=parseDate(a), db=parseDate(b);
+  if(!da||!db) return null;
+  return Math.round((db-da)/86400000);
+}
+function clientMeta(){
+  try{
+    var k='ts8_cid';
+    var cid=localStorage.getItem(k);
+    if(!cid){ cid='c'+Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem(k,cid); }
+    return { cid:cid, ua:(navigator.userAgent||'').slice(0,180), page:location.pathname+location.search };
+  }catch(e){ return { cid:'', ua:'', page:'' }; }
+}
+function toast(msg, err){
+  const el=$('toast'); if(!el) return;
+  el.textContent=msg; el.classList.toggle('err', !!err); el.classList.add('show');
+  clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove('show'), 2800);
+}
+function setSyncText(t){ const el=$('syncText'); if(el) el.textContent=t; }
+
+function migrateDb(raw){
+  const data=JSON.parse(JSON.stringify(raw||{projects:[]}));
+  if(!Array.isArray(data.projects)) data.projects=[];
+  if(!data.fsi || typeof data.fsi!=='object') data.fsi={cases:[], meta:{}};
+  if(!Array.isArray(data.fsi.cases)) data.fsi.cases=[];
+  if(!data.fsi.meta || typeof data.fsi.meta!=='object') data.fsi.meta={};
+  data.fsi.cases=data.fsi.cases.map(normalizeCase);
+  if(!data.meta) data.meta={};
+  return data;
+}
+function normalizeCase(c){
+  c=c||{};
+  return {
+    id:c.id||uid('fsi'),
+    dept:c.dept||'',
+    location:c.location||'',
+    pm:c.pm||'',
+    pmEmail:c.pmEmail||'',
+    ref:c.ref||'',
+    contractor:c.contractor||'',
+    fsi:Array.isArray(c.fsi)?c.fsi.slice():[],
+    noticeDate:c.noticeDate||'',
+    periodStart:c.periodStart||c.noticeDate||'',
+    plannedResume:c.plannedResume||'',
+    status:(c.status==='resumed')?'resumed':'active',
+    remarks:c.remarks||'',
+    extensions:Array.isArray(c.extensions)?c.extensions.map(normalizeExt):[],
+    updatedAt:c.updatedAt||new Date().toISOString(),
+    reminderSentAt:c.reminderSentAt||''
+  };
+}
+function normalizeExt(e){
+  e=e||{};
+  return {
+    id:e.id||uid('ext'),
+    noticeDate:e.noticeDate||'',
+    periodStart:e.periodStart||e.noticeDate||'',
+    plannedResume:e.plannedResume||'',
+    note:e.note||'',
+    createdAt:e.createdAt||new Date().toISOString()
+  };
+}
+
+/** Effective period start = latest extension.periodStart, else case.periodStart */
+function effectivePeriodStart(c){
+  const exts=c.extensions||[];
+  if(exts.length){
+    const last=exts[exts.length-1];
+    return last.periodStart||last.noticeDate||c.periodStart||c.noticeDate||'';
   }
-  function statusOf(c){
-    const d=parseDate(c.planned_resume);
-    if(!d) return 'unknown';
-    return d>=new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate()) ? 'active' : 'done';
-  }
-  function statusLabel(st){
-    return st==='active'?'進行中／未到期':(st==='done'?'已過計劃恢復日':'日期不明');
-  }
-  function summarize(list){
-    const byDept={}, byFsi={}; let active=0, done=0, unknown=0, ext=0, monthNew=0;
-    const y=TODAY.getFullYear(), m=TODAY.getMonth();
-    list.forEach(c=>{
-      byDept[c.dept]=(byDept[c.dept]||0)+1;
-      (c.fsi||[]).forEach(f=>{ byFsi[f]=(byFsi[f]||0)+1; });
-      ext += (c.extensions||[]).length;
-      const st=statusOf(c);
-      if(st==='active') active++; else if(st==='done') done++; else unknown++;
-      const cd=parseDate(c.commence);
-      if(cd && cd.getFullYear()===y && cd.getMonth()===m) monthNew++;
+  return c.periodStart||c.noticeDate||'';
+}
+function needsPmUpdate(c){
+  if(!c || c.status==='resumed') return false;
+  const start=effectivePeriodStart(c);
+  const d=parseDate(start);
+  if(!d) return false;
+  const limit=new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  limit.setDate(limit.getDate()+MAX_DAYS);
+  const today=new Date();
+  const t0=new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  return t0>limit;
+}
+function windowDays(c){
+  const start=effectivePeriodStart(c);
+  if(!start||!c.plannedResume) return null;
+  return daysBetween(start, c.plannedResume);
+}
+
+function cases(){ return (db.fsi&&db.fsi.cases)||[]; }
+function findCase(id){ return cases().find(c=>c.id===id)||null; }
+
+function mapSeedCase(raw, i){
+  const remarks=raw.remarks||'';
+  const resumed=/resumed|completion form|已恢復|已恢復/i.test(remarks);
+  const commence=raw.commence||'';
+  const planned=raw.planned_resume||'';
+  const exts=(raw.extensions||[]).map((e,j)=>{
+    let periodStart='', plannedResume=e.planned_resume||'';
+    const extStr=e.extended||'';
+    // "15/12/2025 to 29/12/2025" or "23/03/2026 to 06/04/2026"
+    const m=String(extStr).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s*to\s*(\d{1,2})\/(\d{1,2})\/(\d{4})/i);
+    if(m){
+      periodStart=m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
+      if(!plannedResume) plannedResume=m[6]+'-'+m[5].padStart(2,'0')+'-'+m[4].padStart(2,'0');
+    }
+    if(!periodStart && plannedResume) periodStart=addDays(plannedResume, -MAX_DAYS);
+    return normalizeExt({
+      id:uid('ext'),
+      noticeDate:periodStart,
+      periodStart:periodStart,
+      plannedResume:plannedResume,
+      note:e.remarks||extStr||'',
+      createdAt:new Date().toISOString()
     });
-    return {total:list.length, active, done, unknown, ext, monthNew, byDept, byFsi};
-  }
+  });
+  return normalizeCase({
+    id:uid('fsi'),
+    dept:raw.dept||'',
+    location:raw.location||'',
+    pm:raw.pm||'',
+    pmEmail:'',
+    ref:raw.ref||('SEED-'+i),
+    contractor:raw.contractor||'',
+    fsi:raw.fsi||[],
+    noticeDate:commence,
+    periodStart:commence,
+    plannedResume:planned,
+    status:resumed?'resumed':'active',
+    remarks:remarks,
+    extensions:exts,
+    updatedAt:new Date().toISOString()
+  });
+}
 
-  function renderSide(sum, meta){
-    $('sideKpis').innerHTML=`
-      <div class="k"><div class="lab">全部個案</div><div class="num">${sum.total}</div></div>
-      <div class="k"><div class="lab">進行中</div><div class="num">${sum.active}</div><div class="sub">計劃恢復日 ≥ 今日</div></div>
-      <div class="k"><div class="lab">已過計劃日</div><div class="num">${sum.done}</div></div>
-      <div class="k"><div class="lab">本月新增</div><div class="num">${sum.monthNew}</div><div class="sub">按開始日</div></div>
-      <div class="k"><div class="lab">延期／更新列</div><div class="num">${sum.ext}</div></div>`;
-    $('sideMeta').textContent=`快照 ${meta.snapshotDate||'—'} · ${meta.sourceFile||''}`;
-    $('footMeta').textContent=`快照 ${meta.snapshotDate||''}`;
-  }
+function loadLocal(){
+  try{
+    const raw=localStorage.getItem(KEY);
+    if(raw){ db=migrateDb(JSON.parse(raw)); return; }
+  }catch(_){}
+  db=migrateDb({projects:[], meta:{}, fsi:{cases:[], meta:{}}});
+}
+function saveLocalOnly(){ try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(_){} }
+function touchMeta(){
+  db.meta=db.meta||{};
+  db.meta.updatedAt=new Date().toISOString();
+  db.meta.rev=(db.meta.rev|0)+1;
+  db.fsi=db.fsi||{cases:[], meta:{}};
+  db.fsi.meta=db.fsi.meta||{};
+  db.fsi.meta.updatedAt=db.meta.updatedAt;
+}
+function save(){
+  touchMeta();
+  saveLocalOnly();
+  setSyncText('自動同步中');
+  if(!UPLOAD_WEBAPP_URL) return;
+  clearTimeout(_pushTimer);
+  _pushTimer=setTimeout(()=>{ pushShared(true); }, 800);
+}
 
-  function filtered(){
-    const q=($('fsiSearch')?.value||'').trim().toLowerCase();
-    const dept=$('fsiDept')?.value||'';
-    const st=$('fsiStatus')?.value||'';
-    const year=$('fsiYear')?.value||'';
-    return cases.filter(c=>{
-      if(dept && c.dept!==dept) return false;
-      if(st && statusOf(c)!==st) return false;
-      if(year){
-        const cd=parseDate(c.commence);
-        if(!cd || String(cd.getFullYear())!==year) return false;
+function parseUpdatedAt(iso){
+  if(!iso) return 0;
+  const n=Date.parse(iso);
+  return Number.isFinite(n)?n:0;
+}
+function cloudIsNewer(shared, local){
+  const s=parseUpdatedAt(shared&&shared.meta&&shared.meta.updatedAt);
+  const l=parseUpdatedAt(local&&local.meta&&local.meta.updatedAt);
+  if(s && l) return s>l;
+  if(s && !l) return true;
+  return false;
+}
+function applyCloudDb(shared){
+  if(!shared||!Array.isArray(shared.projects)) return {changed:false};
+  const before=JSON.stringify(db);
+  db=migrateDb(shared);
+  saveLocalOnly();
+  const at=(db.meta&&db.meta.updatedAt)||'';
+  if(at) _lastCloudUpdatedAt=at;
+  return {changed: before!==JSON.stringify(db)};
+}
+async function fetchSharedDb(){
+  if(!SYNC_URL) throw new Error('no sync url');
+  const res=await fetch(SYNC_URL+'?op=db&t='+Date.now(),{cache:'no-store'});
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const data=await res.json();
+  if(data && data.db && Array.isArray(data.db.projects)) return data.db;
+  if(data && Array.isArray(data.projects)) return data;
+  throw new Error('invalid sync payload');
+}
+async function pullShared(silent){
+  if(_pullBusy) return null;
+  _pullBusy=true;
+  try{
+    const shared=await fetchSharedDb();
+    const cloudUpdated=(shared.meta&&shared.meta.updatedAt)||'';
+    if(silent && cloudUpdated && cloudUpdated===_lastCloudUpdatedAt){
+      return {shared, skipped:true};
+    }
+    if(!cloudIsNewer(shared, db) && cloudUpdated===((db.meta&&db.meta.updatedAt)||'')){
+      if(cloudUpdated) _lastCloudUpdatedAt=cloudUpdated;
+      return {shared, skipped:true};
+    }
+    if(!cloudIsNewer(shared, db) && parseUpdatedAt(db.meta&&db.meta.updatedAt) > parseUpdatedAt(cloudUpdated)){
+      return {shared, localNewer:true};
+    }
+    const applied=applyCloudDb(shared);
+    if(!silent || applied.changed) render();
+    setSyncText('自動同步中');
+    return {shared, reallyChanged:!!applied.changed};
+  }catch(err){
+    if(!silent) toast('同步暫時失敗', true);
+    console.warn(err);
+    setSyncText('自動同步中（離線）');
+    return null;
+  }finally{ _pullBusy=false; }
+}
+async function pushShared(silent){
+  if(!SYNC_URL) return false;
+  if(_pushBusy) return false;
+  _pushBusy=true;
+  try{
+    try{
+      const cloud=await fetchSharedDb();
+      if(cloudIsNewer(cloud, db)){
+        applyCloudDb(cloud);
+        render();
+        if(!silent) toast('已同步較新版本');
+        return false;
       }
-      if(!q) return true;
-      const hay=[c.location,c.dept,c.ref,c.pm,c.contractor,c.remarks,(c.fsi||[]).join(' ')].join(' ').toLowerCase();
-      return hay.includes(q);
+    }catch(_){}
+    db.meta=db.meta||{};
+    db.meta.updatedAt=new Date().toISOString();
+    db.meta.rev=(db.meta.rev|0)+1;
+    saveLocalOnly();
+    const res=await fetch(SYNC_URL,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(Object.assign({ secret:UPLOAD_SECRET, op:'saveDb', db, baseUpdatedAt:_lastCloudUpdatedAt||'', note:'fsi-saveDb' }, clientMeta()))
     });
-  }
-
-  function renderCharts(sum){
-    if(typeof Chart==='undefined') return;
-    const deptLabels=Object.keys(sum.byDept);
-    const deptData=deptLabels.map(k=>sum.byDept[k]);
-    const fsiLabels=Object.keys(sum.byFsi);
-    const fsiData=fsiLabels.map(k=>sum.byFsi[k]);
-    Chart.defaults.color='#6A736C';
-    Chart.defaults.font.family='"Noto Sans TC","PingFang TC",sans-serif';
-    if(deptChart) deptChart.destroy();
-    if(fsiChart) fsiChart.destroy();
-    const el1=$('deptChart'), el2=$('fsiChart');
-    if(el1){
-      deptChart=new Chart(el1,{type:'bar',data:{labels:deptLabels,datasets:[{data:deptData,backgroundColor:'#A0B4A6',borderRadius:6,maxBarThickness:36}]},
-        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}},x:{grid:{display:false}}}}});
+    const text=await res.text();
+    let data=null;
+    try{ data=JSON.parse(text); }catch(_){}
+    if(data && data.ok===false && data.error==='stale' && data.current){
+      applyCloudDb(data.current);
+      render();
+      if(!silent) toast('已同步較新版本');
+      return false;
     }
-    if(el2){
-      fsiChart=new Chart(el2,{type:'doughnut',data:{labels:fsiLabels.length?fsiLabels:['—'],datasets:[{data:fsiData.length?fsiData:[1],backgroundColor:['#2A5A3B','#A0B4A6','#C27A62','#5C8A72','#DCE0D9']}]},
-        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10}}}}});
+    if(!res.ok || (data && data.ok===false)){
+      throw new Error((data&&(data.error||data.message))||('HTTP '+res.status));
     }
+    _lastCloudUpdatedAt=(db.meta&&db.meta.updatedAt)||_lastCloudUpdatedAt;
+    setSyncText('自動同步中');
+    return true;
+  }catch(err){
+    console.warn(err);
+    if(!silent) toast('同步暫時失敗', true);
+    setSyncText('自動同步中（稍後重試）');
+    return false;
+  }finally{ _pushBusy=false; }
+}
+
+async function ensureSeeded(){
+  if(_seedDone) return;
+  if(cases().length>0){ _seedDone=true; return; }
+  try{
+    const res=await fetch(SEED_URL,{cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const payload=await res.json();
+    const mapped=(payload.cases||[]).map(mapSeedCase);
+    db.fsi=db.fsi||{cases:[], meta:{}};
+    db.fsi.cases=mapped;
+    db.fsi.meta={
+      seededFrom:payload.sourceFile||SEED_URL,
+      snapshotDate:payload.snapshotDate||'',
+      seededAt:new Date().toISOString(),
+      note:'Seeded once from GitHub snapshot; SharePoint Excel never modified.'
+    };
+    // Preserve projects from cloud if we have them
+    touchMeta();
+    saveLocalOnly();
+    await pushShared(true);
+    _seedDone=true;
+    toast('已載入種子資料（'+mapped.length+' 宗）');
+  }catch(err){
+    console.warn('seed failed', err);
+    toast('種子資料載入失敗', true);
   }
+}
 
-  function cardHtml(c, idx){
-    const id=c._id;
-    const open=!!openMap[id];
-    const st=statusOf(c);
-    const stDot=st==='active'?'warn':(st==='done'?'on':'info');
-    const fsi=(c.fsi&&c.fsi.length)?c.fsi.join(' · '):'—';
-    const ext=(c.extensions||[]);
-    return `<div class="day-card ${open?'is-open':''}" data-id="${esc(id)}">
-      <div class="day-head" data-act="toggle">
-        <span class="day-chevron">▸</span>
-        <div class="day-date">${esc(c.location||'（無位置）')}</div>
-        <div class="day-sub">${esc(c.ref||'無編號')} · ${esc(c.dept||'')}</div>
-        <div class="day-dots">
-          <span class="day-dot ${stDot}">${esc(statusLabel(st))}</span>
-          <span class="day-dot">${esc(c.planned_resume||'—')}</span>
-          <span class="day-dot">${ext.length?ext.length+' 次更新':'無延期列'}</span>
-        </div>
+function summarize(list){
+  const byDept={}, byFsi={}; let active=0, resumed=0, alert=0, ext=0;
+  list.forEach(c=>{
+    byDept[c.dept||'（無）']=(byDept[c.dept||'（無）']||0)+1;
+    (c.fsi||[]).forEach(f=>{ byFsi[f]=(byFsi[f]||0)+1; });
+    ext += (c.extensions||[]).length;
+    if(c.status==='resumed') resumed++; else active++;
+    if(needsPmUpdate(c)) alert++;
+  });
+  return {total:list.length, active, resumed, alert, ext, byDept, byFsi};
+}
+
+function filtered(){
+  const q=(filterState.q||'').trim().toLowerCase();
+  const dept=filterState.dept||'';
+  const st=filterState.status||'';
+  const al=filterState.alert||'';
+  return cases().filter(c=>{
+    if(dept && c.dept!==dept) return false;
+    if(st==='active' && c.status==='resumed') return false;
+    if(st==='resumed' && c.status!=='resumed') return false;
+    if(al==='needsPm' && !needsPmUpdate(c)) return false;
+    if(al==='ok' && needsPmUpdate(c)) return false;
+    if(!q) return true;
+    const hay=[c.location,c.dept,c.ref,c.pm,c.pmEmail,c.contractor,c.remarks,(c.fsi||[]).join(' ')].join(' ').toLowerCase();
+    return hay.includes(q);
+  });
+}
+
+function renderSide(sum){
+  $('sideKpis').innerHTML=`
+    <div class="k"><div class="lab">全部個案</div><div class="num">${sum.total}</div></div>
+    <div class="k"><div class="lab">進行中</div><div class="num">${sum.active}</div><div class="sub">未標記已恢復</div></div>
+    <div class="k ${sum.alert?'alert':''}"><div class="lab">需提醒 PM</div><div class="num">${sum.alert}</div><div class="sub">超過 14 日未更新</div></div>
+    <div class="k"><div class="lab">已恢復</div><div class="num">${sum.resumed}</div></div>
+    <div class="k"><div class="lab">延期紀錄</div><div class="num">${sum.ext}</div></div>`;
+  const meta=db.fsi&&db.fsi.meta||{};
+  $('sideMeta').textContent=meta.snapshotDate?`種子快照 ${meta.snapshotDate}`:'共用 DB · db.fsi';
+}
+
+function alertBannerHtml(list){
+  const overdue=list.filter(needsPmUpdate);
+  if(!overdue.length) return '';
+  return `<div class="alert-banner" id="pmAlertBanner">
+    <h3>⚠ 需提醒 PM 更新 Shutdown Notice</h3>
+    <p>以下 ${overdue.length} 宗已超過單一暫停期 14 日上限，請要求 PM 提交延期／新通知，或標記已恢復。</p>
+    <div class="alert-list">
+      ${overdue.map(c=>{
+        const start=effectivePeriodStart(c);
+        const due=addDays(start, MAX_DAYS);
+        return `<div class="alert-row">
+          <div class="info"><strong>${esc(c.location||'（無位置）')}</strong><br>${esc(c.ref||'')} · PM ${esc(c.pm||'—')} · 期起 ${esc(start||'—')} · 14日屆滿 ${esc(due||'—')}</div>
+          <button type="button" class="btn btn-warn btn-sm" data-act="remind" data-id="${esc(c.id)}">提醒 PM</button>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+function cardHtml(c){
+  const open=!!openMap[c.id];
+  const alert=needsPmUpdate(c);
+  const start=effectivePeriodStart(c);
+  const due=start?addDays(start, MAX_DAYS):'';
+  const stLabel=c.status==='resumed'?'已恢復':(alert?'需更新 Notice':'進行中');
+  const stDot=c.status==='resumed'?'on':(alert?'danger':'warn');
+  const fsi=(c.fsi&&c.fsi.length)?c.fsi.join(' · '):'—';
+  const ext=c.extensions||[];
+  const cls=['day-card', open?'is-open':'', alert?'needs-pm':'', c.status==='resumed'?'is-resumed':''].filter(Boolean).join(' ');
+  return `<div class="${cls}" data-id="${esc(c.id)}">
+    <div class="day-head" data-act="toggle">
+      <span class="day-chevron">▸</span>
+      <div class="day-date">${esc(c.location||'（無位置）')}</div>
+      <div class="day-sub">${esc(c.ref||'無編號')} · ${esc(c.dept||'')} · PM ${esc(c.pm||'—')}</div>
+      <div class="day-dots">
+        <span class="day-dot ${stDot}">${esc(stLabel)}</span>
+        <span class="day-dot">Notice ${esc(c.noticeDate||'—')}</span>
+        <span class="day-dot">恢復 ${esc(c.plannedResume||'—')}</span>
+        <span class="day-dot">${ext.length?ext.length+' 次延期':'無延期'}</span>
       </div>
-      <div class="day-body">
-        <dl class="detail-grid">
-          <div><dt>開始日</dt><dd>${esc(c.commence||'—')}</dd></div>
-          <div><dt>計劃恢復</dt><dd>${esc(c.planned_resume||'—')}</dd></div>
-          <div><dt>PM / Contacts</dt><dd>${esc(c.pm||'—')}</dd></div>
-          <div><dt>承辦商</dt><dd>${esc(c.contractor||'—')}</dd></div>
-          <div><dt>暫停 FSI</dt><dd>${esc(fsi)}</dd></div>
-          <div><dt>Spot check</dt><dd>FE ${esc(c.spot?.FE||'—')} · Detector ${esc(c.spot?.detector||'—')} · Notice ${esc(c.spot?.notice||'—')}<br>${esc(c.spot?.by||'')} ${esc(c.spot?.date||'')}</dd></div>
-          <div style="grid-column:1/-1"><dt>備註</dt><dd>${esc(c.remarks||'—')}</dd></div>
-        </dl>
-        ${ext.length?`<div class="ext-list"><h4>延期／更新紀錄（${ext.length}）</h4>
-          ${ext.map((e,i)=>`<div class="ext-item"><strong>#${i+1} ${esc(e.type||'update')}</strong> → 恢復 ${esc(e.planned_resume||'—')}${e.extended?` · 期間 ${esc(e.extended)}`:''}${e.remarks?`<br>${esc(e.remarks)}`:''}</div>`).join('')}
-        </div>`:''}
+    </div>
+    <div class="day-body">
+      <dl class="detail-grid">
+        <div><dt>Shutdown Notice 日期</dt><dd>${esc(c.noticeDate||'—')}</dd></div>
+        <div><dt>本期開始</dt><dd>${esc(start||'—')}${due?`（14日屆滿 ${esc(due)}）`:''}</dd></div>
+        <div><dt>計劃恢復</dt><dd>${esc(c.plannedResume||'—')}</dd></div>
+        <div><dt>狀態</dt><dd>${esc(stLabel)}</dd></div>
+        <div><dt>PM / Email</dt><dd>${esc(c.pm||'—')}${c.pmEmail?` · ${esc(c.pmEmail)}`:' · <span style="color:var(--mute)">待填 email</span>'}</dd></div>
+        <div><dt>承辦商</dt><dd>${esc(c.contractor||'—')}</dd></div>
+        <div><dt>暫停 FSI</dt><dd>${esc(fsi)}</dd></div>
+        <div><dt>上次提醒</dt><dd>${esc(c.reminderSentAt?new Date(c.reminderSentAt).toLocaleString('zh-HK',{timeZone:'Asia/Hong_Kong'}):'—')}</dd></div>
+        <div style="grid-column:1/-1"><dt>備註</dt><dd>${esc(c.remarks||'—')}</dd></div>
+      </dl>
+      ${ext.length?`<div class="ext-list"><h4>延期紀錄（${ext.length}）</h4>
+        ${ext.map((e,i)=>`<div class="ext-item"><strong>#${i+1}</strong> Notice ${esc(e.noticeDate||'—')} · 期起 ${esc(e.periodStart||'—')} → 恢復 ${esc(e.plannedResume||'—')}${e.note?`<br>${esc(e.note)}`:''}</div>`).join('')}
+      </div>`:''}
+      <div class="card-actions">
+        <button type="button" class="btn btn-ghost btn-sm" data-act="edit" data-id="${esc(c.id)}">編輯</button>
+        <button type="button" class="btn btn-ghost btn-sm" data-act="notice" data-id="${esc(c.id)}">標記 Shutdown Notice</button>
+        <button type="button" class="btn btn-ghost btn-sm" data-act="extend" data-id="${esc(c.id)}">新增延期（新 14 日）</button>
+        ${c.status!=='resumed'?`<button type="button" class="btn btn-ok btn-sm" data-act="resume" data-id="${esc(c.id)}">標記已恢復</button>`:''}
+        ${alert?`<button type="button" class="btn btn-warn btn-sm" data-act="remind" data-id="${esc(c.id)}">提醒 PM</button>`:''}
+        <button type="button" class="btn btn-danger btn-sm" data-act="delete" data-id="${esc(c.id)}">刪除</button>
       </div>
-    </div>`;
-  }
+    </div>
+  </div>`;
+}
 
-  function render(){
-    const list=filtered();
-    const allSum=summarize(cases);
-    const viewSum=summarize(list);
-    const depts=[...new Set(cases.map(c=>c.dept).filter(Boolean))].sort();
-    const years=[...new Set(cases.map(c=>{const d=parseDate(c.commence);return d?String(d.getFullYear()):'';}).filter(Boolean))].sort();
-    $('crumb').innerHTML=`<strong>FSI 暫停名單</strong> · 顯示 ${list.length} / ${cases.length}`;
-    renderSide(allSum, payload||{});
+function renderCasesView(){
+  const list=filtered();
+  const all=cases();
+  const allSum=summarize(all);
+  const viewSum=summarize(list);
+  const depts=[...new Set(all.map(c=>c.dept).filter(Boolean))].sort();
+  $('crumb').innerHTML=`<strong>項目記錄</strong> · 顯示 ${list.length} / ${all.length}`;
+  renderSide(allSum);
 
-    $('content').innerHTML=`
+  $('content').innerHTML=`
+    ${alertBannerHtml(all)}
+    <div class="day-toolbar">
+      <div class="field"><label>搜尋</label><input type="search" id="fsiSearch" placeholder="位置 / 編號 / PM / 承辦商…" value="${esc(filterState.q)}"></div>
+      <div class="field"><label>部門</label><select id="fsiDept"><option value="">全部</option>${depts.map(d=>`<option value="${esc(d)}" ${filterState.dept===d?'selected':''}>${esc(d)}</option>`).join('')}</select></div>
+      <div class="field"><label>狀態</label><select id="fsiStatus">
+        <option value="" ${!filterState.status?'selected':''}>全部</option>
+        <option value="active" ${filterState.status==='active'?'selected':''}>進行中</option>
+        <option value="resumed" ${filterState.status==='resumed'?'selected':''}>已恢復</option>
+      </select></div>
+      <div class="field"><label>提醒</label><select id="fsiAlert">
+        <option value="" ${!filterState.alert?'selected':''}>全部</option>
+        <option value="needsPm" ${filterState.alert==='needsPm'?'selected':''}>需提醒 PM</option>
+        <option value="ok" ${filterState.alert==='ok'?'selected':''}>未逾期</option>
+      </select></div>
+      <div class="day-toolbar-actions">
+        <button type="button" class="btn btn-ghost btn-sm" id="btnResetFilters">重設篩選</button>
+      </div>
+    </div>
+    <p class="day-count">篩選後 ${list.length} 宗（進行中 ${viewSum.active} · 需提醒 ${viewSum.alert}）</p>
+    <div id="caseList">${list.length?list.map(cardHtml).join(''):'<div class="empty">沒有符合篩選的個案</div>'}</div>`;
+
+  bindFilters();
+  bindCaseActions();
+}
+
+function destroyCharts(){
+  [deptChart,fsiChart,statusChart].forEach(c=>{ try{c&&c.destroy();}catch(_){} });
+  deptChart=fsiChart=statusChart=null;
+}
+
+function renderStatsView(){
+  const all=cases();
+  const sum=summarize(all);
+  const overdue=all.filter(needsPmUpdate);
+  $('crumb').innerHTML=`<strong>統計總結</strong> · ${all.length} 宗`;
+  renderSide(sum);
+
+  $('content').innerHTML=`
+    <div class="stats-shell">
+      ${alertBannerHtml(all)}
       <div class="kpi-row">
-        <div class="kpi"><div class="lab">全部個案</div><div class="num">${allSum.total}</div><div class="delta">延期／更新列 ${allSum.ext}</div></div>
-        <div class="kpi accent"><div class="lab">進行中</div><div class="num">${allSum.active}</div><div class="delta">計劃恢復日未過</div></div>
-        <div class="kpi"><div class="lab">已過計劃日</div><div class="num">${allSum.done}</div><div class="delta">需核對是否已恢復</div></div>
-        <div class="kpi"><div class="lab">本月新增</div><div class="num">${allSum.monthNew}</div><div class="delta">按開始日計</div></div>
+        <div class="kpi"><div class="lab">全部個案</div><div class="num">${sum.total}</div><div class="delta">延期紀錄 ${sum.ext}</div></div>
+        <div class="kpi accent"><div class="lab">進行中</div><div class="num">${sum.active}</div><div class="delta">未標記已恢復</div></div>
+        <div class="kpi warn"><div class="lab">需提醒 PM</div><div class="num">${sum.alert}</div><div class="delta">超過 14 日上限</div></div>
+        <div class="kpi"><div class="lab">已恢復</div><div class="num">${sum.resumed}</div><div class="delta">status = resumed</div></div>
       </div>
       <div class="chart-row">
-        <div class="chart-card"><h3>按部門</h3><div class="sub">CDO / CFSO 等</div><div class="chart-wrap"><canvas id="deptChart"></canvas></div></div>
-        <div class="chart-card"><h3>暫停 FSI 類型</h3><div class="sub">個案標記（可重疊）</div><div class="chart-wrap"><canvas id="fsiChart"></canvas></div></div>
+        <div class="chart-card"><h3>按部門</h3><div class="sub">個案數</div><div class="chart-wrap"><canvas id="deptChart"></canvas></div></div>
+        <div class="chart-card"><h3>暫停 FSI 類型</h3><div class="sub">可重疊</div><div class="chart-wrap"><canvas id="fsiChart"></canvas></div></div>
       </div>
-      <div class="section-title">個案名單</div>
-      <div class="day-toolbar">
-        <div class="field"><label>搜尋</label><input type="search" id="fsiSearch" placeholder="位置 / 編號 / PM / 承辦商…" value="${esc($('fsiSearch')?.value||'')}"></div>
-        <div class="field"><label>部門</label><select id="fsiDept"><option value="">全部</option>${depts.map(d=>`<option value="${esc(d)}" ${($('fsiDept')?.value||'')===d?'selected':''}>${esc(d)}</option>`).join('')}</select></div>
-        <div class="field"><label>狀態</label><select id="fsiStatus">
-          <option value="">全部</option>
-          <option value="active" ${($('fsiStatus')?.value||'')==='active'?'selected':''}>進行中</option>
-          <option value="done" ${($('fsiStatus')?.value||'')==='done'?'selected':''}>已過計劃日</option>
-          <option value="unknown" ${($('fsiStatus')?.value||'')==='unknown'?'selected':''}>日期不明</option>
-        </select></div>
-        <div class="field"><label>開始年份</label><select id="fsiYear"><option value="">全部</option>${years.map(y=>`<option value="${esc(y)}" ${($('fsiYear')?.value||'')===y?'selected':''}>${esc(y)}</option>`).join('')}</select></div>
-        <div class="day-toolbar-actions">
-          <button type="button" class="btn btn-ghost btn-sm" id="btnResetFilters">重設篩選</button>
-          <button type="button" class="btn btn-ghost btn-sm" id="btnExpandAll2">全部展開</button>
-          <button type="button" class="btn btn-ghost btn-sm" id="btnCollapseAll2">全部收合</button>
+      <div class="chart-row">
+        <div class="chart-card"><h3>狀態分佈</h3><div class="sub">進行中 / 已恢復 / 需提醒</div><div class="chart-wrap"><canvas id="statusChart"></canvas></div></div>
+        <div class="chart-card">
+          <h3>14 日規則</h3>
+          <div class="sub">管理守則摘要</div>
+          <p style="font-size:.88rem;line-height:1.55;color:var(--text);margin-top:8px">
+            每一段 Shutdown Notice 期間最多 <strong>14 日</strong>。<br>
+            以最近一次延期嘅 periodStart（無延期則用個案 periodStart）起計。<br>
+            若狀態未恢復且今日已過 periodStart＋14 日 → 標示「需提醒 PM」。<br>
+            請 PM 提交延期（新 14 日）或新通知，或標記已恢復。
+          </p>
+          <p style="font-size:.82rem;color:var(--mute);margin-top:10px">目前逾期 ${overdue.length} 宗 · 唔改線上 SharePoint Excel</p>
         </div>
       </div>
-      <p class="day-count">篩選後 ${list.length} 宗（當中進行中 ${viewSum.active}）</p>
-      <div id="caseList">${list.length?list.map((c,i)=>cardHtml(c,i)).join(''):'<div class="empty">沒有符合篩選的個案</div>'}</div>`;
+      ${overdue.length?`<div class="section-title">逾期個案一覽</div>
+        <div class="alert-list" style="margin-bottom:16px">
+          ${overdue.map(c=>{
+            const start=effectivePeriodStart(c);
+            return `<div class="alert-row" style="background:var(--paper);border:1px solid var(--line-soft)">
+              <div class="info"><strong>${esc(c.location||'')}</strong> · ${esc(c.ref||'')} · PM ${esc(c.pm||'—')}<br>期起 ${esc(start||'—')} · 計劃恢復 ${esc(c.plannedResume||'—')}</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <button type="button" class="btn btn-warn btn-sm" data-act="remind" data-id="${esc(c.id)}">提醒 PM</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-act="goto" data-id="${esc(c.id)}">查看記錄</button>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`:''}
+    </div>`;
 
-    renderCharts(allSum);
-    bindFilters();
-    bindCards();
+  bindCaseActions();
+  if(typeof Chart==='undefined') return;
+  Chart.defaults.color='#6A736C';
+  Chart.defaults.font.family='"Noto Sans TC","PingFang TC",sans-serif';
+  destroyCharts();
+  const deptLabels=Object.keys(sum.byDept);
+  const el1=$('deptChart'), el2=$('fsiChart'), el3=$('statusChart');
+  if(el1){
+    deptChart=new Chart(el1,{type:'bar',data:{labels:deptLabels,datasets:[{data:deptLabels.map(k=>sum.byDept[k]),backgroundColor:'#A0B4A6',borderRadius:6,maxBarThickness:36}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}},x:{grid:{display:false}}}}});
   }
+  const fsiLabels=Object.keys(sum.byFsi);
+  if(el2){
+    fsiChart=new Chart(el2,{type:'doughnut',data:{labels:fsiLabels.length?fsiLabels:['—'],datasets:[{data:fsiLabels.length?fsiLabels.map(k=>sum.byFsi[k]):[1],backgroundColor:['#2A5A3B','#A0B4A6','#C27A62','#5C8A72','#DCE0D9']}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10}}}}});
+  }
+  if(el3){
+    statusChart=new Chart(el3,{type:'doughnut',data:{labels:['進行中','已恢復','需提醒 PM'],datasets:[{data:[sum.active, sum.resumed, sum.alert],backgroundColor:['#5C8A72','#2F7A55','#9A6B2F']}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10}}}}});
+  }
+}
 
-  let searchTimer=null;
-  function bindFilters(){
-    const s=$('fsiSearch');
-    if(s){
-      s.oninput=()=>{ clearTimeout(searchTimer); searchTimer=setTimeout(()=>{ const v=s.value; const pos=s.selectionStart; render(); const n=$('fsiSearch'); if(n){ n.focus(); try{n.setSelectionRange(pos,pos);}catch(_){}} }, 120); };
-    }
-    ['fsiDept','fsiStatus','fsiYear'].forEach(id=>{
-      const el=$(id); if(!el) return;
-      el.onchange=()=>render();
-    });
-    const reset=$('btnResetFilters');
-    if(reset) reset.onclick=()=>{
-      ['fsiSearch','fsiDept','fsiStatus','fsiYear'].forEach(id=>{ const el=$(id); if(el) el.value=''; });
+function syncViewTabs(){
+  document.querySelectorAll('#viewTabs .view-tab').forEach(btn=>{
+    btn.classList.toggle('active', btn.getAttribute('data-view')===mainView);
+  });
+  const showCases=mainView==='cases';
+  ['btnExpandAll','btnCollapseAll'].forEach(id=>{ const el=$(id); if(el) el.style.display=showCases?'':'none'; });
+}
+
+function render(){
+  syncViewTabs();
+  destroyCharts();
+  if(mainView==='stats') renderStatsView();
+  else renderCasesView();
+  const at=(db.meta&&db.meta.updatedAt)||'';
+  const meta=$('footMeta');
+  if(meta){
+    if(at){
+      try{ meta.textContent='上次更新 '+new Date(at).toLocaleString('zh-HK',{timeZone:'Asia/Hong_Kong'}); }
+      catch{ meta.textContent=''; }
+    } else meta.textContent='FSI · 共用同步';
+  }
+}
+
+function bindFilters(){
+  const s=$('fsiSearch');
+  if(s){
+    let t=null;
+    s.oninput=()=>{ clearTimeout(t); t=setTimeout(()=>{ filterState.q=s.value; render(); const n=$('fsiSearch'); if(n){ n.focus(); try{n.setSelectionRange(n.value.length,n.value.length);}catch(_){}} }, 120); };
+  }
+  ['fsiDept','fsiStatus','fsiAlert'].forEach(id=>{
+    const el=$(id); if(!el) return;
+    el.onchange=()=>{
+      if(id==='fsiDept') filterState.dept=el.value;
+      if(id==='fsiStatus') filterState.status=el.value;
+      if(id==='fsiAlert') filterState.alert=el.value;
       render();
     };
-    const ex=$('btnExpandAll2'), cl=$('btnCollapseAll2');
-    if(ex) ex.onclick=()=>expandAll(true);
-    if(cl) cl.onclick=()=>expandAll(false);
-  }
-  function expandAll(open){
-    filtered().forEach(c=>{ openMap[c._id]=open; });
-    render();
-  }
-  function bindCards(){
-    document.querySelectorAll('.day-card .day-head').forEach(head=>{
-      head.addEventListener('click', e=>{
+  });
+  const reset=$('btnResetFilters');
+  if(reset) reset.onclick=()=>{ filterState={q:'',dept:'',status:'',alert:''}; render(); };
+}
+
+function bindCaseActions(){
+  document.querySelectorAll('[data-act]').forEach(el=>{
+    el.addEventListener('click', e=>{
+      const act=el.getAttribute('data-act');
+      const id=el.getAttribute('data-id');
+      if(act==='toggle'){
         if(e.target.closest('button,a,input,select')) return;
-        const card=head.closest('.day-card');
-        const id=card.getAttribute('data-id');
-        openMap[id]=!openMap[id];
-        card.classList.toggle('is-open', !!openMap[id]);
-      });
+        const card=el.closest('.day-card');
+        if(!card) return;
+        const cid=card.getAttribute('data-id');
+        openMap[cid]=!openMap[cid];
+        card.classList.toggle('is-open', !!openMap[cid]);
+        return;
+      }
+      e.preventDefault(); e.stopPropagation();
+      if(act==='edit') openCaseModal(id);
+      else if(act==='notice') openNoticeModal(id);
+      else if(act==='extend') openExtendModal(id);
+      else if(act==='resume') markResumed(id);
+      else if(act==='delete') deleteCase(id);
+      else if(act==='remind') openRemindModal(id);
+      else if(act==='goto'){ openMap[id]=true; mainView='cases'; location.hash='cases'; render(); }
     });
+  });
+}
+
+function closeModal(){
+  modalState=null;
+  $('modalBg').classList.remove('open');
+}
+function openModalShell(title, bodyHtml, footHtml){
+  $('modalTitle').textContent=title;
+  $('modalBody').innerHTML=bodyHtml;
+  $('modalFoot').innerHTML=footHtml;
+  $('modalBg').classList.add('open');
+}
+
+function openCaseModal(id){
+  const c=id?findCase(id):null;
+  modalState={kind:'case', id:id||null};
+  const fsiStr=(c&&c.fsi||[]).join(', ');
+  openModalShell(c?'編輯個案':'新增個案', `
+    <div class="grid">
+      <div class="field span2"><label>位置 <span class="req">*</span></label><input id="m_location" value="${esc(c?c.location:'')}"></div>
+      <div class="field"><label>部門</label><input id="m_dept" value="${esc(c?c.dept:'')}" placeholder="CDO / CFSO"></div>
+      <div class="field"><label>參考編號</label><input id="m_ref" value="${esc(c?c.ref:'')}"></div>
+      <div class="field"><label>PM</label><input id="m_pm" value="${esc(c?c.pm:'')}"></div>
+      <div class="field"><label>PM Email（稍後填）</label><input id="m_pmEmail" type="email" value="${esc(c?c.pmEmail:'')}" placeholder="待填 email"></div>
+      <div class="field span2"><label>承辦商</label><input id="m_contractor" value="${esc(c?c.contractor:'')}"></div>
+      <div class="field span2"><label>暫停 FSI（逗號分隔）</label><input id="m_fsi" value="${esc(fsiStr)}" placeholder="Sprinkler, Detector"></div>
+      <div class="field"><label>Shutdown Notice 日期</label><input type="date" id="m_notice" value="${esc(c?c.noticeDate:'')}"></div>
+      <div class="field"><label>本期開始</label><input type="date" id="m_period" value="${esc(c?c.periodStart:'')}"></div>
+      <div class="field"><label>計劃恢復</label><input type="date" id="m_resume" value="${esc(c?c.plannedResume:'')}"></div>
+      <div class="field"><label>狀態</label><select id="m_status"><option value="active" ${(c?c.status:'active')==='active'?'selected':''}>進行中</option><option value="resumed" ${c&&c.status==='resumed'?'selected':''}>已恢復</option></select></div>
+      <div class="field span2"><label>備註</label><textarea id="m_remarks">${esc(c?c.remarks:'')}</textarea></div>
+    </div>
+    <div class="warn-note" id="m_warn" style="display:none"></div>
+  `, `
+    <button type="button" class="btn btn-ghost" id="m_cancel">取消</button>
+    <button type="button" class="btn btn-primary" id="m_save">儲存</button>
+  `);
+  const notice=$('m_notice'), resume=$('m_resume'), warn=$('m_warn');
+  function checkWindow(){
+    const n=notice.value, r=resume.value, p=$('m_period').value||n;
+    if(n && !r){ resume.value=addDays(n, MAX_DAYS); }
+    if(p && resume.value){
+      const d=daysBetween(p, resume.value);
+      if(d!==null && d>MAX_DAYS){
+        warn.style.display='block';
+        warn.textContent=`注意：計劃恢復距離本期開始為 ${d} 日，超過 ${MAX_DAYS} 日上限。建議縮短，或改用「新增延期」。`;
+      } else { warn.style.display='none'; }
+    } else warn.style.display='none';
   }
-
-  $('btnExpandAll').onclick=()=>expandAll(true);
-  $('btnCollapseAll').onclick=()=>expandAll(false);
-
-  const nav=document.getElementById('siteNav');
-  const btn=document.getElementById('navToggle');
-  if(nav&&btn) btn.addEventListener('click',()=>{
-    const open=nav.classList.toggle('is-open');
-    btn.setAttribute('aria-expanded', open?'true':'false');
+  notice.addEventListener('change', ()=>{
+    if(notice.value){
+      if(!$('m_period').value) $('m_period').value=notice.value;
+      if(!resume.value) resume.value=addDays(notice.value, MAX_DAYS);
+    }
+    checkWindow();
   });
+  resume.addEventListener('change', checkWindow);
+  $('m_period').addEventListener('change', checkWindow);
+  checkWindow();
+  $('m_cancel').onclick=closeModal;
+  $('m_save').onclick=()=>{
+    const location=$('m_location').value.trim();
+    if(!location){ toast('請填位置', true); return; }
+    const period=$('m_period').value||$('m_notice').value;
+    const planned=$('m_resume').value;
+    if(period && planned){
+      const d=daysBetween(period, planned);
+      if(d!==null && d>MAX_DAYS){
+        if(!confirm(`計劃恢復超過 ${MAX_DAYS} 日（${d} 日）。仍要儲存？`)) return;
+      }
+    }
+    const payload={
+      location,
+      dept:$('m_dept').value.trim(),
+      ref:$('m_ref').value.trim(),
+      pm:$('m_pm').value.trim(),
+      pmEmail:$('m_pmEmail').value.trim(),
+      contractor:$('m_contractor').value.trim(),
+      fsi:$('m_fsi').value.split(/[,，]/).map(s=>s.trim()).filter(Boolean),
+      noticeDate:$('m_notice').value,
+      periodStart:period,
+      plannedResume:planned,
+      status:$('m_status').value==='resumed'?'resumed':'active',
+      remarks:$('m_remarks').value
+    };
+    if(id){
+      const cur=findCase(id);
+      Object.assign(cur, payload, {updatedAt:new Date().toISOString()});
+    } else {
+      db.fsi.cases.push(normalizeCase(Object.assign({id:uid('fsi'), extensions:[]}, payload)));
+    }
+    save(); closeModal(); render(); toast('已儲存');
+  };
+}
 
-  fetch(DATA_URL,{cache:'no-store'}).then(r=>{
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    return r.json();
-  }).then(data=>{
-    payload=data;
-    cases=(data.cases||[]).map((c,i)=>({...c, _id:c.ref||('case-'+i)}));
-    // default collapsed
-    cases.forEach(c=>{ openMap[c._id]=false; });
+function openNoticeModal(id){
+  const c=findCase(id); if(!c) return;
+  modalState={kind:'notice', id};
+  const def=todayStr();
+  openModalShell('標記 Shutdown Notice 日期', `
+    <p style="font-size:.85rem;color:var(--mute);margin-bottom:12px">設定後，計劃恢復預設為 Notice 日期 + ${MAX_DAYS} 日。</p>
+    <div class="grid">
+      <div class="field"><label>Shutdown Notice 日期 <span class="req">*</span></label><input type="date" id="m_notice" value="${esc(c.noticeDate||def)}"></div>
+      <div class="field"><label>計劃恢復</label><input type="date" id="m_resume" value="${esc(c.plannedResume||'')}"></div>
+    </div>
+    <div class="warn-note" id="m_warn" style="display:none"></div>
+  `, `<button type="button" class="btn btn-ghost" id="m_cancel">取消</button><button type="button" class="btn btn-primary" id="m_save">儲存</button>`);
+  const notice=$('m_notice'), resume=$('m_resume'), warn=$('m_warn');
+  function sync(){
+    if(notice.value && !resume.dataset.touched) resume.value=addDays(notice.value, MAX_DAYS);
+    const d=daysBetween(notice.value, resume.value);
+    if(d!==null && d>MAX_DAYS){ warn.style.display='block'; warn.textContent=`超過 ${MAX_DAYS} 日（${d} 日）。單一 Notice 期不應超過 ${MAX_DAYS} 日。`; }
+    else warn.style.display='none';
+  }
+  if(!resume.value && notice.value) resume.value=addDays(notice.value, MAX_DAYS);
+  notice.onchange=sync; resume.onchange=()=>{ resume.dataset.touched='1'; sync(); };
+  sync();
+  $('m_cancel').onclick=closeModal;
+  $('m_save').onclick=()=>{
+    if(!notice.value){ toast('請填 Notice 日期', true); return; }
+    const d=daysBetween(notice.value, resume.value);
+    if(d!==null && d>MAX_DAYS && !confirm(`超過 ${MAX_DAYS} 日，仍要儲存？`)) return;
+    c.noticeDate=notice.value;
+    c.periodStart=notice.value;
+    c.plannedResume=resume.value||addDays(notice.value, MAX_DAYS);
+    c.updatedAt=new Date().toISOString();
+    save(); closeModal(); render(); toast('已更新 Notice 日期');
+  };
+}
+
+function openExtendModal(id){
+  const c=findCase(id); if(!c) return;
+  modalState={kind:'extend', id};
+  const start=todayStr();
+  const end=addDays(start, MAX_DAYS);
+  openModalShell('新增延期（新 14 日）', `
+    <p style="font-size:.85rem;color:var(--mute);margin-bottom:12px">新增一段 Shutdown 延期；periodStart 起計新的 ${MAX_DAYS} 日窗口。</p>
+    <div class="grid">
+      <div class="field"><label>延期 Notice 日期 <span class="req">*</span></label><input type="date" id="m_notice" value="${esc(start)}"></div>
+      <div class="field"><label>本期開始</label><input type="date" id="m_period" value="${esc(start)}"></div>
+      <div class="field"><label>計劃恢復</label><input type="date" id="m_resume" value="${esc(end)}"></div>
+      <div class="field span2"><label>備註</label><textarea id="m_note" placeholder="延期原因／表格編號…"></textarea></div>
+    </div>
+    <div class="warn-note" id="m_warn" style="display:none"></div>
+  `, `<button type="button" class="btn btn-ghost" id="m_cancel">取消</button><button type="button" class="btn btn-primary" id="m_save">新增延期</button>`);
+  const notice=$('m_notice'), period=$('m_period'), resume=$('m_resume'), warn=$('m_warn');
+  function sync(){
+    if(notice.value && !period.value) period.value=notice.value;
+    if(period.value && !resume.dataset.touched) resume.value=addDays(period.value, MAX_DAYS);
+    const d=daysBetween(period.value||notice.value, resume.value);
+    if(d!==null && d>MAX_DAYS){ warn.style.display='block'; warn.textContent=`延期窗口 ${d} 日，超過 ${MAX_DAYS} 日上限。`; }
+    else warn.style.display='none';
+  }
+  notice.onchange=sync; period.onchange=sync; resume.onchange=()=>{ resume.dataset.touched='1'; sync(); };
+  $('m_cancel').onclick=closeModal;
+  $('m_save').onclick=()=>{
+    if(!notice.value){ toast('請填 Notice 日期', true); return; }
+    const ps=period.value||notice.value;
+    const pr=resume.value||addDays(ps, MAX_DAYS);
+    const d=daysBetween(ps, pr);
+    if(d!==null && d>MAX_DAYS && !confirm(`超過 ${MAX_DAYS} 日，仍要新增？`)) return;
+    c.extensions=c.extensions||[];
+    c.extensions.push(normalizeExt({noticeDate:notice.value, periodStart:ps, plannedResume:pr, note:$('m_note').value.trim()}));
+    c.noticeDate=notice.value;
+    c.periodStart=ps;
+    c.plannedResume=pr;
+    c.status='active';
+    c.updatedAt=new Date().toISOString();
+    save(); closeModal(); render(); toast('已新增延期');
+  };
+}
+
+function buildRemindDraft(c){
+  const start=effectivePeriodStart(c);
+  const due=start?addDays(start, MAX_DAYS):'—';
+  const to=c.pmEmail||'';
+  const toDisplay=c.pmEmail||`（待填 email）${c.pm?` · ${c.pm}`:''}`;
+  const subject=`[FSI] 請更新 Shutdown Notice — ${c.location||c.ref||'個案'}`;
+  const body=`您好${c.pm?' '+c.pm:''}，
+
+以下 FSI 暫停個案已超過單一 Shutdown Notice 14 日上限，請提交延期／新通知，或確認已恢復：
+
+位置：${c.location||'—'}
+參考編號：${c.ref||'—'}
+部門：${c.dept||'—'}
+Shutdown Notice / 本期開始：${start||'—'}
+14 日屆滿日：${due}
+計劃恢復：${c.plannedResume||'—'}
+暫停 FSI：${(c.fsi||[]).join(', ')||'—'}
+
+請盡快更新，謝謝。
+
+（此為管理工具草稿預覽 · 尚未實際寄出）`;
+  return {to, toDisplay, subject, body};
+}
+
+function openRemindModal(id){
+  const c=findCase(id); if(!c) return;
+  modalState={kind:'remind', id};
+  const draft=buildRemindDraft(c);
+  openModalShell('提醒 PM（模擬）', `
+    <p style="font-size:.85rem;color:var(--mute);margin-bottom:12px">暫時不會寄出電郵。可預覽草稿，或以 mailto 開啟電郵程式；或按「模擬已發送」記錄 reminderSentAt。</p>
+    <div class="mail-preview">
+      <div class="row"><div class="lab">To</div><div>${esc(draft.toDisplay)}</div></div>
+      <div class="row"><div class="lab">Subject</div><div>${esc(draft.subject)}</div></div>
+      <div class="row"><div class="lab">Body</div><div class="body">${esc(draft.body)}</div></div>
+    </div>
+    <div class="field" style="margin-top:12px"><label>PM Email（可先填，稍後會用於 mailto）</label><input type="email" id="m_pmEmail" value="${esc(c.pmEmail||'')}" placeholder="待填 email"></div>
+  `, `
+    <button type="button" class="btn btn-ghost" id="m_cancel">關閉</button>
+    <button type="button" class="btn btn-ghost" id="m_mailto">開啟電郵草稿</button>
+    <button type="button" class="btn btn-warn" id="m_mock">模擬已發送</button>
+  `);
+  $('m_cancel').onclick=closeModal;
+  $('m_mailto').onclick=()=>{
+    const email=($('m_pmEmail').value.trim()||c.pmEmail||'').trim();
+    c.pmEmail=email;
+    const d=buildRemindDraft(c);
+    const mailto='mailto:'+encodeURIComponent(email||'')+'?subject='+encodeURIComponent(d.subject)+'&body='+encodeURIComponent(d.body);
+    window.location.href=mailto;
+    toast(email?'已開啟電郵草稿':'已開啟電郵草稿（收件人待填）');
+  };
+  $('m_mock').onclick=()=>{
+    const email=$('m_pmEmail').value.trim();
+    if(email) c.pmEmail=email;
+    c.reminderSentAt=new Date().toISOString();
+    c.updatedAt=new Date().toISOString();
+    save(); closeModal(); render();
+    toast('已模擬發送提醒（已記錄 reminderSentAt）');
+    console.info('[FSI mock remind]', {id:c.id, pm:c.pm, pmEmail:c.pmEmail, reminderSentAt:c.reminderSentAt});
+  };
+}
+
+function markResumed(id){
+  const c=findCase(id); if(!c) return;
+  if(!confirm('標記此個案為已恢復？')) return;
+  c.status='resumed';
+  c.updatedAt=new Date().toISOString();
+  save(); render(); toast('已標記為已恢復');
+}
+function deleteCase(id){
+  const c=findCase(id); if(!c) return;
+  if(!confirm('刪除此個案？')) return;
+  db.fsi.cases=db.fsi.cases.filter(x=>x.id!==id);
+  save(); render(); toast('已刪除');
+}
+
+function expandAll(open){
+  filtered().forEach(c=>{ openMap[c.id]=open; });
+  render();
+}
+
+// —— UI wiring ——
+document.querySelectorAll('#viewTabs .view-tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const v=btn.getAttribute('data-view');
+    mainView=v==='stats'?'stats':'cases';
+    if(mainView==='stats') location.hash='stats';
+    else if(location.hash==='#stats' || location.hash==='#cases') history.replaceState(null,'',location.pathname+location.search+(mainView==='cases'?'#cases':''));
+    else location.hash='cases';
     render();
-  }).catch(err=>{
-    $('content').innerHTML=`<div class="empty">載入失敗：${esc(err.message)}</div>`;
-    $('crumb').textContent='載入失敗';
   });
+});
+window.addEventListener('hashchange', ()=>{
+  const next=(location.hash==='#stats')?'stats':'cases';
+  if(next!==mainView){ mainView=next; render(); }
+});
+$('btnNewCase').onclick=()=>openCaseModal(null);
+$('btnExpandAll').onclick=()=>expandAll(true);
+$('btnCollapseAll').onclick=()=>expandAll(false);
+$('modalClose').onclick=closeModal;
+$('modalBg').addEventListener('click', e=>{ if(e.target===$('modalBg')) closeModal(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+const nav=document.getElementById('siteNav');
+const btn=document.getElementById('navToggle');
+if(nav&&btn) btn.addEventListener('click',()=>{
+  const open=nav.classList.toggle('is-open');
+  btn.setAttribute('aria-expanded', open?'true':'false');
+});
+
+(async function init(){
+  loadLocal();
+  render();
+  try{
+    const pulled=await pullShared(true);
+    if(pulled && pulled.shared){
+      // if cloud has no fsi cases, seed
+      if(!cases().length) await ensureSeeded();
+    } else if(!cases().length){
+      await ensureSeeded();
+    }
+  }catch(_){
+    if(!cases().length) await ensureSeeded();
+  }
+  render();
+  setInterval(()=>pullShared(true), 5000);
+})();
 })();
 </script>
-<script src="./config.js"></script>
 <script src="./js/t.js"></script>
 </body>
 </html>

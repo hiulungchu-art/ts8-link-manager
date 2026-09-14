@@ -954,7 +954,8 @@ const SEED={
       ]
     }]
   }],
-  meta:{ updatedAt:'2026-09-11T04:00:00.000Z', driveFolderName:'TS8 PDFs', driveFolderId:DRIVE_FOLDER_ID }
+  meta:{ updatedAt:'2026-09-11T04:00:00.000Z', driveFolderName:'TS8 PDFs', driveFolderId:DRIVE_FOLDER_ID },
+  fsi:{ cases:[], meta:{} }
 };
 
 let db={projects:[]};
@@ -1055,6 +1056,10 @@ function migrateDb(raw){
       });
     });
   });
+  // Preserve / init shared FSI suspension management block (never wipe on TS8 save)
+  if(!data.fsi || typeof data.fsi!=='object') data.fsi={cases:[], meta:{}};
+  if(!Array.isArray(data.fsi.cases)) data.fsi.cases=[];
+  if(!data.fsi.meta || typeof data.fsi.meta!=='object') data.fsi.meta={};
   if(!data.meta) data.meta={};
   return data;
 }
@@ -1074,7 +1079,8 @@ function load(){
       return;
     }
     db=migrateDb(JSON.parse(raw));
-    if(!db.projects) db={projects:[],meta:{}};
+    if(!db.projects){ db.projects=[]; }
+    db.fsi=db.fsi||{cases:[],meta:{}};
   }catch{
     db=migrateDb(JSON.parse(JSON.stringify(SEED)));
   }
