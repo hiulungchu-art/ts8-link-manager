@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TS8 連結管理 · 工作頁面集</title>
 <link rel="stylesheet" href="./css/site.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&display=swap');
 
@@ -561,6 +562,35 @@ body{
 .b-done{background:var(--okb);color:var(--ok)}
 .b-idle{background:var(--cream-2);color:var(--mute)}
 
+
+/* —— Internal view tabs —— */
+.view-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-right:auto}
+.view-tab{
+  border:1px solid var(--line-soft);background:var(--cream-2);color:var(--mute);
+  border-radius:999px;padding:7px 14px;font:inherit;font-size:.82rem;font-weight:600;cursor:pointer;
+}
+.view-tab.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.topbar{gap:12px;align-items:center}
+.kpi-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:18px}
+@media(max-width:720px){.kpi-row{grid-template-columns:1fr}}
+.kpi{background:var(--paper);border:1px solid var(--line-soft);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+.kpi .lab{font-size:.72rem;font-weight:700;color:var(--mute);letter-spacing:.04em}
+.kpi .num{font-family:var(--font-display);font-size:2rem;font-weight:600;color:var(--ink);margin-top:4px;line-height:1.1}
+.kpi.accent{background:linear-gradient(145deg,var(--okb),var(--paper));border-color:rgba(47,122,85,.2)}
+.kpi.accent .num{color:var(--ok)}
+.stats-toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:16px;background:var(--paper);border:1px solid var(--line-soft);border-radius:14px;padding:14px 16px}
+.stats-toolbar .field{margin:0;min-width:140px}
+.stats-toolbar label{display:block;font-size:.68rem;color:var(--mute);font-weight:700;margin-bottom:4px}
+.stats-toolbar select{width:100%;padding:9px 11px;border-radius:10px;border:1px solid var(--line-soft);background:var(--cream-2);font:inherit;font-size:.88rem;color:var(--ink)}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.chart-grid{grid-template-columns:1fr}}
+.chart-card{background:var(--paper);border:1px solid var(--line-soft);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 18px 12px;min-height:300px}
+.chart-card h2{font-family:var(--font-display);font-size:1.05rem;margin:0 0 4px;color:var(--ink)}
+.chart-card .sub{font-size:.78rem;color:var(--mute);margin-bottom:12px}
+.chart-wrap{position:relative;height:240px}
+.stats-note{margin-top:14px;font-size:.78rem;color:var(--mute)}
+.stats-empty{padding:48px;text-align:center;color:var(--mute)}
+
 .hint{font-size:.75rem;color:var(--mute)}
 .modal-bg{
   position:fixed;inset:0;
@@ -735,7 +765,6 @@ textarea{min-height:72px;resize:vertical}
   <ul class="site-nav-links">
     <li><a href="./">首頁</a></li>
     <li><a href="./ts8.html" class="is-active" aria-current="page">TS8 連結管理</a></li>
-    <li><a href="./stats.html">Part B 統計</a></li>
   </ul>
 </header>
 <div class="app">
@@ -754,6 +783,10 @@ textarea{min-height:72px;resize:vertical}
 
   <section class="main">
     <div class="topbar">
+      <div class="view-tabs" id="viewTabs">
+        <button type="button" class="view-tab active" data-view="links">連結管理</button>
+        <button type="button" class="view-tab" data-view="stats">Part B 統計</button>
+      </div>
       <div class="crumb" id="crumb">請選擇或建立項目</div>
       <button class="btn btn-ghost" id="btnEditProject" style="display:none">編輯項目</button>
     </div>
@@ -856,6 +889,9 @@ let db={projects:[]};
 let selectedProjectId=null;
 let selectedPartAId=null;
 let searchQ='';
+let mainView=(location.hash==='#stats')?'stats':'links';
+let statsYearFilter='';
+let yearChart=null, monthChart=null;
 let modalMode=null;
 let dayFilterQ='';
 let dayFilterStatus='';
@@ -1405,9 +1441,138 @@ function applyDayFilter(){
 }
 
 
+
+function findPrimaryLink(links,type){
+  return (links||[]).find(l=>l && l.type===type && l.url);
+}
+function isPartBDone(day){
+  if(!day) return false;
+  if((day.status||'')==='已完結') return true;
+  return !!findPrimaryLink(day.links,'pdf_b2');
+}
+function partBStats(project){
+  const map={}, yearMap={}; let total=0;
+  (project.partAs||[]).forEach(pa=>{
+    (pa.days||[]).forEach(d=>{
+      if(!isPartBDone(d)) return;
+      const m=(d.date||'').slice(0,7);
+      if(!/^\d{4}-\d{2}$/.test(m)) return;
+      map[m]=(map[m]||0)+1;
+      const y=m.slice(0,4);
+      yearMap[y]=(yearMap[y]||0)+1;
+      total++;
+    });
+  });
+  return {
+    total, map, yearMap,
+    months:Object.keys(map).sort(),
+    years:Object.keys(yearMap).sort()
+  };
+}
+
+function destroyStatsCharts(){
+  try{ if(yearChart){ yearChart.destroy(); yearChart=null; } }catch(_){}
+  try{ if(monthChart){ monthChart.destroy(); monthChart=null; } }catch(_){}
+}
+
+function renderStatsView(){
+  const p=proj();
+  $('btnEditProject').style.display=p?'inline-flex':'none';
+  if(!p){
+    $('crumb').textContent='請先選擇項目';
+    destroyStatsCharts();
+    $('content').innerHTML=`<div class="stats-empty">請先在左側選擇項目，再查看 Part B 統計。</div>`;
+    return;
+  }
+  $('crumb').innerHTML=`<strong>${esc(p.name)}</strong> · Part B 統計`;
+  const st=partBStats(p);
+  const now=new Date();
+  const yNow=String(now.getFullYear());
+  const ym=yNow+'-'+String(now.getMonth()+1).padStart(2,'0');
+  let selectedYear=statsYearFilter;
+  if(!selectedYear){
+    selectedYear=st.years.includes(yNow)?yNow:(st.years[st.years.length-1]||yNow);
+  }else if(st.years.length && !st.years.includes(selectedYear)){
+    selectedYear=st.years.includes(yNow)?yNow:st.years[st.years.length-1];
+    statsYearFilter=selectedYear;
+  }
+  const yearOpts=(st.years.length?st.years:[yNow]).map(y=>`<option value="${esc(y)}" ${y===selectedYear?'selected':''}>${esc(y)} 年</option>`).join('');
+
+  $('content').innerHTML=`
+    <div class="stats-toolbar">
+      <div class="field"><label>年份（月圖）</label><select id="statsYearSelect">${yearOpts}</select></div>
+    </div>
+    <div class="kpi-row">
+      <div class="kpi accent"><div class="lab">累計 Part B</div><div class="num">${st.total}</div></div>
+      <div class="kpi"><div class="lab">本年 ${esc(yNow)}</div><div class="num">${st.yearMap[yNow]||0}</div></div>
+      <div class="kpi"><div class="lab">本月 ${esc(ym)}</div><div class="num">${st.map[ym]||0}</div></div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h2>按年完成次數</h2>
+        <div class="sub">折線圖 · 各年趨勢</div>
+        <div class="chart-wrap"><canvas id="yearChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h2>按月完成次數</h2>
+        <div class="sub" id="monthSub">柱狀圖 · ${esc(selectedYear)} 年</div>
+        <div class="chart-wrap"><canvas id="monthChart"></canvas></div>
+      </div>
+    </div>
+    <p class="stats-note">完成條件：隔離日狀態「已完結」或已有完整 PDF（B2 完成後）。以隔離日日期計。</p>`;
+
+  const ys=$('statsYearSelect');
+  if(ys) ys.onchange=()=>{ statsYearFilter=ys.value; render(); };
+
+  if(typeof Chart==='undefined'){
+    console.warn('Chart.js missing');
+    return;
+  }
+  Chart.defaults.color='#6A736C';
+  Chart.defaults.borderColor='rgba(221,213,200,.7)';
+  Chart.defaults.font.family='"Noto Sans TC","PingFang TC",sans-serif';
+  const accent='rgba(92,138,114,.85)';
+  const soft='rgba(92,138,114,.35)';
+  const yearLabels=st.years.length?st.years:[yNow];
+  const yearData=yearLabels.map(y=>st.yearMap[y]||0);
+  destroyStatsCharts();
+  yearChart=new Chart($('yearChart'),{
+    type:'line',
+    data:{labels:yearLabels.map(y=>y+' 年'), datasets:[{
+      label:'完成次數', data:yearData, borderColor:accent, backgroundColor:'rgba(92,138,114,.18)',
+      fill:true, tension:.28, pointRadius:4, pointBackgroundColor:accent, borderWidth:2.5
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.parsed.y+' 次'}}},
+      scales:{y:{beginAtZero:true,ticks:{precision:0},grid:{color:'rgba(221,213,200,.55)'}},x:{grid:{display:false}}}}
+  });
+  const monthLabels=[], monthData=[], monthColors=[];
+  for(let i=1;i<=12;i++){
+    const m=selectedYear+'-'+String(i).padStart(2,'0');
+    monthLabels.push(i+'月');
+    monthData.push(st.map[m]||0);
+    monthColors.push(m===ym?accent:soft);
+  }
+  monthChart=new Chart($('monthChart'),{
+    type:'bar',
+    data:{labels:monthLabels, datasets:[{label:'完成次數', data:monthData, backgroundColor:monthColors, borderRadius:8, maxBarThickness:36}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.parsed.y+' 次'}}},
+      scales:{y:{beginAtZero:true,ticks:{precision:0},grid:{color:'rgba(221,213,200,.55)'}},x:{grid:{display:false}}}}
+  });
+}
+
+function syncViewTabs(){
+  document.querySelectorAll('#viewTabs .view-tab').forEach(btn=>{
+    btn.classList.toggle('active', btn.getAttribute('data-view')===mainView);
+  });
+  // Sidebar useful for links; keep visible for stats too (project select)
+}
+
+
 function render(){
   renderSidebar();
-  renderMain();
+  syncViewTabs();
+  if(mainView==='stats'){ renderStatsView(); }
+  else { destroyStatsCharts(); renderMain(); }
   const at=(db.meta&&db.meta.updatedAt)||'';
   const meta=$('syncMeta');
   if(meta && at){
@@ -1703,6 +1868,20 @@ $('projList').addEventListener('click',e=>{
   render();
 });
 $('btnNewProject').onclick=()=>openModal({kind:'project'});
+const viewTabs=$('viewTabs');
+if(viewTabs){
+  viewTabs.addEventListener('click',e=>{
+    const b=e.target.closest('[data-view]'); if(!b) return;
+    e.preventDefault();
+    mainView=b.getAttribute('data-view')||'links';
+    if(mainView==='stats') location.hash='stats'; else if(location.hash==='#stats') history.replaceState(null,'',location.pathname+location.search);
+    render();
+  });
+}
+window.addEventListener('hashchange',()=>{
+  const next=(location.hash==='#stats')?'stats':'links';
+  if(next!==mainView){ mainView=next; render(); }
+});
 $('btnEditProject').onclick=()=>{if(selectedProjectId) openModal({kind:'project',id:selectedProjectId})};
 $('globalSearch').addEventListener('input',e=>{searchQ=e.target.value;render()});
 
@@ -1726,9 +1905,13 @@ $('content').addEventListener('change',e=>{
 $('content').addEventListener('click',e=>{
   const t=e.target.closest('[data-act]'); if(!t) return;
   const act=t.getAttribute('data-act');
+  // Prevent parent toggle handlers from also firing when a child control was intended
+  if(act==='edit-day'||act==='edit-pa'||act==='add-day'||act==='expand-days'||act==='collapse-days'||act==='paste-slot'||act==='edit-slot'||act==='upload-slot'||act==='del-slot'||act==='select-pa'||act==='add-pa'){
+    e.stopPropagation();
+  }
   if(act==='toggle-day'){
-    // ignore if clicking nested button with another act (edit)
-    if(e.target.closest('button[data-act="edit-day"]')) return;
+    // ignore nested controls (edit etc.) — otherwise head toggle steals the click
+    if(e.target.closest('button')) return;
     const id=t.getAttribute('data-day-id');
     const card=document.querySelector('.day-card[data-day-id="'+CSS.escape(id)+'"]');
     if(!card) return;
@@ -1738,6 +1921,7 @@ $('content').addEventListener('click',e=>{
     return;
   }
   if(act==='toggle-section'){
+    if(e.target.closest('button')) return;
     const id=t.getAttribute('data-section');
     const sec=document.querySelector('.section-collapsible[data-section="'+CSS.escape(id)+'"]');
     if(!sec) return;
