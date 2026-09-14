@@ -402,43 +402,6 @@ body{
   background:linear-gradient(90deg, var(--line), transparent);
 }
 
-.stats-panel{
-  background:var(--paper);
-  border:1px solid var(--line-soft);
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
-  padding:18px 20px;
-  margin-bottom:22px;
-}
-.stats-panel h3{
-  font-family:var(--font-display);
-  font-size:1.05rem;
-  margin:0 0 4px;
-  color:var(--ink);
-}
-.stats-panel .stats-sub{font-size:.78rem;color:var(--mute);margin-bottom:14px}
-.stats-grid{display:flex;flex-wrap:wrap;gap:10px}
-.stats-chip{
-  min-width:110px;
-  padding:12px 14px;
-  border-radius:12px;
-  background:var(--cream-2);
-  border:1px solid var(--line-soft);
-}
-.stats-chip .lab{font-size:.68rem;color:var(--mute);font-weight:700;letter-spacing:.04em}
-.stats-chip .num{font-family:var(--font-display);font-size:1.45rem;font-weight:600;color:var(--ink);margin-top:2px}
-.stats-chip.total{background:var(--okb);border-color:transparent}
-.stats-chip.total .num{color:var(--ok)}
-.stats-chip.year{background:rgba(61,143,110,.12);border-color:rgba(61,143,110,.25)}
-.stats-row-label{font-size:.68rem;font-weight:700;color:var(--mute-2);letter-spacing:.1em;text-transform:uppercase;margin:12px 0 8px;width:100%}
-.stats-row-label:first-of-type{margin-top:0}
-.stats-year-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:4px 0 10px}
-.stats-year-bar select{
-  padding:8px 10px;border-radius:10px;border:1px solid var(--line-soft);
-  background:var(--paper);font:inherit;font-size:.85rem;color:var(--ink);
-}
-.stats-year-bar .year-sum{font-size:.85rem;color:var(--mute)}
-.stats-year-bar .year-sum strong{color:var(--ink);font-size:1rem}
 
 .tile-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:700px){.tile-grid{grid-template-columns:1fr}}
@@ -772,7 +735,7 @@ textarea{min-height:72px;resize:vertical}
   <ul class="site-nav-links">
     <li><a href="./">首頁</a></li>
     <li><a href="./ts8.html" class="is-active" aria-current="page">TS8 連結管理</a></li>
-    <!-- 新增頁面時在此加一個 <li><a href="./other.html">…</a></li> -->
+    <li><a href="./stats.html">Part B 統計</a></li>
   </ul>
 </header>
 <div class="app">
@@ -1276,97 +1239,6 @@ function renderSidebar(){
 }
 
 
-function isPartBDone(day){
-  if(!day) return false;
-  if((day.status||'')==='已完結') return true;
-  return !!(findPrimary(day.links,'pdf_b2'));
-}
-
-/** Count completed Part B by month (YYYY-MM) and year (YYYY). Scope: whole project. */
-function partBStatsByMonth(project){
-  const map={};
-  const yearMap={};
-  let total=0;
-  (project.partAs||[]).forEach(pa=>{
-    (pa.days||[]).forEach(d=>{
-      if(!isPartBDone(d)) return;
-      const m=(d.date||'').slice(0,7);
-      if(!/^\d{4}-\d{2}$/.test(m)) return;
-      map[m]=(map[m]||0)+1;
-      const y=m.slice(0,4);
-      yearMap[y]=(yearMap[y]||0)+1;
-      total++;
-    });
-  });
-  const months=Object.keys(map).sort().reverse();
-  const years=Object.keys(yearMap).sort().reverse();
-  return {total, months, map, years, yearMap};
-}
-
-let partBStatsYearFilter=''; // empty = current year if available, else latest
-
-function renderPartBStats(project){
-  const {total, months, map, years, yearMap}=partBStatsByMonth(project);
-  const now=new Date();
-  const yNow=String(now.getFullYear());
-  const ym=yNow+'-'+String(now.getMonth()+1).padStart(2,'0');
-  const thisMonth=map[ym]||0;
-  const thisYear=yearMap[yNow]||0;
-
-  let selectedYear=partBStatsYearFilter;
-  if(!selectedYear){
-    selectedYear = years.includes(yNow) ? yNow : (years[0]||yNow);
-  }else if(years.length && !years.includes(selectedYear)){
-    selectedYear = years.includes(yNow) ? yNow : years[0];
-    partBStatsYearFilter=selectedYear;
-  }
-  const yearTotal=yearMap[selectedYear]||0;
-  const monthsInYear=months.filter(m=>m.startsWith(selectedYear+'-'));
-
-  let overview=`<div class="stats-row-label">總覽</div><div class="stats-grid">`
-    +`<div class="stats-chip total"><div class="lab">累計 Part B</div><div class="num">${total}</div></div>`
-    +`<div class="stats-chip year"><div class="lab">本年 ${esc(yNow)}</div><div class="num">${thisYear}</div></div>`
-    +`<div class="stats-chip"><div class="lab">本月 ${esc(ym)}</div><div class="num">${thisMonth}</div></div>`
-    +`</div>`;
-
-  let yearRow=`<div class="stats-row-label">按年</div><div class="stats-year-bar">`
-    +`<select id="partBYearSelect" aria-label="選擇年份">`;
-  if(!years.length){
-    yearRow+=`<option value="${esc(yNow)}">${esc(yNow)} 年</option>`;
-  }else{
-    years.forEach(y=>{
-      yearRow+=`<option value="${esc(y)}" ${y===selectedYear?'selected':''}>${esc(y)} 年</option>`;
-    });
-  }
-  yearRow+=`</select><span class="year-sum">${esc(selectedYear)} 年累計完成：<strong>${yearTotal}</strong> 次</span></div>`
-    +`<div class="stats-grid">`;
-  if(!years.length){
-    yearRow+=`<div class="stats-chip"><div class="lab">尚無完成</div><div class="num">0</div></div>`;
-  }else{
-    years.forEach(y=>{
-      yearRow+=`<div class="stats-chip year"><div class="lab">${esc(y)} 年</div><div class="num">${yearMap[y]}</div></div>`;
-    });
-  }
-  yearRow+=`</div>`;
-
-  let monthRow=`<div class="stats-row-label">按月（${esc(selectedYear)}）</div><div class="stats-grid">`;
-  if(!monthsInYear.length){
-    monthRow+=`<div class="stats-chip"><div class="lab">此年尚無完成</div><div class="num">0</div></div>`;
-  }else{
-    monthsInYear.forEach(m=>{
-      const highlight=m===ym?' style="outline:2px solid var(--accent)"':'';
-      monthRow+=`<div class="stats-chip"${highlight}><div class="lab">${esc(m)}</div><div class="num">${map[m]}</div></div>`;
-    });
-  }
-  monthRow+=`</div>`;
-
-  return `<div class="stats-panel">
-    <h3>Part B 統計</h3>
-    <div class="stats-sub">以隔離日日期計；完成＝狀態「已完結」或已有完整 PDF。可揀年份睇該年各月。</div>
-    ${overview}${yearRow}${monthRow}
-  </div>`;
-}
-
 function renderMain(){
 
   const p=proj();
@@ -1411,7 +1283,6 @@ function renderMain(){
     </div>
   </div></div>`;
 
-  html+=renderPartBStats(p);
 
   const paDocsKey='pa-docs:'+pa.id;
   // Part A docs: default open on first visit, then remember
@@ -1533,16 +1404,10 @@ function applyDayFilter(){
   }
 }
 
-function bindPartBYearSelect(){
-  const sel=$('partBYearSelect');
-  if(!sel) return;
-  sel.onchange=()=>{ partBStatsYearFilter=sel.value; render(); };
-}
 
 function render(){
   renderSidebar();
   renderMain();
-  bindPartBYearSelect();
   const at=(db.meta&&db.meta.updatedAt)||'';
   const meta=$('syncMeta');
   if(meta && at){

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TS8 Part B 統計 · 工作頁面集</title>
+<link rel="stylesheet" href="./css/site.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+.stats-page{max-width:1100px;margin:0 auto;padding:28px 22px 64px;flex:1;width:100%}
+.stats-hero{margin-bottom:22px}
+.stats-hero .eyebrow{font-family:var(--font-ui);font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--mute-2);margin-bottom:8px}
+.stats-hero h1{font-family:var(--font-display);font-size:1.85rem;color:var(--ink);letter-spacing:-.02em;margin-bottom:8px}
+.stats-hero p{color:var(--mute);font-size:.92rem;max-width:42rem;line-height:1.55}
+.kpi-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:18px}
+@media(max-width:720px){.kpi-row{grid-template-columns:1fr}}
+.kpi{
+  background:var(--paper);border:1px solid var(--line-soft);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:18px 18px 16px;
+}
+.kpi .lab{font-size:.72rem;font-weight:700;color:var(--mute);letter-spacing:.04em}
+.kpi .num{font-family:var(--font-display);font-size:2rem;font-weight:600;color:var(--ink);margin-top:4px;line-height:1.1}
+.kpi.accent{background:linear-gradient(145deg,var(--okb),var(--paper));border-color:rgba(47,122,85,.2)}
+.kpi.accent .num{color:var(--ok)}
+.toolbar{
+  display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:16px;
+  background:var(--paper);border:1px solid var(--line-soft);border-radius:14px;padding:14px 16px;
+}
+.toolbar .field{margin:0;min-width:160px}
+.toolbar label{display:block;font-size:.68rem;color:var(--mute);font-weight:700;margin-bottom:4px}
+.toolbar select{
+  width:100%;padding:9px 11px;border-radius:10px;border:1px solid var(--line-soft);
+  background:var(--cream-2);font:inherit;font-size:.88rem;color:var(--ink);
+}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.chart-grid{grid-template-columns:1fr}}
+.chart-card{
+  background:var(--paper);border:1px solid var(--line-soft);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:18px 18px 12px;min-height:320px;
+}
+.chart-card h2{font-family:var(--font-display);font-size:1.05rem;margin:0 0 4px;color:var(--ink)}
+.chart-card .sub{font-size:.78rem;color:var(--mute);margin-bottom:12px}
+.chart-wrap{position:relative;height:260px}
+.stats-note{margin-top:16px;font-size:.78rem;color:var(--mute)}
+.stats-empty{padding:48px;text-align:center;color:var(--mute);background:var(--paper);border-radius:var(--radius);border:1px dashed var(--line)}
+</style>
+</head>
+<body class="site-body">
+<header class="site-nav" id="siteNav">
+  <a class="site-brand" href="./">
+    <span class="site-brand-mark" aria-hidden="true"></span>
+    <span class="site-brand-text">
+      <span class="site-brand-name">工作頁面集</span>
+      <span class="site-brand-sub">Workspace</span>
+    </span>
+  </a>
+  <button class="site-nav-toggle" type="button" id="navToggle" aria-label="開啟選單" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+  <ul class="site-nav-links">
+    <li><a href="./">首頁</a></li>
+    <li><a href="./ts8.html">TS8 連結管理</a></li>
+    <li><a href="./stats.html" class="is-active" aria-current="page">Part B 統計</a></li>
+  </ul>
+</header>
+
+<main class="stats-page">
+  <div class="stats-hero">
+    <div class="eyebrow">TS8 · Analytics</div>
+    <h1>Part B 統計</h1>
+    <p>按隔離日完成次數統計（狀態「已完結」或已有完整 PDF）。資料與連結管理頁共用雲端同步。</p>
+  </div>
+
+  <div class="toolbar">
+    <div class="field" style="flex:1.2">
+      <label>項目</label>
+      <select id="projectSelect"></select>
+    </div>
+    <div class="field">
+      <label>年份（月圖）</label>
+      <select id="yearSelect"></select>
+    </div>
+  </div>
+
+  <div id="kpiRow" class="kpi-row"></div>
+  <div id="charts" class="chart-grid">
+    <div class="chart-card">
+      <h2>按年完成次數</h2>
+      <div class="sub">柱狀圖 · 各年累計</div>
+      <div class="chart-wrap"><canvas id="yearChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h2>按月完成次數</h2>
+      <div class="sub" id="monthSub">柱狀圖 · 選定年份</div>
+      <div class="chart-wrap"><canvas id="monthChart"></canvas></div>
+    </div>
+  </div>
+  <p class="stats-note" id="metaNote"></p>
+</main>
+
+<footer class="site-footer">
+  <span>工作頁面集 · 內部使用</span>
+  <span><a href="./ts8.html" style="color:inherit">返回 TS8 連結管理</a></span>
+</footer>
+
+<script src="./config.js"></script>
+<script src="./js/t.js"></script>
+<script>
+(function(){
+  const KEY='ts8_project_link_manager_v6';
+  const CFG=window.TS8_CONFIG||{};
+  const SYNC=CFG.UPLOAD_WEBAPP_URL||'';
+  let db={projects:[]};
+  let yearChart=null, monthChart=null;
+  let selectedProjectId='';
+  let selectedYear='';
+
+  const $=id=>document.getElementById(id);
+  function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+  function findPrimary(links,type){
+    return (links||[]).find(l=>l && l.type===type && l.url);
+  }
+  function isPartBDone(day){
+    if(!day) return false;
+    if((day.status||'')==='已完結') return true;
+    return !!findPrimary(day.links,'pdf_b2');
+  }
+  function computeStats(project){
+    const map={}, yearMap={}; let total=0;
+    (project.partAs||[]).forEach(pa=>{
+      (pa.days||[]).forEach(d=>{
+        if(!isPartBDone(d)) return;
+        const m=(d.date||'').slice(0,7);
+        if(!/^\d{4}-\d{2}$/.test(m)) return;
+        map[m]=(map[m]||0)+1;
+        const y=m.slice(0,4);
+        yearMap[y]=(yearMap[y]||0)+1;
+        total++;
+      });
+    });
+    const months=Object.keys(map).sort();
+    const years=Object.keys(yearMap).sort();
+    return {total, map, yearMap, months, years};
+  }
+
+  function chartDefaults(){
+    Chart.defaults.color='#6A736C';
+    Chart.defaults.borderColor='rgba(221,213,200,.7)';
+    Chart.defaults.font.family='"Noto Sans TC","PingFang TC",sans-serif';
+  }
+
+  function render(){
+    const projects=db.projects||[];
+    const ps=$('projectSelect');
+    if(!selectedProjectId || !projects.find(p=>p.id===selectedProjectId)){
+      selectedProjectId=projects[0]?projects[0].id:'';
+    }
+    ps.innerHTML=projects.length
+      ? projects.map(p=>`<option value="${esc(p.id)}" ${p.id===selectedProjectId?'selected':''}>${esc(p.name||'未命名項目')}</option>`).join('')
+      : '<option value="">尚無項目</option>';
+
+    const project=projects.find(p=>p.id===selectedProjectId);
+    if(!project){
+      $('kpiRow').innerHTML=`<div class="stats-empty" style="grid-column:1/-1">尚未有項目資料。請先到 TS8 連結管理新增。</div>`;
+      $('charts').style.display='none';
+      return;
+    }
+    $('charts').style.display='grid';
+    const st=computeStats(project);
+    const now=new Date();
+    const yNow=String(now.getFullYear());
+    const ym=yNow+'-'+String(now.getMonth()+1).padStart(2,'0');
+
+    if(!selectedYear){
+      selectedYear=st.years.includes(yNow)?yNow:(st.years[st.years.length-1]||yNow);
+    }else if(st.years.length && !st.years.includes(selectedYear)){
+      selectedYear=st.years.includes(yNow)?yNow:st.years[st.years.length-1];
+    }
+
+    const ys=$('yearSelect');
+    const yearOpts=st.years.length?st.years: [yNow];
+    ys.innerHTML=yearOpts.map(y=>`<option value="${esc(y)}" ${y===selectedYear?'selected':''}>${esc(y)} 年</option>`).join('');
+
+    $('kpiRow').innerHTML=`
+      <div class="kpi accent"><div class="lab">累計 Part B</div><div class="num">${st.total}</div></div>
+      <div class="kpi"><div class="lab">本年 ${esc(yNow)}</div><div class="num">${st.yearMap[yNow]||0}</div></div>
+      <div class="kpi"><div class="lab">本月 ${esc(ym)}</div><div class="num">${st.map[ym]||0}</div></div>`;
+
+    $('monthSub').textContent='柱狀圖 · '+selectedYear+' 年各月';
+
+    const yearLabels=st.years.length?st.years:[yNow];
+    const yearData=yearLabels.map(y=>st.yearMap[y]||0);
+
+    const monthLabels=[];
+    const monthData=[];
+    for(let i=1;i<=12;i++){
+      const m=selectedYear+'-'+String(i).padStart(2,'0');
+      monthLabels.push(i+'月');
+      monthData.push(st.map[m]||0);
+    }
+
+    chartDefaults();
+    const accent='rgba(92,138,114,.85)';
+    const accentSoft='rgba(92,138,114,.35)';
+
+    if(yearChart) yearChart.destroy();
+    yearChart=new Chart($('yearChart'),{
+      type:'bar',
+      data:{labels:yearLabels.map(y=>y+' 年'), datasets:[{label:'完成次數', data:yearData, backgroundColor:accent, borderRadius:8, maxBarThickness:48}]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>' '+c.parsed.y+' 次'}}},
+        scales:{y:{beginAtZero:true, ticks:{precision:0}, grid:{color:'rgba(221,213,200,.55)'}}, x:{grid:{display:false}}}
+      }
+    });
+
+    if(monthChart) monthChart.destroy();
+    monthChart=new Chart($('monthChart'),{
+      type:'bar',
+      data:{labels:monthLabels, datasets:[{label:'完成次數', data:monthData, backgroundColor:monthLabels.map((_,i)=>{
+        const m=selectedYear+'-'+String(i+1).padStart(2,'0');
+        return m===ym?accent:accentSoft;
+      }), borderRadius:8, maxBarThickness:36}]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>' '+c.parsed.y+' 次'}}},
+        scales:{y:{beginAtZero:true, ticks:{precision:0}, grid:{color:'rgba(221,213,200,.55)'}}, x:{grid:{display:false}}}
+      }
+    });
+
+    const at=(db.meta&&db.meta.updatedAt)||'';
+    let meta='完成條件：隔離日狀態「已完結」或已有完整 PDF（B2 完成後）。';
+    if(at){
+      try{ meta+=' 雲端更新：'+new Date(at).toLocaleString('zh-HK',{timeZone:'Asia/Hong_Kong'}); }catch(_){}
+    }
+    $('metaNote').textContent=meta;
+  }
+
+  async function loadDb(){
+    try{
+      const local=localStorage.getItem(KEY);
+      if(local) db=JSON.parse(local);
+    }catch(_){}
+    if(SYNC){
+      try{
+        const res=await fetch(SYNC+'?op=db&t='+Date.now());
+        const cloud=await res.json();
+        if(cloud && Array.isArray(cloud.projects)){
+          db=cloud;
+          try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(_){}
+        }
+      }catch(err){ console.warn(err); }
+    }
+    render();
+  }
+
+  $('projectSelect').onchange=()=>{ selectedProjectId=$('projectSelect').value; selectedYear=''; render(); };
+  $('yearSelect').onchange=()=>{ selectedYear=$('yearSelect').value; render(); };
+
+  var nav=document.getElementById('siteNav');
+  var btn=document.getElementById('navToggle');
+  if(nav&&btn){
+    btn.addEventListener('click', function(){
+      var open=nav.classList.toggle('is-open');
+      btn.setAttribute('aria-expanded', open?'true':'false');
+    });
+  }
+
+  loadDb();
+  setInterval(()=>{ if(!document.hidden) loadDb(); }, 15000);
+})();
+</script>
+</body>
+</html>
