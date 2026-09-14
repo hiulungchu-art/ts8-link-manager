@@ -432,6 +432,13 @@ body{
 .stats-chip.year{background:rgba(61,143,110,.12);border-color:rgba(61,143,110,.25)}
 .stats-row-label{font-size:.68rem;font-weight:700;color:var(--mute-2);letter-spacing:.1em;text-transform:uppercase;margin:12px 0 8px;width:100%}
 .stats-row-label:first-of-type{margin-top:0}
+.stats-year-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:4px 0 10px}
+.stats-year-bar select{
+  padding:8px 10px;border-radius:10px;border:1px solid var(--line-soft);
+  background:var(--paper);font:inherit;font-size:.85rem;color:var(--ink);
+}
+.stats-year-bar .year-sum{font-size:.85rem;color:var(--mute)}
+.stats-year-bar .year-sum strong{color:var(--ink);font-size:1rem}
 
 .tile-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:700px){.tile-grid{grid-template-columns:1fr}}
@@ -1296,6 +1303,8 @@ function partBStatsByMonth(project){
   return {total, months, map, years, yearMap};
 }
 
+let partBStatsYearFilter=''; // empty = current year if available, else latest
+
 function renderPartBStats(project){
   const {total, months, map, years, yearMap}=partBStatsByMonth(project);
   const now=new Date();
@@ -1304,13 +1313,33 @@ function renderPartBStats(project){
   const thisMonth=map[ym]||0;
   const thisYear=yearMap[yNow]||0;
 
+  let selectedYear=partBStatsYearFilter;
+  if(!selectedYear){
+    selectedYear = years.includes(yNow) ? yNow : (years[0]||yNow);
+  }else if(years.length && !years.includes(selectedYear)){
+    selectedYear = years.includes(yNow) ? yNow : years[0];
+    partBStatsYearFilter=selectedYear;
+  }
+  const yearTotal=yearMap[selectedYear]||0;
+  const monthsInYear=months.filter(m=>m.startsWith(selectedYear+'-'));
+
   let overview=`<div class="stats-row-label">總覽</div><div class="stats-grid">`
     +`<div class="stats-chip total"><div class="lab">累計 Part B</div><div class="num">${total}</div></div>`
     +`<div class="stats-chip year"><div class="lab">本年 ${esc(yNow)}</div><div class="num">${thisYear}</div></div>`
     +`<div class="stats-chip"><div class="lab">本月 ${esc(ym)}</div><div class="num">${thisMonth}</div></div>`
     +`</div>`;
 
-  let yearRow=`<div class="stats-row-label">按年</div><div class="stats-grid">`;
+  let yearRow=`<div class="stats-row-label">按年</div><div class="stats-year-bar">`
+    +`<select id="partBYearSelect" aria-label="選擇年份">`;
+  if(!years.length){
+    yearRow+=`<option value="${esc(yNow)}">${esc(yNow)} 年</option>`;
+  }else{
+    years.forEach(y=>{
+      yearRow+=`<option value="${esc(y)}" ${y===selectedYear?'selected':''}>${esc(y)} 年</option>`;
+    });
+  }
+  yearRow+=`</select><span class="year-sum">${esc(selectedYear)} 年累計完成：<strong>${yearTotal}</strong> 次</span></div>`
+    +`<div class="stats-grid">`;
   if(!years.length){
     yearRow+=`<div class="stats-chip"><div class="lab">尚無完成</div><div class="num">0</div></div>`;
   }else{
@@ -1320,19 +1349,20 @@ function renderPartBStats(project){
   }
   yearRow+=`</div>`;
 
-  let monthRow=`<div class="stats-row-label">按月</div><div class="stats-grid">`;
-  if(!months.length){
-    monthRow+=`<div class="stats-chip"><div class="lab">尚無完成</div><div class="num">0</div></div>`;
+  let monthRow=`<div class="stats-row-label">按月（${esc(selectedYear)}）</div><div class="stats-grid">`;
+  if(!monthsInYear.length){
+    monthRow+=`<div class="stats-chip"><div class="lab">此年尚無完成</div><div class="num">0</div></div>`;
   }else{
-    months.forEach(m=>{
-      monthRow+=`<div class="stats-chip"><div class="lab">${esc(m)}</div><div class="num">${map[m]}</div></div>`;
+    monthsInYear.forEach(m=>{
+      const highlight=m===ym?' style="outline:2px solid var(--accent)"':'';
+      monthRow+=`<div class="stats-chip"${highlight}><div class="lab">${esc(m)}</div><div class="num">${map[m]}</div></div>`;
     });
   }
   monthRow+=`</div>`;
 
   return `<div class="stats-panel">
     <h3>Part B 統計</h3>
-    <div class="stats-sub">以隔離日日期計；完成＝狀態「已完結」或已有完整 PDF。總覽 → 全年 → 各月。</div>
+    <div class="stats-sub">以隔離日日期計；完成＝狀態「已完結」或已有完整 PDF。可揀年份睇該年各月。</div>
     ${overview}${yearRow}${monthRow}
   </div>`;
 }
@@ -1503,9 +1533,16 @@ function applyDayFilter(){
   }
 }
 
+function bindPartBYearSelect(){
+  const sel=$('partBYearSelect');
+  if(!sel) return;
+  sel.onchange=()=>{ partBStatsYearFilter=sel.value; render(); };
+}
+
 function render(){
   renderSidebar();
   renderMain();
+  bindPartBYearSelect();
   const at=(db.meta&&db.meta.updatedAt)||'';
   const meta=$('syncMeta');
   if(meta && at){
