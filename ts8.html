@@ -1500,7 +1500,7 @@ function renderStatsView(){
 
   $('content').innerHTML=`
     <div class="stats-toolbar">
-      <div class="field"><label>年份（月圖）</label><select id="statsYearSelect">${yearOpts}</select></div>
+      <div class="field"><label>年份（右側月對比）</label><select id="statsYearSelect">${yearOpts}</select></div>
     </div>
     <div class="kpi-row">
       <div class="kpi accent"><div class="lab">累計 Part B</div><div class="num">${st.total}</div></div>
@@ -1509,12 +1509,12 @@ function renderStatsView(){
     </div>
     <div class="chart-grid">
       <div class="chart-card">
-        <h2>按年完成次數</h2>
-        <div class="sub">折線圖 · 各年趨勢</div>
-        <div class="chart-wrap"><canvas id="yearChart"></canvas></div>
+        <h2>每月趨勢</h2>
+        <div class="sub">折線圖 · 按時間順序（有數據嘅月份）</div>
+        <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
       </div>
       <div class="chart-card">
-        <h2>按月完成次數</h2>
+        <h2>年內各月對比</h2>
         <div class="sub" id="monthSub">柱狀圖 · ${esc(selectedYear)} 年</div>
         <div class="chart-wrap"><canvas id="monthChart"></canvas></div>
       </div>
@@ -1533,18 +1533,41 @@ function renderStatsView(){
   Chart.defaults.font.family='"Noto Sans TC","PingFang TC",sans-serif';
   const accent='rgba(92,138,114,.85)';
   const soft='rgba(92,138,114,.35)';
-  const yearLabels=st.years.length?st.years:[yNow];
-  const yearData=yearLabels.map(y=>st.yearMap[y]||0);
+
+  // Monthly trend line across all months that have data (chronological)
+  let trendMonths=st.months.slice();
+  if(!trendMonths.length){
+    // still show empty 12 months of current year for axis
+    for(let i=1;i<=12;i++) trendMonths.push(yNow+'-'+String(i).padStart(2,'0'));
+  }else{
+    // fill gaps between first and last month for smoother trend reading
+    const start=trendMonths[0], end=trendMonths[trendMonths.length-1];
+    const filled=[];
+    let [sy,sm]=start.split('-').map(Number);
+    const [ey,em]=end.split('-').map(Number);
+    while(sy<ey || (sy===ey && sm<=em)){
+      filled.push(sy+'-'+String(sm).padStart(2,'0'));
+      sm++; if(sm>12){ sm=1; sy++; }
+    }
+    trendMonths=filled;
+  }
+  const trendLabels=trendMonths.map(m=>{
+    const [y,mo]=m.split('-');
+    return y+'-'+mo;
+  });
+  const trendData=trendMonths.map(m=>st.map[m]||0);
+
   destroyStatsCharts();
-  yearChart=new Chart($('yearChart'),{
+  yearChart=new Chart($('trendChart'),{
     type:'line',
-    data:{labels:yearLabels.map(y=>y+' 年'), datasets:[{
-      label:'完成次數', data:yearData, borderColor:accent, backgroundColor:'rgba(92,138,114,.18)',
-      fill:true, tension:.28, pointRadius:4, pointBackgroundColor:accent, borderWidth:2.5
+    data:{labels:trendLabels, datasets:[{
+      label:'完成次數', data:trendData, borderColor:accent, backgroundColor:'rgba(92,138,114,.18)',
+      fill:true, tension:.28, pointRadius:3.5, pointBackgroundColor:accent, borderWidth:2.5
     }]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.parsed.y+' 次'}}},
-      scales:{y:{beginAtZero:true,ticks:{precision:0},grid:{color:'rgba(221,213,200,.55)'}},x:{grid:{display:false}}}}
+      scales:{y:{beginAtZero:true,ticks:{precision:0},grid:{color:'rgba(221,213,200,.55)'}},x:{grid:{display:false},ticks:{maxRotation:45,minRotation:0,autoSkip:true,maxTicksLimit:12}}}}
   });
+
   const monthLabels=[], monthData=[], monthColors=[];
   for(let i=1;i<=12;i++){
     const m=selectedYear+'-'+String(i).padStart(2,'0');
