@@ -154,22 +154,26 @@ body.has-site-chrome .app{min-height:calc(100vh - 64px)}
     return st==='active'?'進行中／未到期':(st==='done'?'已過計劃恢復日':'日期不明');
   }
   function summarize(list){
-    const byDept={}, byFsi={}; let active=0, done=0, unknown=0, ext=0;
+    const byDept={}, byFsi={}; let active=0, done=0, unknown=0, ext=0, monthNew=0;
+    const y=TODAY.getFullYear(), m=TODAY.getMonth();
     list.forEach(c=>{
       byDept[c.dept]=(byDept[c.dept]||0)+1;
       (c.fsi||[]).forEach(f=>{ byFsi[f]=(byFsi[f]||0)+1; });
       ext += (c.extensions||[]).length;
       const st=statusOf(c);
       if(st==='active') active++; else if(st==='done') done++; else unknown++;
+      const cd=parseDate(c.commence);
+      if(cd && cd.getFullYear()===y && cd.getMonth()===m) monthNew++;
     });
-    return {total:list.length, active, done, unknown, ext, byDept, byFsi};
+    return {total:list.length, active, done, unknown, ext, monthNew, byDept, byFsi};
   }
 
   function renderSide(sum, meta){
     $('sideKpis').innerHTML=`
       <div class="k"><div class="lab">全部個案</div><div class="num">${sum.total}</div></div>
       <div class="k"><div class="lab">進行中</div><div class="num">${sum.active}</div><div class="sub">計劃恢復日 ≥ 今日</div></div>
-      <div class="k"><div class="lab">已過期／完結向</div><div class="num">${sum.done}</div></div>
+      <div class="k"><div class="lab">已過計劃日</div><div class="num">${sum.done}</div></div>
+      <div class="k"><div class="lab">本月新增</div><div class="num">${sum.monthNew}</div><div class="sub">按開始日</div></div>
       <div class="k"><div class="lab">延期／更新列</div><div class="num">${sum.ext}</div></div>`;
     $('sideMeta').textContent=`快照 ${meta.snapshotDate||'—'} · ${meta.sourceFile||''}`;
     $('footMeta').textContent=`快照 ${meta.snapshotDate||''}`;
@@ -179,9 +183,14 @@ body.has-site-chrome .app{min-height:calc(100vh - 64px)}
     const q=($('fsiSearch')?.value||'').trim().toLowerCase();
     const dept=$('fsiDept')?.value||'';
     const st=$('fsiStatus')?.value||'';
+    const year=$('fsiYear')?.value||'';
     return cases.filter(c=>{
       if(dept && c.dept!==dept) return false;
       if(st && statusOf(c)!==st) return false;
+      if(year){
+        const cd=parseDate(c.commence);
+        if(!cd || String(cd.getFullYear())!==year) return false;
+      }
       if(!q) return true;
       const hay=[c.location,c.dept,c.ref,c.pm,c.contractor,c.remarks,(c.fsi||[]).join(' ')].join(' ').toLowerCase();
       return hay.includes(q);
@@ -249,15 +258,16 @@ body.has-site-chrome .app{min-height:calc(100vh - 64px)}
     const allSum=summarize(cases);
     const viewSum=summarize(list);
     const depts=[...new Set(cases.map(c=>c.dept).filter(Boolean))].sort();
+    const years=[...new Set(cases.map(c=>{const d=parseDate(c.commence);return d?String(d.getFullYear()):'';}).filter(Boolean))].sort();
     $('crumb').innerHTML=`<strong>FSI 暫停名單</strong> · 顯示 ${list.length} / ${cases.length}`;
     renderSide(allSum, payload||{});
 
     $('content').innerHTML=`
       <div class="kpi-row">
-        <div class="kpi"><div class="lab">全部個案</div><div class="num">${allSum.total}</div><div class="delta">站內快照合計</div></div>
+        <div class="kpi"><div class="lab">全部個案</div><div class="num">${allSum.total}</div><div class="delta">延期／更新列 ${allSum.ext}</div></div>
         <div class="kpi accent"><div class="lab">進行中</div><div class="num">${allSum.active}</div><div class="delta">計劃恢復日未過</div></div>
         <div class="kpi"><div class="lab">已過計劃日</div><div class="num">${allSum.done}</div><div class="delta">需核對是否已恢復</div></div>
-        <div class="kpi"><div class="lab">延期／更新</div><div class="num">${allSum.ext}</div><div class="delta">extension 列總數</div></div>
+        <div class="kpi"><div class="lab">本月新增</div><div class="num">${allSum.monthNew}</div><div class="delta">按開始日計</div></div>
       </div>
       <div class="chart-row">
         <div class="chart-card"><h3>按部門</h3><div class="sub">CDO / CFSO 等</div><div class="chart-wrap"><canvas id="deptChart"></canvas></div></div>
@@ -273,7 +283,9 @@ body.has-site-chrome .app{min-height:calc(100vh - 64px)}
           <option value="done" ${($('fsiStatus')?.value||'')==='done'?'selected':''}>已過計劃日</option>
           <option value="unknown" ${($('fsiStatus')?.value||'')==='unknown'?'selected':''}>日期不明</option>
         </select></div>
+        <div class="field"><label>開始年份</label><select id="fsiYear"><option value="">全部</option>${years.map(y=>`<option value="${esc(y)}" ${($('fsiYear')?.value||'')===y?'selected':''}>${esc(y)}</option>`).join('')}</select></div>
         <div class="day-toolbar-actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="btnResetFilters">重設篩選</button>
           <button type="button" class="btn btn-ghost btn-sm" id="btnExpandAll2">全部展開</button>
           <button type="button" class="btn btn-ghost btn-sm" id="btnCollapseAll2">全部收合</button>
         </div>
@@ -292,10 +304,15 @@ body.has-site-chrome .app{min-height:calc(100vh - 64px)}
     if(s){
       s.oninput=()=>{ clearTimeout(searchTimer); searchTimer=setTimeout(()=>{ const v=s.value; const pos=s.selectionStart; render(); const n=$('fsiSearch'); if(n){ n.focus(); try{n.setSelectionRange(pos,pos);}catch(_){}} }, 120); };
     }
-    ['fsiDept','fsiStatus'].forEach(id=>{
+    ['fsiDept','fsiStatus','fsiYear'].forEach(id=>{
       const el=$(id); if(!el) return;
       el.onchange=()=>render();
     });
+    const reset=$('btnResetFilters');
+    if(reset) reset.onclick=()=>{
+      ['fsiSearch','fsiDept','fsiStatus','fsiYear'].forEach(id=>{ const el=$(id); if(el) el.value=''; });
+      render();
+    };
     const ex=$('btnExpandAll2'), cl=$('btnCollapseAll2');
     if(ex) ex.onclick=()=>expandAll(true);
     if(cl) cl.onclick=()=>expandAll(false);
