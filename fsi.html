@@ -5,38 +5,91 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache">
 <title>FSI 暫停名單 · 工作頁面集</title>
-<link rel="stylesheet" href="./css/site.css?v=20260914fsi2">
+<link rel="stylesheet" href="./css/site.css?v=20260914fsi3">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
-.fsi-page{max-width:980px;margin:0 auto;padding:40px 28px 72px}
-.fsi-hero{margin-bottom:28px}
-.fsi-hero h1{font-family:var(--font-display);font-size:clamp(1.6rem,3vw,2.1rem);color:var(--ink);margin:0 0 10px}
-.fsi-hero p{color:var(--mute);line-height:1.6;max-width:40rem}
-.fsi-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:22px 0 28px}
-@media(max-width:720px){.fsi-kpis{grid-template-columns:1fr}}
-.fsi-kpi{background:var(--paper-glass);border:1px solid rgba(221,213,200,.85);border-radius:16px;padding:18px 16px}
-.fsi-kpi .lab{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);font-weight:700}
-.fsi-kpi .num{font-family:var(--font-display);font-size:1.8rem;font-weight:600;color:#1B4332;margin-top:6px;font-variant-numeric:tabular-nums}
-.fsi-note{font-size:.8rem;color:var(--mute);margin-bottom:18px}
-.fsi-card{background:var(--paper-glass);border:1px solid rgba(221,213,200,.85);border-radius:16px;padding:18px 18px 14px;margin-bottom:14px;box-shadow:var(--shadow)}
-.fsi-card-top{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:start}
-@media(max-width:720px){.fsi-card-top{grid-template-columns:auto 1fr}}
-.fsi-idx{font-family:var(--font-ui);font-size:.75rem;font-weight:700;color:#1B4332;opacity:.7;padding-top:4px}
-.fsi-loc{font-family:var(--font-display);font-size:1.12rem;font-weight:600;color:var(--ink);line-height:1.35}
-.fsi-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.chip{display:inline-flex;padding:3px 8px;border-radius:999px;font-size:.72rem;font-weight:700;background:rgba(27,67,50,.08);color:#1B4332}
-.chip.muted{background:rgba(106,115,108,.12);color:var(--mute);font-weight:600}
-.fsi-dates{text-align:right;font-size:.82rem;color:var(--mute);display:flex;flex-direction:column;gap:6px}
-.fsi-dates .lab{display:block;font-size:.65rem;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
-.fsi-dates strong{color:var(--ink);font-variant-numeric:tabular-nums}
-@media(max-width:720px){.fsi-dates{grid-column:1/-1;text-align:left;flex-direction:row;gap:18px;margin-top:4px}}
-.fsi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(221,213,200,.9)}
-@media(max-width:720px){.fsi-grid{grid-template-columns:1fr}}
-.fsi-grid dt{font-size:.65rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:700;margin-bottom:2px}
-.fsi-grid dd{font-size:.88rem;color:var(--text);line-height:1.45;margin:0;white-space:pre-wrap}
-.fsi-grid .span2{grid-column:1/-1}
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&display=swap');
+:root{
+  --ink:#0F1612;--cream:#F3EEE4;--cream-2:#EAE3D6;--paper:#FAF7F1;--line:#DDD5C8;--line-soft:#E8E1D4;
+  --text:#1E2622;--mute:#6A736C;--accent:#5C8A72;--accent-d:#3F6B56;--ok:#2F7A55;--okb:#E6F4EC;
+  --warn:#9A6B2F;--warnb:#F8F0E4;--info:#3A6E8C;--infob:#E8F1F6;--danger:#A33B3B;
+  --font-display:"Noto Serif TC",serif;--font-body:"Noto Sans TC","PingFang TC",sans-serif;--font-ui:"Instrument Sans","Noto Sans TC",sans-serif;
+  --radius:18px;--shadow:0 1px 2px rgba(15,22,18,.04),0 10px 28px rgba(15,22,18,.06);
+}
+*{box-sizing:border-box}
+body.has-site-chrome .app{min-height:calc(100vh - 64px)}
+.app{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 64px)}
+@media(max-width:900px){.app{grid-template-columns:1fr}}
+.sidebar{background:rgba(15,22,18,.92);color:#E8EDE9;padding:22px 18px;border-right:1px solid rgba(255,255,255,.06)}
+@media(max-width:900px){.sidebar{border-right:0;border-bottom:1px solid rgba(255,255,255,.06)}}
+.side-eyebrow{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(232,237,233,.55);font-weight:700;margin-bottom:8px}
+.sidebar h1{font-family:var(--font-display);font-size:1.35rem;margin:0 0 6px;font-weight:600}
+.sidebar .side-desc{font-size:.82rem;color:rgba(232,237,233,.65);line-height:1.45;margin-bottom:18px}
+.side-kpi{display:grid;gap:8px;margin-bottom:18px}
+.side-kpi .k{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 12px}
+.side-kpi .lab{font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(232,237,233,.5);font-weight:700}
+.side-kpi .num{font-family:var(--font-display);font-size:1.45rem;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums}
+.side-kpi .sub{font-size:.72rem;color:rgba(232,237,233,.55);margin-top:2px}
+.main{display:flex;flex-direction:column;min-width:0;background:transparent}
+.topbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line-soft);background:rgba(250,247,241,.72);backdrop-filter:blur(10px)}
+.crumb{font-size:.9rem;color:var(--mute);flex:1;min-width:160px}
+.crumb strong{color:var(--ink)}
+.content{padding:18px 20px 40px;flex:1}
+.kpi-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+@media(max-width:900px){.kpi-row{grid-template-columns:1fr 1fr}}
+.kpi{background:var(--paper);border:1px solid var(--line-soft);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
+.kpi .lab{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);font-weight:700}
+.kpi .num{font-family:var(--font-display);font-size:1.7rem;font-weight:600;color:var(--ink);margin-top:6px;font-variant-numeric:tabular-nums}
+.kpi .delta{font-size:.78rem;color:var(--mute);margin-top:6px}
+.kpi.accent{background:#1A3A2B;border-color:#1A3A2B;color:#FAF9F6}
+.kpi.accent .lab,.kpi.accent .delta{color:rgba(250,249,246,.7)}
+.kpi.accent .num{color:#FAF9F6}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+@media(max-width:900px){.chart-row{grid-template-columns:1fr}}
+.chart-card{background:var(--paper);border:1px solid var(--line-soft);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow)}
+.chart-card h3{font-family:var(--font-display);font-size:1rem;margin:0 0 4px;color:var(--ink)}
+.chart-card .sub{font-size:.75rem;color:var(--mute);margin-bottom:8px}
+.chart-wrap{height:200px;position:relative}
+.day-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:14px;padding:14px 16px;background:var(--cream-2);border:1px solid var(--line-soft);border-radius:14px}
+.day-toolbar .field{margin:0;min-width:120px;flex:1}
+.day-toolbar .field label{display:block;font-size:.68rem;color:var(--mute);margin-bottom:4px;font-weight:600}
+.day-toolbar input,.day-toolbar select{width:100%;padding:8px 10px;border:1px solid var(--line-soft);border-radius:10px;background:var(--paper);font:inherit;font-size:.85rem;color:var(--ink)}
+.day-toolbar-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border:0;border-radius:10px;padding:8px 12px;font:inherit;font-size:.82rem;font-weight:600;cursor:pointer}
+.btn-sm{padding:6px 10px;font-size:.78rem}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn-ghost:hover{background:rgba(92,138,114,.1)}
+.btn-primary{background:var(--accent-d);color:#fff}
+.day-count{font-size:.78rem;color:var(--mute);margin:0 0 12px}
+.day-card{background:var(--paper);border:1px solid var(--line-soft);border-radius:var(--radius);padding:0;box-shadow:var(--shadow);margin-bottom:12px;border-left:3px solid var(--accent);overflow:hidden}
+.day-card.is-hidden{display:none}
+.day-card .day-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:14px 18px;cursor:pointer;user-select:none}
+.day-card.is-open .day-head{border-bottom:1px solid var(--line-soft)}
+.day-chevron{width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;color:var(--mute);transition:transform .18s}
+.day-card.is-open .day-chevron{transform:rotate(90deg);color:var(--accent)}
+.day-date{font-family:var(--font-display);font-weight:600;font-size:1.05rem;color:var(--ink);flex:1;min-width:140px}
+.day-sub{font-size:.78rem;color:var(--mute)}
+.day-dots{display:flex;gap:6px;flex-wrap:wrap}
+.day-dot{font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--cream-2);color:var(--mute)}
+.day-dot.on{background:var(--okb);color:var(--ok)}
+.day-dot.warn{background:var(--warnb);color:var(--warn)}
+.day-dot.info{background:var(--infob);color:var(--info)}
+.day-body{display:none;padding:4px 18px 18px}
+.day-card.is-open .day-body{display:block}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-top:12px}
+@media(max-width:720px){.detail-grid{grid-template-columns:1fr}}
+.detail-grid dt{font-size:.65rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:700}
+.detail-grid dd{margin:2px 0 0;font-size:.88rem;line-height:1.45;white-space:pre-wrap}
+.ext-list{margin-top:14px;border-top:1px solid var(--line-soft);padding-top:12px}
+.ext-list h4{margin:0 0 8px;font-size:.82rem;color:var(--ink)}
+.ext-item{font-size:.8rem;color:var(--mute);padding:8px 10px;border-radius:10px;background:var(--cream-2);margin-bottom:6px}
+.ext-item strong{color:var(--ink)}
+.section-title{font-family:var(--font-display);font-size:1.05rem;margin:8px 0 12px;color:var(--ink)}
+.empty{padding:40px;text-align:center;color:var(--mute)}
+.foot-bar{padding:10px 20px;border-top:1px solid var(--line-soft);font-size:.75rem;color:var(--mute);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 </style>
 </head>
-<body class="site-body">
+<body class="site-body has-site-chrome">
 <header class="site-nav" id="siteNav">
   <a class="site-brand" href="./">
     <span class="site-brand-mark" aria-hidden="true"></span>
@@ -45,293 +98,241 @@
       <span class="site-brand-sub">Workspace</span>
     </span>
   </a>
-  <button class="site-nav-toggle" type="button" id="navToggle" aria-label="開啟選單" aria-expanded="false">
-    <span></span><span></span><span></span>
-  </button>
+  <button class="site-nav-toggle" type="button" id="navToggle" aria-label="開啟選單" aria-expanded="false"><span></span><span></span><span></span></button>
   <ul class="site-nav-links">
     <li><a href="./">首頁</a></li>
-    <li><a href="./ts8.html">TS8 連結管理</a></li>
     <li><a href="./fsi.html" class="is-active" aria-current="page">FSI 暫停名單</a></li>
+    <li><a href="./ts8.html">TS8 連結管理</a></li>
   </ul>
 </header>
 
-<main class="fsi-page">
-  <div class="fsi-hero">
-    <div class="landing-eyebrow">FSI · Internal</div>
-    <h1>FSI 暫停名單</h1>
-    <p>由 Excel 快照匯入 GitHub Pages 的資料頁（唔再依賴線上 Excel 日常運作）。更新時重新匯入 JSON／重建此頁即可。</p>
-  </div>
-  <div class="fsi-kpis">
-    <div class="fsi-kpi"><div class="lab">個案</div><div class="num">10</div></div>
-    <div class="fsi-kpi"><div class="lab">資料快照</div><div class="num" style="font-size:1.25rem;padding-top:8px">2025-12-19</div></div>
-    <div class="fsi-kpi"><div class="lab">來源檔</div><div class="num" style="font-size:.95rem;padding-top:10px;line-height:1.3">FSI suspension list 20251219.xlsx</div></div>
-  </div>
-  <p class="fsi-note">本頁為站內完整名單。線上 SharePoint Excel 不會被此站修改；你若棄用線上表，以此頁／repo 為準。</p>
-  
-    <article class="fsi-card">
-      <div class="fsi-card-top">
-        <div class="fsi-idx">01</div>
-        <div class="fsi-main">
-          <div class="fsi-loc">VA P/F Hang Seng Bank (V207)</div>
-          <div class="fsi-chips">
-            <span class="chip">CFSO</span>
-            <span class="chip muted">F202557559</span>
-          </div>
-        </div>
-        <div class="fsi-dates">
-          <div><span class="lab">開始</span><strong>2025-12-05</strong></div>
-          <div><span class="lab">計劃恢復</span><strong>2025-12-31</strong></div>
-        </div>
-      </div>
-      <dl class="fsi-grid">
-        <div><dt>PM / Contacts</dt><dd>Jeff Wu</dd></div>
-        <div><dt>承辦商</dt><dd>Premier Design and Contracting / 
-Hang Da Fire Engineering</dd></div>
-        <div><dt>暫停 FSI</dt><dd>Sprinkler</dd></div>
-        <div><dt>延期紀錄</dt><dd>1 次延期／更新</dd></div>
-        <div><dt>Spot check</dt><dd>FE P · Detector O · Notice O · Ranork 2025-12-15</dd></div>
-        <div class="span2"><dt>備註</dt><dd>CFSO requested HSB to provide a standalone detector to enhance monitoring and confirm if extension is required on 05/12 and 18/12. Will consider suspending their work if no update on 19/12/2025<br>Extension form received on 19/12/2025<br>Sprinkler system resumed on 22/12/2025<br>Received completion form from Chung on 05/01/2026</dd></div>
-      </dl>
-    </article>
-    <article class="fsi-card">
-      <div class="fsi-card-top">
-        <div class="fsi-idx">02</div>
-        <div class="fsi-main">
-          <div class="fsi-loc">U502</div>
-          <div class="fsi-chips">
-            <span class="chip">CDO</span>
-            <span class="chip muted">F202556840</span>
-          </div>
-        </div>
-        <div class="fsi-dates">
-          <div><span class="lab">開始</span><strong>2025-12-02</strong></div>
-          <div><span class="lab">計劃恢復</span><strong>2026-03-25</strong></div>
-        </div>
-      </div>
-      <dl class="fsi-grid">
-        <div><dt>PM / Contacts</dt><dd>Devon Tsui</dd></div>
-        <div><dt>承辦商</dt><dd>Hon Fung Engg. Ltd. / 
-RNB</dd></div>
-        <div><dt>暫停 FSI</dt><dd>Sprinkler</dd></div>
-        <div><dt>延期紀錄</dt><dd>9 次延期／更新</dd></div>
-        <div><dt>Spot check</dt><dd>FE P · Detector P · Notice O · Ranork &amp; Billy 2025-12-12</dd></div>
-        <div class="span2"><dt>備註</dt><dd>Please consider relocating the standalone detector to a ceiling mount position to enhance its coverage<br>Reminded CDO to submit updated shutdown notice on 15/12/2025<br>Extension form received on 15/12/2025<br>Reminded CDO to submit updated shutdown notice on 29/12/2025<br>Extension form received on 30/12/2025<br>Reminded CDO to submit updated shutdown notice on 12/01/2026<br>Extension form received on 12/1/2026<br>Reminded CDO to submit updated shutdown notice on 26/01/2026<br>Extension form received on 28/1/2026<br>Reminded CDO to submit updated shutdown notice on 9/02/2026<br>Extension form received on 10/02/2026<br>Reminded CDO to submit updated shutdown notice on 23/02/2026<br>Extension form received on 24/02/2026<br>Extension form received on 10/03/2026<br>Extension form received on 09/04/2026<br>Received completion form on 09/04/2026</dd></div>
-      </dl>
-    </article>
-    <article class="fsi-card">
-      <div class="fsi-card-top">
-        <div class="fsi-idx">03</div>
-        <div class="fsi-main">
-          <div class="fsi-loc">Y511</div>
-          <div class="fsi-chips">
-            <span class="chip">CDO</span>
-            <span class="chip muted">F202556774</span>
-          </div>
-        </div>
-        <div class="fsi-dates">
-          <div><span class="lab">開始</span><strong>2025-12-02</strong></div>
-          <div><span class="lab">計劃恢復</span><strong>2026-02-14</strong></div>
-        </div>
-      </div>
-      <dl class="fsi-grid">
-        <div><dt>PM / Contacts</dt><dd>Ar. Yin Yeung</dd></div>
-        <div><dt>承辦商</dt><dd>KAN Construction (HK) Co. Ltd. / 
-Hang Da Fire Engineering</dd></div>
-        <div><dt>暫停 FSI</dt><dd>Sprinkler</dd></div>
-        <div><dt>延期紀錄</dt><dd>6 次延期／更新</dd></div>
-        <div><dt>Spot check</dt><dd>FE P · Detector P · Notice P · Ranork 2025-12-15</dd></div>
-        <div class="span2"><dt>備註</dt><dd>A set of standalone detector has been installed at the ceiling level. The PM should review if additional detectors are needed to enhance coverage suitable for the site by e-mail on 18/12/2025.<br>Reminded CDO to submit updated shutdown notice on 15/12/2025<br>Extension form received on 15/12/2025<br>Reminded CDO to submit updated shutdown notice on 29/12/2025<br>Extension form received on 29/12/2025<br>Reminded CDO to submit updated shutdown notice on 12/01/2026<br>Extension form received on 12/01/2026<br>Reminded CDO to submit updated shutdown notice on 26/01/2026<br>Extension form received on 29/01/2026<br>Reminded CDO to submit updated shutdown notice on 09/02/2026<br>Extension form received on 10/02/2026<br>Reminded CDO to submit updated shutdown notice on 23/02/2026<br>Received completion form on 16/02/2026</dd></div>
-      </dl>
-    </article>
-    <article class="fsi-card">
-      <div class="fsi-card-top">
-        <div class="fsi-idx">04</div>
-        <div class="fsi-main">
-          <div class="fsi-loc">W201 to W203</div>
-          <div class="fsi-chips">
-            <span class="chip">CDO</span>
-            <span class="chip muted">F202558603</span>
-          </div>
-        </div>
-        <div class="fsi-dates">
-          <div><span class="lab">開始</span><strong>2025-12-09</strong></div>
-          <div><span class="lab">計劃恢復</span><strong>2026-05-27</strong></div>
-        </div>
-      </div>
-      <dl class="fsi-grid">
-        <div><dt>PM / Contacts</dt><dd>Calvin</dd></div>
-        <div><dt>承辦商</dt><dd>NA / 
-Hang Da Fire Engineering</dd></div>
-        <div><dt>暫停 FSI</dt><dd>Sprinkler</dd></div>
-        <div><dt>延期紀錄</dt><dd>12 次延期／更新</dd></div>
-        <div><dt>Spot check</dt><dd>FE P · Detector O · Notice P · Ranork 2025-12-15</dd></div>
-        <div class="span2"><dt>備註</dt><dd>No standalone detector has been provided. CDO suggested a further review on 18/12/2025<br>Reminded CDO to submit updated shutdown notice on 05/01/2026<br>Extension form received on 07/01/2026<br>Reminded CDO to submit updated shutdown notice on 16/01/2026<br>Extension form received on 23/01/2026<br>shutdown notice expire and sent reminder on 16/01/2026 &amp; 23/01/2026.  Extension received on 23/01/2026<br>Extension form received on 04/02/2026<br>Reminded CDO to submit updated shutdown notice on 16/02/2026<br>Extension form received on 16/02/2026<br>Extension form received on 02/03/2026<br>&#x27;Reminded CDO to submit updated shutdown notice on 18/03/2026<br>&#x27;Extension form received on 19/03/2026<br>Extension form received on 31/03/2026<br>Extension form received on 15/04/2026<br>Extension form received on 04/05/2026<br>Extension form received on 14/05/2026<br>Received completion form on 04/06/2026</dd></div>
-      </dl>
-    </article>
-    <article class="fsi-card">
-      <div class="fsi-card-top">
-        <div class="fsi-idx">05</div>
-        <div class="fsi-main">
-          <div class="fsi-loc">YY503</div>
-          <div class="fsi-chips">
-            <span class="chip">CDO</span>
-            <span class="chip muted">F202612</span>
-          </div>
-        </div>
-        <div class="fsi-dates">
-          <div><span class="lab">開始</span><strong>2025-01-06</strong></div>
-          <div><span class="lab">計劃恢復</span><strong>2026-02-14</strong></div>
-        </div>
-      </div>
-      <dl class="fsi-grid">
-        <div><dt>PM / Contacts</dt><dd>Ar. Yin Yeung</dd></div>
-        <div><dt>承辦商</dt><dd>KAN Construction (HK) Co. Ltd. / 
-Hang Da Fire Engineering</dd></div>
-        <div><dt>暫停 FSI</dt><dd>Sprinkler</dd></div>
-        <div><dt>延期紀錄</dt><dd>3 次延期／更新</dd></div>
-        <div><dt>Spot check</dt><dd>FE O · Detector O · Notice P · Billy, Simon, Muse, Ranork 2026-01-07</dd></div>
-        <div class="span2"><dt>備註</dt><dd>Suspension notice received on 02/01/2026<br>Reminded CDO to submit updated shutdown notice on 03/02/2026<br>Extension form received on 6/02/2026<br>N/A<br>Reminded CDO to submit updated shutdown notice on 16/02/2026<br>Received completion form on 16/02/2026</dd></div>
-      </dl>
-    </article>
-    <article class="fsi-card">
-      <div class="fsi-card-top">
-        <div class="fsi-idx">06</div>
-        <div class="fsi-main">
-          <div class="fsi-loc">TU 4/F</div>
-          <div class="fsi-chips">
-            <span class="chip">CDO</span>
-            <span class="chip muted">F2026541</span>
-          </div>
-        </div>
-        <div class="fsi-dates">
-          <div><span class="lab">開始</span><strong>2026-01-30</strong></div>
-          <div><span class="lab">計劃恢復</span><strong>2026-03-20</strong></div>
-        </div>
-      </div>
-      <dl class="fsi-grid">
-        <div><dt>PM / Contacts</dt><dd>Ar. Yin Yeung</dd></div>
-        <div><dt>承辦商</dt><dd>Hanison Constrictopm Cp, Ltd / 
-Pyrofoe Engingineer Ltd</dd></div>
-        <div><dt>暫停 FSI</dt><dd>Sprinkler</dd></div>
-        <div><dt>延期紀錄</dt><dd>3 次延期／更新</dd></div>
-        <div><dt>Spot check</dt><dd>FE P · Detector P · Notice P · Ranork 2026-01-30</dd></div>
-        <div class="span2"><dt>備註</dt><dd>TS8 form and suspension notice received on 29/01/2026, photos record and emergency plan received from the contractor.<br>Reminded CDO to submit updated shutdown notice on 12/02/2026<br>Extension form received on 13/02/2026<br>Reminded CDO to submit updated shutdown notice on 26/02/2026<br>Extension form received on 26/02/2026<br>Reminded CDO to submit updated shutdown notice on 13/03/2026<br>Received completion form on 20/03/2026</dd></div>
-      </dl>
-    </article>
-    <article class="fsi-card">
-      <div class="fsi-card-top">
-        <div class="fsi-idx">07</div>
-        <div class="fsi-main">
-          <div class="fsi-loc">TU 4/F</div>
-          <div class="fsi-chips">
-            <span class="chip">CDO</span>
-            <span class="chip muted">F202616566</span>
-          </div>
-        </div>
-        <div class="fsi-dates">
-          <div><span class="lab">開始</span><strong>2026-04-02</strong></div>
-          <div><span class="lab">計劃恢復</span><strong>2026-07-07</strong></div>
-        </div>
-      </div>
-      <dl class="fsi-grid">
-        <div><dt>PM / Contacts</dt><dd>Yin Yeung</dd></div>
-        <div><dt>承辦商</dt><dd>Kan Construction (HK) Co Ltd / 
-Hang Da Fire Engineering</dd></div>
-        <div><dt>暫停 FSI</dt><dd>Sprinkler</dd></div>
-        <div><dt>延期紀錄</dt><dd>7 次延期／更新</dd></div>
-        <div><dt>Spot check</dt><dd>FE P · Detector O · Notice P · Ranork, Muse, Simon 2026-04-01</dd></div>
-        <div class="span2"><dt>備註</dt><dd>Suspension notice received on 19/03/2026<br>Extension form received on 15/04/2026<br>Extension form received on 29/04/2026<br>Extension form received on 14/05/2026<br>Extension form received on 01/06/2026<br>Received completion form on 10/06/2026<br>Suspension notice received on 23/06/2026<br>Received completion form on 07/07/2026</dd></div>
-      </dl>
-    </article>
-    <article class="fsi-card">
-      <div class="fsi-card-top">
-        <div class="fsi-idx">08</div>
-        <div class="fsi-main">
-          <div class="fsi-loc">Block V 3/F</div>
-          <div class="fsi-chips">
-            <span class="chip">CDO</span>
-            <span class="chip muted">F202622283 &amp; F202622765</span>
-          </div>
-        </div>
-        <div class="fsi-dates">
-          <div><span class="lab">開始</span><strong>2026-05-11</strong></div>
-          <div><span class="lab">計劃恢復</span><strong>2026-06-18</strong></div>
-        </div>
-      </div>
-      <dl class="fsi-grid">
-        <div><dt>PM / Contacts</dt><dd>Rachel Tang</dd></div>
-        <div><dt>承辦商</dt><dd>Kan Construction (HK) Co Ltd / 
-Hang Da Fire Engineering</dd></div>
-        <div><dt>暫停 FSI</dt><dd>AFA, Sprinkler, Others</dd></div>
-        <div><dt>延期紀錄</dt><dd>3 次延期／更新</dd></div>
-        <div><dt>Spot check</dt><dd>FE O · Detector O · Notice O · Ranork, Simon 2026-05-07</dd></div>
-        <div class="span2"><dt>備註</dt><dd>Suspension notice received on 05/05/2026<br>Suspension notice received on 26/05/2026<br>&#x27;Suspension notice received on 09/06/2026<br>Received completion form on 22/06/2026</dd></div>
-      </dl>
-    </article>
-    <article class="fsi-card">
-      <div class="fsi-card-top">
-        <div class="fsi-idx">09</div>
-        <div class="fsi-main">
-          <div class="fsi-loc">PQ 3/F</div>
-          <div class="fsi-chips">
-            <span class="chip">CDO</span>
-            <span class="chip muted">F202622764</span>
-          </div>
-        </div>
-        <div class="fsi-dates">
-          <div><span class="lab">開始</span><strong>2026-05-11</strong></div>
-          <div><span class="lab">計劃恢復</span><strong>2026-06-30</strong></div>
-        </div>
-      </div>
-      <dl class="fsi-grid">
-        <div><dt>PM / Contacts</dt><dd>Rachel Tang</dd></div>
-        <div><dt>承辦商</dt><dd>Kan Construction (HK) Co Ltd / 
-Hang Da Fire Engineering</dd></div>
-        <div><dt>暫停 FSI</dt><dd>AFA, Sprinkler</dd></div>
-        <div><dt>延期紀錄</dt><dd>4 次延期／更新</dd></div>
-        <div><dt>Spot check</dt><dd>FE O · Detector O · Notice O · Ranork, Simon 2026-05-07</dd></div>
-        <div class="span2"><dt>備註</dt><dd>Suspension notice received on 05/05/2026<br>Suspension notice received on 26/05/2026<br>Received completion form on 09/06/2026<br>Suspension notice received on 22/06/2026<br>Received completion form on 07/07/2026</dd></div>
-      </dl>
-    </article>
-    <article class="fsi-card">
-      <div class="fsi-card-top">
-        <div class="fsi-idx">10</div>
-        <div class="fsi-main">
-          <div class="fsi-loc">Y409, Y410</div>
-          <div class="fsi-chips">
-            <span class="chip">CDO</span>
-            <span class="chip muted">F202645224</span>
-          </div>
-        </div>
-        <div class="fsi-dates">
-          <div><span class="lab">開始</span><strong>2026-08-26</strong></div>
-          <div><span class="lab">計劃恢復</span><strong>2026-09-22</strong></div>
-        </div>
-      </div>
-      <dl class="fsi-grid">
-        <div><dt>PM / Contacts</dt><dd>Devon</dd></div>
-        <div><dt>承辦商</dt><dd>Shun Yip Construction Co Ltd. / 
-Hang Da Fire Engineering</dd></div>
-        <div><dt>暫停 FSI</dt><dd>Sprinkler</dd></div>
-        <div><dt>延期紀錄</dt><dd>1 次延期／更新</dd></div>
-        <div><dt>Spot check</dt><dd>FE P · Detector O · Notice O · Ranork, Simon 2026-08-24</dd></div>
-        <div class="span2"><dt>備註</dt><dd>Suspension notice received on 25/08/2026<br>Extension form received on 8/09/2026</dd></div>
-      </dl>
-    </article>
-</main>
+<div class="app">
+  <aside class="sidebar">
+    <div class="side-eyebrow">FSI Workspace</div>
+    <h1>暫停名單</h1>
+    <p class="side-desc">GitHub 站內資料（Excel 快照匯入）。可篩選、收合、睇總結。</p>
+    <div class="side-kpi" id="sideKpis"></div>
+    <div class="side-desc" id="sideMeta" style="margin-top:8px"></div>
+  </aside>
+  <section class="main">
+    <div class="topbar">
+      <div class="crumb" id="crumb"><strong>FSI</strong> · 載入中…</div>
+      <button type="button" class="btn btn-ghost btn-sm" id="btnExpandAll">全部展開</button>
+      <button type="button" class="btn btn-ghost btn-sm" id="btnCollapseAll">全部收合</button>
+    </div>
+    <div class="content" id="content"></div>
+    <div class="foot-bar">
+      <span>FSI snapshot · 唔改線上 Excel</span>
+      <span id="footMeta"></span>
+    </div>
+  </section>
+</div>
 
-<footer class="site-footer">
-  <span>工作頁面集 · 內部使用</span>
-  <span>FSI snapshot · read-only import</span>
-</footer>
 <script>
 (function(){
-  var nav=document.getElementById('siteNav');
-  var btn=document.getElementById('navToggle');
-  if(!nav||!btn) return;
-  btn.addEventListener('click', function(){
-    var open=nav.classList.toggle('is-open');
+  const DATA_URL='./data/fsi-suspension-20251219.json?v=1';
+  const TODAY=new Date('2026-09-14T00:00:00+08:00');
+  let payload=null;
+  let cases=[];
+  let openMap={};
+  let deptChart=null, fsiChart=null;
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  function parseDate(s){
+    if(!s) return null;
+    const m=String(s).slice(0,10).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(!m) return null;
+    return new Date(+m[1], +m[2]-1, +m[3]);
+  }
+  function statusOf(c){
+    const d=parseDate(c.planned_resume);
+    if(!d) return 'unknown';
+    return d>=new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate()) ? 'active' : 'done';
+  }
+  function statusLabel(st){
+    return st==='active'?'進行中／未到期':(st==='done'?'已過計劃恢復日':'日期不明');
+  }
+  function summarize(list){
+    const byDept={}, byFsi={}; let active=0, done=0, unknown=0, ext=0;
+    list.forEach(c=>{
+      byDept[c.dept]=(byDept[c.dept]||0)+1;
+      (c.fsi||[]).forEach(f=>{ byFsi[f]=(byFsi[f]||0)+1; });
+      ext += (c.extensions||[]).length;
+      const st=statusOf(c);
+      if(st==='active') active++; else if(st==='done') done++; else unknown++;
+    });
+    return {total:list.length, active, done, unknown, ext, byDept, byFsi};
+  }
+
+  function renderSide(sum, meta){
+    $('sideKpis').innerHTML=`
+      <div class="k"><div class="lab">全部個案</div><div class="num">${sum.total}</div></div>
+      <div class="k"><div class="lab">進行中</div><div class="num">${sum.active}</div><div class="sub">計劃恢復日 ≥ 今日</div></div>
+      <div class="k"><div class="lab">已過期／完結向</div><div class="num">${sum.done}</div></div>
+      <div class="k"><div class="lab">延期／更新列</div><div class="num">${sum.ext}</div></div>`;
+    $('sideMeta').textContent=`快照 ${meta.snapshotDate||'—'} · ${meta.sourceFile||''}`;
+    $('footMeta').textContent=`快照 ${meta.snapshotDate||''}`;
+  }
+
+  function filtered(){
+    const q=($('fsiSearch')?.value||'').trim().toLowerCase();
+    const dept=$('fsiDept')?.value||'';
+    const st=$('fsiStatus')?.value||'';
+    return cases.filter(c=>{
+      if(dept && c.dept!==dept) return false;
+      if(st && statusOf(c)!==st) return false;
+      if(!q) return true;
+      const hay=[c.location,c.dept,c.ref,c.pm,c.contractor,c.remarks,(c.fsi||[]).join(' ')].join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+  }
+
+  function renderCharts(sum){
+    if(typeof Chart==='undefined') return;
+    const deptLabels=Object.keys(sum.byDept);
+    const deptData=deptLabels.map(k=>sum.byDept[k]);
+    const fsiLabels=Object.keys(sum.byFsi);
+    const fsiData=fsiLabels.map(k=>sum.byFsi[k]);
+    Chart.defaults.color='#6A736C';
+    Chart.defaults.font.family='"Noto Sans TC","PingFang TC",sans-serif';
+    if(deptChart) deptChart.destroy();
+    if(fsiChart) fsiChart.destroy();
+    const el1=$('deptChart'), el2=$('fsiChart');
+    if(el1){
+      deptChart=new Chart(el1,{type:'bar',data:{labels:deptLabels,datasets:[{data:deptData,backgroundColor:'#A0B4A6',borderRadius:6,maxBarThickness:36}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}},x:{grid:{display:false}}}}});
+    }
+    if(el2){
+      fsiChart=new Chart(el2,{type:'doughnut',data:{labels:fsiLabels.length?fsiLabels:['—'],datasets:[{data:fsiData.length?fsiData:[1],backgroundColor:['#2A5A3B','#A0B4A6','#C27A62','#5C8A72','#DCE0D9']}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10}}}}});
+    }
+  }
+
+  function cardHtml(c, idx){
+    const id=c._id;
+    const open=!!openMap[id];
+    const st=statusOf(c);
+    const stDot=st==='active'?'warn':(st==='done'?'on':'info');
+    const fsi=(c.fsi&&c.fsi.length)?c.fsi.join(' · '):'—';
+    const ext=(c.extensions||[]);
+    return `<div class="day-card ${open?'is-open':''}" data-id="${esc(id)}">
+      <div class="day-head" data-act="toggle">
+        <span class="day-chevron">▸</span>
+        <div class="day-date">${esc(c.location||'（無位置）')}</div>
+        <div class="day-sub">${esc(c.ref||'無編號')} · ${esc(c.dept||'')}</div>
+        <div class="day-dots">
+          <span class="day-dot ${stDot}">${esc(statusLabel(st))}</span>
+          <span class="day-dot">${esc(c.planned_resume||'—')}</span>
+          <span class="day-dot">${ext.length?ext.length+' 次更新':'無延期列'}</span>
+        </div>
+      </div>
+      <div class="day-body">
+        <dl class="detail-grid">
+          <div><dt>開始日</dt><dd>${esc(c.commence||'—')}</dd></div>
+          <div><dt>計劃恢復</dt><dd>${esc(c.planned_resume||'—')}</dd></div>
+          <div><dt>PM / Contacts</dt><dd>${esc(c.pm||'—')}</dd></div>
+          <div><dt>承辦商</dt><dd>${esc(c.contractor||'—')}</dd></div>
+          <div><dt>暫停 FSI</dt><dd>${esc(fsi)}</dd></div>
+          <div><dt>Spot check</dt><dd>FE ${esc(c.spot?.FE||'—')} · Detector ${esc(c.spot?.detector||'—')} · Notice ${esc(c.spot?.notice||'—')}<br>${esc(c.spot?.by||'')} ${esc(c.spot?.date||'')}</dd></div>
+          <div style="grid-column:1/-1"><dt>備註</dt><dd>${esc(c.remarks||'—')}</dd></div>
+        </dl>
+        ${ext.length?`<div class="ext-list"><h4>延期／更新紀錄（${ext.length}）</h4>
+          ${ext.map((e,i)=>`<div class="ext-item"><strong>#${i+1} ${esc(e.type||'update')}</strong> → 恢復 ${esc(e.planned_resume||'—')}${e.extended?` · 期間 ${esc(e.extended)}`:''}${e.remarks?`<br>${esc(e.remarks)}`:''}</div>`).join('')}
+        </div>`:''}
+      </div>
+    </div>`;
+  }
+
+  function render(){
+    const list=filtered();
+    const allSum=summarize(cases);
+    const viewSum=summarize(list);
+    const depts=[...new Set(cases.map(c=>c.dept).filter(Boolean))].sort();
+    $('crumb').innerHTML=`<strong>FSI 暫停名單</strong> · 顯示 ${list.length} / ${cases.length}`;
+    renderSide(allSum, payload||{});
+
+    $('content').innerHTML=`
+      <div class="kpi-row">
+        <div class="kpi"><div class="lab">全部個案</div><div class="num">${allSum.total}</div><div class="delta">站內快照合計</div></div>
+        <div class="kpi accent"><div class="lab">進行中</div><div class="num">${allSum.active}</div><div class="delta">計劃恢復日未過</div></div>
+        <div class="kpi"><div class="lab">已過計劃日</div><div class="num">${allSum.done}</div><div class="delta">需核對是否已恢復</div></div>
+        <div class="kpi"><div class="lab">延期／更新</div><div class="num">${allSum.ext}</div><div class="delta">extension 列總數</div></div>
+      </div>
+      <div class="chart-row">
+        <div class="chart-card"><h3>按部門</h3><div class="sub">CDO / CFSO 等</div><div class="chart-wrap"><canvas id="deptChart"></canvas></div></div>
+        <div class="chart-card"><h3>暫停 FSI 類型</h3><div class="sub">個案標記（可重疊）</div><div class="chart-wrap"><canvas id="fsiChart"></canvas></div></div>
+      </div>
+      <div class="section-title">個案名單</div>
+      <div class="day-toolbar">
+        <div class="field"><label>搜尋</label><input type="search" id="fsiSearch" placeholder="位置 / 編號 / PM / 承辦商…" value="${esc($('fsiSearch')?.value||'')}"></div>
+        <div class="field"><label>部門</label><select id="fsiDept"><option value="">全部</option>${depts.map(d=>`<option value="${esc(d)}" ${($('fsiDept')?.value||'')===d?'selected':''}>${esc(d)}</option>`).join('')}</select></div>
+        <div class="field"><label>狀態</label><select id="fsiStatus">
+          <option value="">全部</option>
+          <option value="active" ${($('fsiStatus')?.value||'')==='active'?'selected':''}>進行中</option>
+          <option value="done" ${($('fsiStatus')?.value||'')==='done'?'selected':''}>已過計劃日</option>
+          <option value="unknown" ${($('fsiStatus')?.value||'')==='unknown'?'selected':''}>日期不明</option>
+        </select></div>
+        <div class="day-toolbar-actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="btnExpandAll2">全部展開</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnCollapseAll2">全部收合</button>
+        </div>
+      </div>
+      <p class="day-count">篩選後 ${list.length} 宗（當中進行中 ${viewSum.active}）</p>
+      <div id="caseList">${list.length?list.map((c,i)=>cardHtml(c,i)).join(''):'<div class="empty">沒有符合篩選的個案</div>'}</div>`;
+
+    renderCharts(allSum);
+    bindFilters();
+    bindCards();
+  }
+
+  function bindFilters(){
+    ['fsiSearch','fsiDept','fsiStatus'].forEach(id=>{
+      const el=$(id); if(!el) return;
+      el.onchange=el.oninput=()=>render();
+    });
+    const ex=$('btnExpandAll2'), cl=$('btnCollapseAll2');
+    if(ex) ex.onclick=()=>expandAll(true);
+    if(cl) cl.onclick=()=>expandAll(false);
+  }
+  function expandAll(open){
+    filtered().forEach(c=>{ openMap[c._id]=open; });
+    render();
+  }
+  function bindCards(){
+    document.querySelectorAll('.day-card .day-head').forEach(head=>{
+      head.addEventListener('click', e=>{
+        if(e.target.closest('button,a,input,select')) return;
+        const card=head.closest('.day-card');
+        const id=card.getAttribute('data-id');
+        openMap[id]=!openMap[id];
+        card.classList.toggle('is-open', !!openMap[id]);
+      });
+    });
+  }
+
+  $('btnExpandAll').onclick=()=>expandAll(true);
+  $('btnCollapseAll').onclick=()=>expandAll(false);
+
+  const nav=document.getElementById('siteNav');
+  const btn=document.getElementById('navToggle');
+  if(nav&&btn) btn.addEventListener('click',()=>{
+    const open=nav.classList.toggle('is-open');
     btn.setAttribute('aria-expanded', open?'true':'false');
+  });
+
+  fetch(DATA_URL,{cache:'no-store'}).then(r=>{
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.json();
+  }).then(data=>{
+    payload=data;
+    cases=(data.cases||[]).map((c,i)=>({...c, _id:c.ref||('case-'+i)}));
+    // default collapsed
+    cases.forEach(c=>{ openMap[c._id]=false; });
+    render();
+  }).catch(err=>{
+    $('content').innerHTML=`<div class="empty">載入失敗：${esc(err.message)}</div>`;
+    $('crumb').textContent='載入失敗';
   });
 })();
 </script>
