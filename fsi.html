@@ -131,7 +131,7 @@ body.has-site-chrome .app{min-height:calc(100vh - 64px)}
 <script>
 (function(){
   const DATA_URL='./data/fsi-suspension-20251219.json?v=1';
-  const TODAY=new Date('2026-09-14T00:00:00+08:00');
+  const TODAY=new Date();
   let payload=null;
   let cases=[];
   let openMap={};
@@ -286,10 +286,15 @@ body.has-site-chrome .app{min-height:calc(100vh - 64px)}
     bindCards();
   }
 
+  let searchTimer=null;
   function bindFilters(){
-    ['fsiSearch','fsiDept','fsiStatus'].forEach(id=>{
+    const s=$('fsiSearch');
+    if(s){
+      s.oninput=()=>{ clearTimeout(searchTimer); searchTimer=setTimeout(()=>{ const v=s.value; const pos=s.selectionStart; render(); const n=$('fsiSearch'); if(n){ n.focus(); try{n.setSelectionRange(pos,pos);}catch(_){}} }, 120); };
+    }
+    ['fsiDept','fsiStatus'].forEach(id=>{
       const el=$(id); if(!el) return;
-      el.onchange=el.oninput=()=>render();
+      el.onchange=()=>render();
     });
     const ex=$('btnExpandAll2'), cl=$('btnCollapseAll2');
     if(ex) ex.onclick=()=>expandAll(true);
