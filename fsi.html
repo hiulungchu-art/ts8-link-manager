@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache">
 <title>FSI 暫停管理 · 工作頁面集</title>
-<link rel="stylesheet" href="./css/site.css?v=20260914fsi4">
+<link rel="stylesheet" href="./css/site.css?v=20260914fsi5">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="./config.js"></script>
 <style>
@@ -112,7 +112,23 @@ body.has-site-chrome .app{min-height:calc(100vh - 64px)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
 .modal-bg{position:fixed;inset:0;background:rgba(15,22,18,.45);z-index:60;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-bg.open{display:flex}
-.modal{background:var(--paper);border-radius:18px;max-width:560px;width:100%;max-height:90vh;overflow:auto;box-shadow:var(--shadow);border:1px solid var(--line-soft)}
+.modal{background:var(--paper);border-radius:18px;max-width:680px;width:100%;max-height:90vh;overflow:auto;box-shadow:var(--shadow);border:1px solid var(--line-soft)}
+.form-section{margin:0 0 14px;padding:12px 12px 4px;border:1px solid var(--line-soft);border-radius:12px;background:rgba(250,247,241,.55)}
+.form-section h3{margin:0 0 10px;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-d);font-family:var(--font-ui)}
+.form-section .hint{font-size:.72rem;color:var(--mute);font-weight:500;text-transform:none;letter-spacing:0;margin-left:6px}
+.form-section.fill{background:var(--infob);border-color:#C9DCE8}
+.form-section.fill h3{color:var(--info)}
+.history-block{margin-top:12px;border:1px solid var(--line-soft);border-radius:10px;background:var(--cream-2);overflow:hidden}
+.history-block summary{cursor:pointer;padding:8px 12px;font-size:.78rem;font-weight:700;color:var(--mute);list-style:none;user-select:none}
+.history-block summary::-webkit-details-marker{display:none}
+.history-block summary::before{content:'▸';display:inline-block;margin-right:6px;transition:transform .15s;color:var(--accent)}
+.history-block[open] summary::before{transform:rotate(90deg)}
+.history-block .history-body{padding:0 12px 12px;font-size:.8rem;line-height:1.5;color:var(--text);white-space:pre-wrap;border-top:1px solid var(--line-soft);margin:0 0 0;padding-top:10px}
+.card-subsec{margin-top:12px;padding-top:10px;border-top:1px solid var(--line-soft)}
+.card-subsec h4{margin:0 0 8px;font-size:.78rem;font-weight:700;color:var(--ink)}
+.po-badge{display:inline-block;min-width:1.4em;text-align:center;font-weight:700;font-size:.75rem;padding:1px 6px;border-radius:6px;background:var(--cream-2);color:var(--mute)}
+.po-badge.p{background:var(--okb);color:var(--ok)}
+.po-badge.o{background:var(--warnb);color:var(--warn)}
 .modal-h{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line-soft)}
 .modal-h h2{margin:0;font-family:var(--font-display);font-size:1.15rem}
 .modal-x{border:0;background:transparent;font-size:1.2rem;cursor:pointer;color:var(--mute);padding:4px 8px}
@@ -259,8 +275,45 @@ function migrateDb(raw){
   if(!data.meta) data.meta={};
   return data;
 }
+function emptySpotCheck(){
+  return { fe:'', detector:'', noticeOnSite:'', inspectedBy:'', inspectionDate:'' };
+}
+function emptyJoint(){
+  return { attendees:'', date:'' };
+}
+function normalizeSpotCheck(s){
+  s=s||{};
+  // accept legacy seed keys: FE/detector/notice/by/date
+  return {
+    fe:s.fe!=null?String(s.fe):(s.FE!=null?String(s.FE):''),
+    detector:s.detector!=null?String(s.detector):'',
+    noticeOnSite:s.noticeOnSite!=null?String(s.noticeOnSite):(s.notice!=null?String(s.notice):''),
+    inspectedBy:s.inspectedBy!=null?String(s.inspectedBy):(s.by!=null?String(s.by):''),
+    inspectionDate:s.inspectionDate!=null?String(s.inspectionDate):(s.date!=null?String(s.date):'')
+  };
+}
+function normalizeJoint(j){
+  j=j||{};
+  return { attendees:j.attendees!=null?String(j.attendees):'', date:j.date!=null?String(j.date):'' };
+}
+/** True if remarks looks like imported Excel narrative (not a short working note). */
+function looksLikeImportedRemarks(s){
+  s=String(s||'');
+  if(!s.trim()) return false;
+  if(s.length>=120) return true;
+  return /Extension form|Reminded|Received|completion form|resumed on|Will consider|requested|standalone detector/i.test(s);
+}
 function normalizeCase(c){
   c=c||{};
+  let remarks=c.remarks||'';
+  let historyLog=c.historyLog||'';
+  // one-time soft migrate: imported blob was dumped into remarks
+  if(!historyLog && looksLikeImportedRemarks(remarks)){
+    historyLog=remarks;
+    remarks='';
+  }
+  let spotCheck=normalizeSpotCheck(c.spotCheck||c.spot||emptySpotCheck());
+  let jointInspection=normalizeJoint(c.jointInspection||c.joint||emptyJoint());
   return {
     id:c.id||uid('fsi'),
     dept:c.dept||'',
@@ -274,7 +327,10 @@ function normalizeCase(c){
     periodStart:c.periodStart||c.noticeDate||'',
     plannedResume:c.plannedResume||'',
     status:(c.status==='resumed')?'resumed':'active',
-    remarks:c.remarks||'',
+    spotCheck,
+    jointInspection,
+    remarks:remarks||'',
+    historyLog:historyLog||'',
     extensions:Array.isArray(c.extensions)?c.extensions.map(normalizeExt):[],
     updatedAt:c.updatedAt||new Date().toISOString(),
     reminderSentAt:c.reminderSentAt||''
@@ -322,8 +378,8 @@ function cases(){ return (db.fsi&&db.fsi.cases)||[]; }
 function findCase(id){ return cases().find(c=>c.id===id)||null; }
 
 function mapSeedCase(raw, i){
-  const remarks=raw.remarks||'';
-  const resumed=/resumed|completion form|已恢復|已恢復/i.test(remarks);
+  const historyLog=raw.remarks||'';
+  const resumed=/resumed|completion form|已恢復|已恢復/i.test(historyLog);
   const commence=raw.commence||'';
   const planned=raw.planned_resume||'';
   const exts=(raw.extensions||[]).map((e,j)=>{
@@ -336,6 +392,7 @@ function mapSeedCase(raw, i){
       if(!plannedResume) plannedResume=m[6]+'-'+m[5].padStart(2,'0')+'-'+m[4].padStart(2,'0');
     }
     if(!periodStart && plannedResume) periodStart=addDays(plannedResume, -MAX_DAYS);
+    // imported extension narrative stays on note as history; UI labels new notes clearly
     return normalizeExt({
       id:uid('ext'),
       noticeDate:periodStart,
@@ -358,7 +415,10 @@ function mapSeedCase(raw, i){
     periodStart:commence,
     plannedResume:planned,
     status:resumed?'resumed':'active',
-    remarks:remarks,
+    spotCheck:normalizeSpotCheck(raw.spot||{}),
+    jointInspection:normalizeJoint(raw.joint||{}),
+    remarks:'',
+    historyLog:historyLog,
     extensions:exts,
     updatedAt:new Date().toISOString()
   });
@@ -544,7 +604,10 @@ function filtered(){
     if(al==='needsPm' && !needsPmUpdate(c)) return false;
     if(al==='ok' && needsPmUpdate(c)) return false;
     if(!q) return true;
-    const hay=[c.location,c.dept,c.ref,c.pm,c.pmEmail,c.contractor,c.remarks,(c.fsi||[]).join(' ')].join(' ').toLowerCase();
+    const sc=c.spotCheck||{}, ji=c.jointInspection||{};
+    const hay=[c.location,c.dept,c.ref,c.pm,c.pmEmail,c.contractor,c.remarks,c.historyLog,
+      sc.fe,sc.detector,sc.noticeOnSite,sc.inspectedBy,sc.inspectionDate,
+      ji.attendees,ji.date,(c.fsi||[]).join(' ')].join(' ').toLowerCase();
     return hay.includes(q);
   });
 }
@@ -579,6 +642,12 @@ function alertBannerHtml(list){
   </div>`;
 }
 
+function poBadge(v){
+  const t=String(v||'').trim().toUpperCase();
+  if(!t) return '<span class="po-badge">—</span>';
+  const cls=t==='P'?'p':(t==='O'?'o':'');
+  return `<span class="po-badge ${cls}">${esc(t)}</span>`;
+}
 function cardHtml(c){
   const open=!!openMap[c.id];
   const alert=needsPmUpdate(c);
@@ -588,6 +657,8 @@ function cardHtml(c){
   const stDot=c.status==='resumed'?'on':(alert?'danger':'warn');
   const fsi=(c.fsi&&c.fsi.length)?c.fsi.join(' · '):'—';
   const ext=c.extensions||[];
+  const sc=c.spotCheck||emptySpotCheck();
+  const ji=c.jointInspection||emptyJoint();
   const cls=['day-card', open?'is-open':'', alert?'needs-pm':'', c.status==='resumed'?'is-resumed':''].filter(Boolean).join(' ');
   return `<div class="${cls}" data-id="${esc(c.id)}">
     <div class="day-head" data-act="toggle">
@@ -611,8 +682,29 @@ function cardHtml(c){
         <div><dt>承辦商</dt><dd>${esc(c.contractor||'—')}</dd></div>
         <div><dt>暫停 FSI</dt><dd>${esc(fsi)}</dd></div>
         <div><dt>上次提醒</dt><dd>${esc(c.reminderSentAt?new Date(c.reminderSentAt).toLocaleString('zh-HK',{timeZone:'Asia/Hong_Kong'}):'—')}</dd></div>
-        <div style="grid-column:1/-1"><dt>備註</dt><dd>${esc(c.remarks||'—')}</dd></div>
       </dl>
+      <div class="card-subsec">
+        <h4>Spot Check（請填）</h4>
+        <dl class="detail-grid">
+          <div><dt>FE</dt><dd>${poBadge(sc.fe)}</dd></div>
+          <div><dt>獨立探測器</dt><dd>${poBadge(sc.detector)}</dd></div>
+          <div><dt>現場 Shutdown Notice</dt><dd>${poBadge(sc.noticeOnSite)}</dd></div>
+          <div><dt>巡查人</dt><dd>${esc(sc.inspectedBy||'—')}</dd></div>
+          <div><dt>巡查日期</dt><dd>${esc(sc.inspectionDate||'—')}</dd></div>
+        </dl>
+      </div>
+      <div class="card-subsec">
+        <h4>聯合巡查（請填）</h4>
+        <dl class="detail-grid">
+          <div><dt>出席者</dt><dd>${esc(ji.attendees||'—')}</dd></div>
+          <div><dt>日期</dt><dd>${esc(ji.date||'—')}</dd></div>
+        </dl>
+      </div>
+      <div class="card-subsec">
+        <h4>工作備註（你填）</h4>
+        <div style="font-size:.88rem;line-height:1.45;white-space:pre-wrap;color:var(--text)">${esc(c.remarks||'—')}</div>
+      </div>
+      ${c.historyLog?`<details class="history-block"><summary>匯入歷程（唯讀）</summary><div class="history-body">${esc(c.historyLog)}</div></details>`:''}
       ${ext.length?`<div class="ext-list"><h4>延期紀錄（${ext.length}）</h4>
         ${ext.map((e,i)=>`<div class="ext-item"><strong>#${i+1}</strong> Notice ${esc(e.noticeDate||'—')} · 期起 ${esc(e.periodStart||'—')} → 恢復 ${esc(e.plannedResume||'—')}${e.note?`<br>${esc(e.note)}`:''}</div>`).join('')}
       </div>`:''}
@@ -818,26 +910,68 @@ function openModalShell(title, bodyHtml, footHtml){
   $('modalBg').classList.add('open');
 }
 
+function poSelect(id, val){
+  const v=String(val||'');
+  return `<select id="${id}">
+    <option value="" ${!v?'selected':''}>（未填）</option>
+    <option value="P" ${v==='P'?'selected':''}>P</option>
+    <option value="O" ${v==='O'?'selected':''}>O</option>
+  </select>`;
+}
 function openCaseModal(id){
   const c=id?findCase(id):null;
   modalState={kind:'case', id:id||null};
   const fsiStr=(c&&c.fsi||[]).join(', ');
+  const sc=(c&&c.spotCheck)||emptySpotCheck();
+  const ji=(c&&c.jointInspection)||emptyJoint();
+  const hist=c&&c.historyLog?c.historyLog:'';
   openModalShell(c?'編輯個案':'新增個案', `
-    <div class="grid">
-      <div class="field span2"><label>位置 <span class="req">*</span></label><input id="m_location" value="${esc(c?c.location:'')}"></div>
-      <div class="field"><label>部門</label><input id="m_dept" value="${esc(c?c.dept:'')}" placeholder="CDO / CFSO"></div>
-      <div class="field"><label>參考編號</label><input id="m_ref" value="${esc(c?c.ref:'')}"></div>
-      <div class="field"><label>PM</label><input id="m_pm" value="${esc(c?c.pm:'')}"></div>
-      <div class="field"><label>PM Email（稍後填）</label><input id="m_pmEmail" type="email" value="${esc(c?c.pmEmail:'')}" placeholder="待填 email"></div>
-      <div class="field span2"><label>承辦商</label><input id="m_contractor" value="${esc(c?c.contractor:'')}"></div>
-      <div class="field span2"><label>暫停 FSI（逗號分隔）</label><input id="m_fsi" value="${esc(fsiStr)}" placeholder="Sprinkler, Detector"></div>
-      <div class="field"><label>Shutdown Notice 日期</label><input type="date" id="m_notice" value="${esc(c?c.noticeDate:'')}"></div>
-      <div class="field"><label>本期開始</label><input type="date" id="m_period" value="${esc(c?c.periodStart:'')}"></div>
-      <div class="field"><label>計劃恢復</label><input type="date" id="m_resume" value="${esc(c?c.plannedResume:'')}"></div>
-      <div class="field"><label>狀態</label><select id="m_status"><option value="active" ${(c?c.status:'active')==='active'?'selected':''}>進行中</option><option value="resumed" ${c&&c.status==='resumed'?'selected':''}>已恢復</option></select></div>
-      <div class="field span2"><label>備註</label><textarea id="m_remarks">${esc(c?c.remarks:'')}</textarea></div>
+    <div class="form-section">
+      <h3>基本資料</h3>
+      <div class="grid">
+        <div class="field span2"><label>位置 <span class="req">*</span></label><input id="m_location" value="${esc(c?c.location:'')}"></div>
+        <div class="field"><label>部門</label><input id="m_dept" value="${esc(c?c.dept:'')}" placeholder="CDO / CFSO"></div>
+        <div class="field"><label>參考編號</label><input id="m_ref" value="${esc(c?c.ref:'')}"></div>
+        <div class="field"><label>PM</label><input id="m_pm" value="${esc(c?c.pm:'')}"></div>
+        <div class="field"><label>PM Email（稍後填）</label><input id="m_pmEmail" type="email" value="${esc(c?c.pmEmail:'')}" placeholder="待填 email"></div>
+        <div class="field span2"><label>承辦商</label><input id="m_contractor" value="${esc(c?c.contractor:'')}"></div>
+        <div class="field span2"><label>暫停 FSI（逗號分隔）</label><input id="m_fsi" value="${esc(fsiStr)}" placeholder="Sprinkler, Detector"></div>
+      </div>
     </div>
-    <div class="warn-note" id="m_warn" style="display:none"></div>
+    <div class="form-section">
+      <h3>Shutdown 時段</h3>
+      <div class="grid">
+        <div class="field"><label>Shutdown Notice 日期</label><input type="date" id="m_notice" value="${esc(c?c.noticeDate:'')}"></div>
+        <div class="field"><label>本期開始</label><input type="date" id="m_period" value="${esc(c?c.periodStart:'')}"></div>
+        <div class="field"><label>計劃恢復</label><input type="date" id="m_resume" value="${esc(c?c.plannedResume:'')}"></div>
+        <div class="field"><label>狀態</label><select id="m_status"><option value="active" ${(c?c.status:'active')==='active'?'selected':''}>進行中</option><option value="resumed" ${c&&c.status==='resumed'?'selected':''}>已恢復</option></select></div>
+      </div>
+      <div class="warn-note" id="m_warn" style="display:none"></div>
+    </div>
+    <div class="form-section fill">
+      <h3>Spot Check<span class="hint">請填 · P／O／空白</span></h3>
+      <div class="grid">
+        <div class="field"><label>FE</label>${poSelect('m_sc_fe', sc.fe)}</div>
+        <div class="field"><label>獨立探測器</label>${poSelect('m_sc_detector', sc.detector)}</div>
+        <div class="field"><label>現場 Shutdown Notice</label>${poSelect('m_sc_notice', sc.noticeOnSite)}</div>
+        <div class="field"><label>巡查人</label><input id="m_sc_by" value="${esc(sc.inspectedBy||'')}" placeholder="姓名"></div>
+        <div class="field"><label>巡查日期</label><input type="date" id="m_sc_date" value="${esc(sc.inspectionDate||'')}"></div>
+      </div>
+    </div>
+    <div class="form-section fill">
+      <h3>聯合巡查<span class="hint">請填</span></h3>
+      <div class="grid">
+        <div class="field span2"><label>出席者</label><input id="m_ji_attendees" value="${esc(ji.attendees||'')}" placeholder="姓名／單位"></div>
+        <div class="field"><label>日期</label><input type="date" id="m_ji_date" value="${esc(ji.date||'')}"></div>
+      </div>
+    </div>
+    <div class="form-section fill">
+      <h3>工作備註（你填）<span class="hint">短註 · 唔好貼匯入文字</span></h3>
+      <div class="grid">
+        <div class="field span2"><label>工作備註</label><textarea id="m_remarks" placeholder="你嘅跟進短註…">${esc(c?c.remarks:'')}</textarea></div>
+      </div>
+    </div>
+    ${hist?`<details class="history-block"><summary>匯入歷程（唯讀）</summary><div class="history-body">${esc(hist)}</div></details>`:''}
   `, `
     <button type="button" class="btn btn-ghost" id="m_cancel">取消</button>
     <button type="button" class="btn btn-primary" id="m_save">儲存</button>
@@ -888,13 +1022,25 @@ function openCaseModal(id){
       periodStart:period,
       plannedResume:planned,
       status:$('m_status').value==='resumed'?'resumed':'active',
+      spotCheck:normalizeSpotCheck({
+        fe:$('m_sc_fe').value,
+        detector:$('m_sc_detector').value,
+        noticeOnSite:$('m_sc_notice').value,
+        inspectedBy:$('m_sc_by').value.trim(),
+        inspectionDate:$('m_sc_date').value
+      }),
+      jointInspection:normalizeJoint({
+        attendees:$('m_ji_attendees').value.trim(),
+        date:$('m_ji_date').value
+      }),
       remarks:$('m_remarks').value
     };
     if(id){
       const cur=findCase(id);
-      Object.assign(cur, payload, {updatedAt:new Date().toISOString()});
+      // preserve historyLog (read-only); do not overwrite from form
+      Object.assign(cur, payload, {historyLog:cur.historyLog||'', updatedAt:new Date().toISOString()});
     } else {
-      db.fsi.cases.push(normalizeCase(Object.assign({id:uid('fsi'), extensions:[]}, payload)));
+      db.fsi.cases.push(normalizeCase(Object.assign({id:uid('fsi'), extensions:[], historyLog:''}, payload)));
     }
     save(); closeModal(); render(); toast('已儲存');
   };
@@ -946,7 +1092,7 @@ function openExtendModal(id){
       <div class="field"><label>延期 Notice 日期 <span class="req">*</span></label><input type="date" id="m_notice" value="${esc(start)}"></div>
       <div class="field"><label>本期開始</label><input type="date" id="m_period" value="${esc(start)}"></div>
       <div class="field"><label>計劃恢復</label><input type="date" id="m_resume" value="${esc(end)}"></div>
-      <div class="field span2"><label>備註</label><textarea id="m_note" placeholder="延期原因／表格編號…"></textarea></div>
+      <div class="field span2"><label>延期備註（你填）</label><textarea id="m_note" placeholder="延期原因／表格編號…"></textarea></div>
     </div>
     <div class="warn-note" id="m_warn" style="display:none"></div>
   `, `<button type="button" class="btn btn-ghost" id="m_cancel">取消</button><button type="button" class="btn btn-primary" id="m_save">新增延期</button>`);
