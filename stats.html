@@ -86,7 +86,7 @@
   <div id="charts" class="chart-grid">
     <div class="chart-card">
       <h2>按年完成次數</h2>
-      <div class="sub">柱狀圖 · 各年累計</div>
+      <div class="sub">折線圖 · 各年趨勢</div>
       <div class="chart-wrap"><canvas id="yearChart"></canvas></div>
     </div>
     <div class="chart-card">
@@ -206,8 +206,12 @@
 
     if(yearChart) yearChart.destroy();
     yearChart=new Chart($('yearChart'),{
-      type:'bar',
-      data:{labels:yearLabels.map(y=>y+' 年'), datasets:[{label:'完成次數', data:yearData, backgroundColor:accent, borderRadius:8, maxBarThickness:48}]},
+      type:'line',
+      data:{labels:yearLabels.map(y=>y+' 年'), datasets:[{
+        label:'完成次數', data:yearData,
+        borderColor:accent, backgroundColor:'rgba(92,138,114,.18)',
+        fill:true, tension:.28, pointRadius:4, pointBackgroundColor:accent, borderWidth:2.5
+      }]},
       options:{
         responsive:true, maintainAspectRatio:false,
         plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>' '+c.parsed.y+' 次'}}},
