@@ -314,6 +314,12 @@ body.site-body{
   line-height:1.55;
   flex:1;
 }
+.page-card-meta{
+  display:flex;flex-wrap:wrap;gap:10px 16px;
+  font-size:.78rem;color:var(--mute);
+  font-variant-numeric:tabular-nums;
+}
+.page-card-meta strong{color:var(--ink);font-weight:700;font-size:.95rem}
 .page-card-cta{
   font-family:var(--font-ui);
   font-size:.78rem;
