@@ -1500,17 +1500,20 @@ function isPartBDone(day){
   if((day.status||'')==='已完結') return true;
   return !!findPrimaryLink(day.links,'pdf_b2');
 }
-function partBStats(project){
+function partBStats(projects){
+  const list=Array.isArray(projects)?projects:(projects?[projects]:[]);
   const map={}, yearMap={}; let total=0;
-  (project.partAs||[]).forEach(pa=>{
-    (pa.days||[]).forEach(d=>{
-      if(!isPartBDone(d)) return;
-      const m=(d.date||'').slice(0,7);
-      if(!/^\d{4}-\d{2}$/.test(m)) return;
-      map[m]=(map[m]||0)+1;
-      const y=m.slice(0,4);
-      yearMap[y]=(yearMap[y]||0)+1;
-      total++;
+  list.forEach(project=>{
+    (project.partAs||[]).forEach(pa=>{
+      (pa.days||[]).forEach(d=>{
+        if(!isPartBDone(d)) return;
+        const m=(d.date||'').slice(0,7);
+        if(!/^\d{4}-\d{2}$/.test(m)) return;
+        map[m]=(map[m]||0)+1;
+        const y=m.slice(0,4);
+        yearMap[y]=(yearMap[y]||0)+1;
+        total++;
+      });
     });
   });
   return {
@@ -1528,14 +1531,14 @@ function destroyStatsCharts(){
 function renderStatsView(){
   const p=proj();
   $('btnEditProject').style.display=p?'inline-flex':'none';
-  if(!p){
-    $('crumb').textContent='請先選擇項目';
+  const all=db.projects||[];
+  $('crumb').innerHTML=`<strong>全部項目</strong> · Part B 統計`;
+  if(!all.length){
     destroyStatsCharts();
-    $('content').innerHTML=`<div class="stats-shell"><div class="stats-empty">請先在左側選擇項目，再查看 Part B 統計。</div></div>`;
+    $('content').innerHTML=`<div class="stats-shell"><div class="stats-empty">尚未有項目資料。</div></div>`;
     return;
   }
-  $('crumb').innerHTML=`<strong>${esc(p.name)}</strong> · Part B 統計`;
-  const st=partBStats(p);
+  const st=partBStats(all);
   const now=new Date();
   const yNow=String(now.getFullYear());
   const mNow=now.getMonth()+1;
@@ -1566,7 +1569,7 @@ function renderStatsView(){
   const yearOpts=(st.years.length?st.years:[yNow]).map(y=>`<option value="${esc(y)}" ${y===selectedYear?'selected':''}>${esc(y)} 年</option>`).join('');
 
   const metaAt=(db.meta&&db.meta.updatedAt)||'';
-  let metaLine='完成條件：狀態「已完結」或已有完整 PDF。以隔離日日期計。';
+  let metaLine='範圍：全部項目。完成條件：狀態「已完結」或已有完整 PDF。以隔離日日期計。';
   if(metaAt){
     try{ metaLine+=' 資料更新至 '+new Date(metaAt).toLocaleString('zh-HK',{timeZone:'Asia/Hong_Kong'}); }catch(_){}
   }
@@ -1576,13 +1579,13 @@ function renderStatsView(){
       <div class="stats-hero-inline">
         <div class="eyebrow">TS8 · Analytics</div>
         <h2>Part B 統計</h2>
-        <p>一眼睇完成量；月趨勢睇走勢，右側對比選定年份各月。</p>
+        <p>合計全部 job／項目的 Part B 完成量；月趨勢睇整體走勢，右側對比選定年份各月。</p>
       </div>
       <div class="stats-toolbar">
         <div class="field"><label>年份</label><select id="statsYearSelect" aria-label="選擇年份">${yearOpts}</select></div>
       </div>
       <div class="kpi-row">
-        <div class="kpi"><div class="lab">累計 Part B</div><div class="num">${st.total}</div><div class="delta">全部完成次數</div></div>
+        <div class="kpi"><div class="lab">累計 Part B</div><div class="num">${st.total}</div><div class="delta">全部項目合計</div></div>
         <div class="kpi"><div class="lab">本年 ${esc(yNow)}</div><div class="num">${thisYear}</div>${deltaHtml(thisYear,lastYear)}</div>
         <div class="kpi accent"><div class="lab">本月 ${esc(ym)}</div><div class="num">${thisMonth}</div>${deltaHtml(thisMonth,lastMonth)}</div>
       </div>
