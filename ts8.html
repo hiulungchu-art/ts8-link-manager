@@ -402,6 +402,34 @@ body{
   background:linear-gradient(90deg, var(--line), transparent);
 }
 
+.stats-panel{
+  background:var(--paper);
+  border:1px solid var(--line-soft);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:18px 20px;
+  margin-bottom:22px;
+}
+.stats-panel h3{
+  font-family:var(--font-display);
+  font-size:1.05rem;
+  margin:0 0 4px;
+  color:var(--ink);
+}
+.stats-panel .stats-sub{font-size:.78rem;color:var(--mute);margin-bottom:14px}
+.stats-grid{display:flex;flex-wrap:wrap;gap:10px}
+.stats-chip{
+  min-width:110px;
+  padding:12px 14px;
+  border-radius:12px;
+  background:var(--cream-2);
+  border:1px solid var(--line-soft);
+}
+.stats-chip .lab{font-size:.68rem;color:var(--mute);font-weight:700;letter-spacing:.04em}
+.stats-chip .num{font-family:var(--font-display);font-size:1.45rem;font-weight:600;color:var(--ink);margin-top:2px}
+.stats-chip.total{background:var(--okb);border-color:transparent}
+.stats-chip.total .num{color:var(--ok)}
+
 .tile-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:700px){.tile-grid{grid-template-columns:1fr}}
 
@@ -1237,7 +1265,53 @@ function renderSidebar(){
     </button>`).join('');
 }
 
+
+function isPartBDone(day){
+  if(!day) return false;
+  if((day.status||'')==='已完結') return true;
+  return !!(findPrimary(day.links,'pdf_b2'));
+}
+
+/** Count completed Part B by isolation-day month (YYYY-MM). Scope: whole project. */
+function partBStatsByMonth(project){
+  const map={};
+  let total=0;
+  (project.partAs||[]).forEach(pa=>{
+    (pa.days||[]).forEach(d=>{
+      if(!isPartBDone(d)) return;
+      const m=(d.date||'').slice(0,7);
+      if(!/^\d{4}-\d{2}$/.test(m)) return;
+      map[m]=(map[m]||0)+1;
+      total++;
+    });
+  });
+  const months=Object.keys(map).sort().reverse();
+  return {total, months, map};
+}
+
+function renderPartBStats(project){
+  const {total, months, map}=partBStatsByMonth(project);
+  const now=new Date();
+  const ym=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const thisMonth=map[ym]||0;
+  let chips=`<div class="stats-chip total"><div class="lab">累計 Part B</div><div class="num">${total}</div></div>`
+    +`<div class="stats-chip"><div class="lab">本月 ${esc(ym)}</div><div class="num">${thisMonth}</div></div>`;
+  months.forEach(m=>{
+    if(m===ym) return;
+    chips+=`<div class="stats-chip"><div class="lab">${esc(m)}</div><div class="num">${map[m]}</div></div>`;
+  });
+  if(!months.length){
+    chips+=`<div class="stats-chip"><div class="lab">尚無完成</div><div class="num">0</div></div>`;
+  }
+  return `<div class="stats-panel">
+    <h3>Part B 統計</h3>
+    <div class="stats-sub">以隔離日日期計月；完成條件：狀態「已完結」或已有完整 PDF（B2 完成後）。</div>
+    <div class="stats-grid">${chips}</div>
+  </div>`;
+}
+
 function renderMain(){
+
   const p=proj();
   $('btnEditProject').style.display=p?'inline-flex':'none';
   if(!p){
@@ -1279,6 +1353,8 @@ function renderMain(){
       <button class="btn btn-ghost btn-sm" data-act="add-day" data-paid="${esc(pa.id)}">＋ 隔離日</button>
     </div>
   </div></div>`;
+
+  html+=renderPartBStats(p);
 
   const paDocsKey='pa-docs:'+pa.id;
   // Part A docs: default open on first visit, then remember
