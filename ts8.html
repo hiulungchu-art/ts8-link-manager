@@ -638,22 +638,25 @@ body{
 }
 .chart-empty{position:absolute;inset:12px;display:flex;align-items:center;justify-content:center;margin:0;border:0;background:transparent}
 
-.jobs-table-wrap{margin-top:24px;background:var(--s-card);border:1px solid var(--s-line);border-radius:16px;overflow:hidden}
+.jobs-table-wrap{margin-top:3rem;background:var(--s-card,#FAF9F6);border:1px solid var(--s-line,#DCE0D9);border-radius:16px;overflow:hidden}
 .jobs-table-wrap .jobs-head{padding:16px 20px 8px}
-.jobs-table-wrap .jobs-head h2{font-family:var(--font-display);font-size:1.08rem;margin:0 0 4px;color:var(--s-text);font-weight:600}
-.jobs-table-wrap .jobs-head .sub{font-size:.78rem;color:var(--s-muted);margin:0 0 8px}
+.jobs-table-wrap .jobs-head h2{font-family:var(--font-display);font-size:1.08rem;margin:0 0 4px;color:#1B4332;font-weight:600}
+.jobs-table-wrap .jobs-head .sub{font-size:.78rem;color:var(--s-muted,#5C6B61);margin:0 0 8px}
 .jobs-table{width:100%;border-collapse:collapse;font-size:.88rem}
-.jobs-table th,.jobs-table td{text-align:left;padding:12px 20px;border-top:1px solid var(--s-line);vertical-align:top}
-.jobs-table th{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--s-muted);font-weight:700;border-top:0;padding-top:8px;padding-bottom:8px}
-.jobs-table td.num{font-variant-numeric:tabular-nums;font-weight:600;color:var(--s-text);text-align:right}
+.jobs-table th,.jobs-table td{text-align:left;padding:16px 20px;border-left:none;border-right:none;border-top:none;border-bottom:1px solid rgba(27,67,50,.15);vertical-align:top}
+.jobs-table thead th{border-top:2px solid #1B4332;border-bottom:2px solid #1B4332;font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;color:#1B4332;font-weight:700;padding-top:10px;padding-bottom:10px}
+.jobs-table td.num{font-variant-numeric:tabular-nums;font-weight:700;color:#1B4332;text-align:right}
 .jobs-table th.num{text-align:right}
-.jobs-table .job-name{font-weight:600;color:var(--s-text)}
-.jobs-table .job-meta{font-size:.78rem;color:var(--s-muted);margin-top:2px}
+.jobs-table tbody tr:last-child td{border-bottom:none}
+.jobs-table .job-name{font-weight:600;color:var(--s-text,#1A2C22)}
+.jobs-table .job-meta{font-size:.78rem;color:var(--s-muted,#5C6B61);margin-top:2px}
 .stats-scope-pill{
   display:inline-flex;align-items:center;gap:6px;margin:0 0 12px;
-  padding:6px 12px;border-radius:999px;font-size:.75rem;font-weight:700;
-  letter-spacing:.04em;background:#1A3A2B;color:#FAF9F6;
+  padding:4px 12px;border-radius:999px;font-size:.75rem;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;background:#1B4332;color:#FDFBF7;
 }
+.stats-hero-inline h2{border-bottom:4px double #1B4332;padding-bottom:12px;margin-bottom:1.25rem !important;color:#1B4332}
+.stats-hero-inline .eyebrow{color:#1B4332}
 
 @media (prefers-reduced-motion: reduce){
   .view-tab,.kpi,.chart-card{transition:none !important}
@@ -1612,9 +1615,9 @@ function renderStatsView(){
     <div class="stats-shell">
       <div class="stats-hero-inline">
         <div class="eyebrow">TS8 · Analytics</div>
-        <div class="stats-scope-pill">範圍：全部 ${byProj.length} 個項目／job</div>
-        <h2>Part B 統計（全站）</h2>
-        <p>合計全部 job 的完成量（唔跟左邊揀邊個項目）。下面有各項目明細；圖表係整體走勢。</p>
+        <div class="stats-scope-pill">✓ 已合併全部項目 · ${byProj.length} jobs</div>
+        <h2>TS8 Part B 綜合統計</h2>
+        <p>全部 job 合計（唔跟左邊揀邊個項目）。上層睇整體 KPI／圖表，下層「項目明細」逐個 job。</p>
       </div>
       <div class="stats-toolbar">
         <div class="field"><label>年份</label><select id="statsYearSelect" aria-label="選擇年份">${yearOpts}</select></div>
@@ -1638,11 +1641,11 @@ function renderStatsView(){
       </div>
       <div class="jobs-table-wrap">
         <div class="jobs-head">
-          <h2>各項目明細</h2>
+          <h2>— 項目明細 Breakdown</h2>
           <p class="sub">每個 job 的 Part B 完成次數（已完結或已有完整 PDF）</p>
         </div>
         <table class="jobs-table" aria-label="各項目 Part B 完成次數">
-          <thead><tr><th>項目</th><th>Job No</th><th class="num">完成次數</th></tr></thead>
+          <thead><tr><th>項目名 Item</th><th>任務編號 Job No.</th><th class="num">完成次數</th></tr></thead>
           <tbody>
             ${byProj.map(r=>`<tr>
               <td><div class="job-name">${esc(r.name)}</div>${r.code?`<div class="job-meta">${esc(r.code)}</div>`:''}</td>
