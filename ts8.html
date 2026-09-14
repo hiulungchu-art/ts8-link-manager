@@ -563,33 +563,62 @@ body{
 .b-idle{background:var(--cream-2);color:var(--mute)}
 
 
-/* —— Internal view tabs —— */
-.view-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-right:auto}
+/* —— Internal view tabs + Part B stats (Gemini editorial) —— */
+.view-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-right:auto;border-bottom:1px solid rgba(44,66,54,.1);padding-bottom:0}
 .view-tab{
-  border:1px solid var(--line-soft);background:var(--cream-2);color:var(--mute);
-  border-radius:999px;padding:7px 14px;font:inherit;font-size:.82rem;font-weight:600;cursor:pointer;
+  border:0;background:transparent;color:var(--mute);
+  border-radius:0;padding:8px 14px 10px;font:inherit;font-size:.84rem;font-weight:600;cursor:pointer;
+  border-bottom:2px solid transparent;margin-bottom:-1px;
 }
-.view-tab.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.view-tab:hover{color:#2C4236}
+.view-tab.active{background:transparent;color:#2C4236;border-bottom-color:#5C8A72}
 .topbar{gap:12px;align-items:center}
 .kpi-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:18px}
 @media(max-width:720px){.kpi-row{grid-template-columns:1fr}}
-.kpi{background:var(--paper);border:1px solid var(--line-soft);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
-.kpi .lab{font-size:.72rem;font-weight:700;color:var(--mute);letter-spacing:.04em}
-.kpi .num{font-family:var(--font-display);font-size:2rem;font-weight:600;color:var(--ink);margin-top:4px;line-height:1.1}
-.kpi.accent{background:linear-gradient(145deg,var(--okb),var(--paper));border-color:rgba(47,122,85,.2)}
-.kpi.accent .num{color:var(--ok)}
-.stats-toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:16px;background:var(--paper);border:1px solid var(--line-soft);border-radius:14px;padding:14px 16px}
+.kpi{
+  background:rgba(253,251,247,.92);
+  border:1px solid rgba(44,66,54,.1);
+  border-radius:8px;
+  box-shadow:none;
+  padding:18px 18px 16px;
+}
+.kpi .lab{font-family:var(--font-ui);font-size:.72rem;font-weight:600;color:rgba(44,66,54,.55);letter-spacing:.08em;text-transform:uppercase}
+.kpi .num{font-family:var(--font-display);font-size:2.35rem;font-weight:600;color:#2C4236;margin-top:6px;line-height:1.05;letter-spacing:-.02em}
+.kpi.accent{
+  background:#5C8A72;
+  border-color:#5C8A72;
+}
+.kpi.accent .lab{color:rgba(253,251,247,.78)}
+.kpi.accent .num{color:#FDFBF7}
+.stats-toolbar{
+  display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:16px;
+  background:transparent;border:0;border-radius:0;padding:0 0 4px;
+}
 .stats-toolbar .field{margin:0;min-width:140px}
-.stats-toolbar label{display:block;font-size:.68rem;color:var(--mute);font-weight:700;margin-bottom:4px}
-.stats-toolbar select{width:100%;padding:9px 11px;border-radius:10px;border:1px solid var(--line-soft);background:var(--cream-2);font:inherit;font-size:.88rem;color:var(--ink)}
-.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.stats-toolbar label{display:block;font-size:.68rem;color:rgba(44,66,54,.55);font-weight:700;margin-bottom:4px;letter-spacing:.06em}
+.stats-toolbar select{
+  width:100%;padding:8px 2px;border-radius:0;border:0;border-bottom:1px solid rgba(44,66,54,.25);
+  background:transparent;font:inherit;font-size:.92rem;color:#2C4236;outline:none;
+}
+.stats-toolbar select:focus{border-bottom-color:#5C8A72}
+.chart-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:16px}
 @media(max-width:900px){.chart-grid{grid-template-columns:1fr}}
-.chart-card{background:var(--paper);border:1px solid var(--line-soft);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 18px 12px;min-height:300px}
-.chart-card h2{font-family:var(--font-display);font-size:1.05rem;margin:0 0 4px;color:var(--ink)}
-.chart-card .sub{font-size:.78rem;color:var(--mute);margin-bottom:12px}
-.chart-wrap{position:relative;height:240px}
-.stats-note{margin-top:14px;font-size:.78rem;color:var(--mute)}
-.stats-empty{padding:48px;text-align:center;color:var(--mute)}
+.chart-card{
+  background:rgba(253,251,247,.95);
+  border:1px solid rgba(44,66,54,.1);
+  border-radius:8px;
+  box-shadow:none;
+  padding:18px 18px 12px;min-height:300px;
+}
+.chart-card h2{font-family:var(--font-display);font-size:1.08rem;margin:0 0 4px;color:#2C4236;font-weight:600}
+.chart-card .sub{font-size:.76rem;color:rgba(44,66,54,.5);margin-bottom:12px;letter-spacing:.02em}
+.chart-wrap{position:relative;height:250px}
+.stats-note{margin-top:14px;font-size:.76rem;color:rgba(44,66,54,.5)}
+.stats-empty{padding:48px;text-align:center;color:rgba(44,66,54,.5)}
+.stats-hero-inline{margin-bottom:14px}
+.stats-hero-inline .eyebrow{font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(44,66,54,.45);margin-bottom:6px}
+.stats-hero-inline h2{font-family:var(--font-display);font-size:1.45rem;color:#2C4236;margin:0 0 4px;font-weight:600}
+.stats-hero-inline p{font-size:.86rem;color:rgba(44,66,54,.55);margin:0}
 
 .hint{font-size:.75rem;color:var(--mute)}
 .modal-bg{
@@ -1499,27 +1528,32 @@ function renderStatsView(){
   const yearOpts=(st.years.length?st.years:[yNow]).map(y=>`<option value="${esc(y)}" ${y===selectedYear?'selected':''}>${esc(y)} 年</option>`).join('');
 
   $('content').innerHTML=`
+    <div class="stats-hero-inline">
+      <div class="eyebrow">TS8 · Analytics</div>
+      <h2>Part B 統計</h2>
+      <p>月趨勢看走勢；右側揀年份對比各月。</p>
+    </div>
     <div class="stats-toolbar">
-      <div class="field"><label>年份（右側月對比）</label><select id="statsYearSelect">${yearOpts}</select></div>
+      <div class="field"><label>年份</label><select id="statsYearSelect">${yearOpts}</select></div>
     </div>
     <div class="kpi-row">
-      <div class="kpi accent"><div class="lab">累計 Part B</div><div class="num">${st.total}</div></div>
+      <div class="kpi"><div class="lab">累計 Part B</div><div class="num">${st.total}</div></div>
       <div class="kpi"><div class="lab">本年 ${esc(yNow)}</div><div class="num">${st.yearMap[yNow]||0}</div></div>
-      <div class="kpi"><div class="lab">本月 ${esc(ym)}</div><div class="num">${st.map[ym]||0}</div></div>
+      <div class="kpi accent"><div class="lab">本月 ${esc(ym)}</div><div class="num">${st.map[ym]||0}</div></div>
     </div>
     <div class="chart-grid">
       <div class="chart-card">
         <h2>每月趨勢</h2>
-        <div class="sub">折線圖 · 按時間順序（有數據嘅月份）</div>
+        <div class="sub">折線 · 時間順序</div>
         <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
       </div>
       <div class="chart-card">
-        <h2>年內各月對比</h2>
-        <div class="sub" id="monthSub">柱狀圖 · ${esc(selectedYear)} 年</div>
+        <h2>年內各月</h2>
+        <div class="sub" id="monthSub">柱狀 · ${esc(selectedYear)} 年</div>
         <div class="chart-wrap"><canvas id="monthChart"></canvas></div>
       </div>
     </div>
-    <p class="stats-note">完成條件：隔離日狀態「已完結」或已有完整 PDF（B2 完成後）。以隔離日日期計。</p>`;
+    <p class="stats-note">完成條件：狀態「已完結」或已有完整 PDF。以隔離日日期計。</p>`;
 
   const ys=$('statsYearSelect');
   if(ys) ys.onchange=()=>{ statsYearFilter=ys.value; render(); };
@@ -1531,8 +1565,9 @@ function renderStatsView(){
   Chart.defaults.color='#6A736C';
   Chart.defaults.borderColor='rgba(221,213,200,.7)';
   Chart.defaults.font.family='"Noto Sans TC","PingFang TC",sans-serif';
-  const accent='rgba(92,138,114,.85)';
-  const soft='rgba(92,138,114,.35)';
+  const accent='rgba(92,138,114,.9)';
+  const soft='rgba(92,138,114,.28)';
+  const clay='rgba(194,122,98,.92)';
 
   // Monthly trend line across all months that have data (chronological)
   let trendMonths=st.months.slice();
@@ -1565,7 +1600,7 @@ function renderStatsView(){
       fill:true, tension:.28, pointRadius:3.5, pointBackgroundColor:accent, borderWidth:2.5
     }]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.parsed.y+' 次'}}},
-      scales:{y:{beginAtZero:true,ticks:{precision:0},grid:{color:'rgba(221,213,200,.55)'}},x:{grid:{display:false},ticks:{maxRotation:45,minRotation:0,autoSkip:true,maxTicksLimit:12}}}}
+      scales:{y:{beginAtZero:true,ticks:{precision:0},grid:{color:'rgba(44,66,54,.08)',borderDash:[4,4],drawBorder:false}},x:{grid:{display:false},ticks:{maxRotation:45,minRotation:0,autoSkip:true,maxTicksLimit:12}}}}
   });
 
   const monthLabels=[], monthData=[], monthColors=[];
@@ -1573,13 +1608,13 @@ function renderStatsView(){
     const m=selectedYear+'-'+String(i).padStart(2,'0');
     monthLabels.push(i+'月');
     monthData.push(st.map[m]||0);
-    monthColors.push(m===ym?accent:soft);
+    monthColors.push(m===ym?clay:soft);
   }
   monthChart=new Chart($('monthChart'),{
     type:'bar',
     data:{labels:monthLabels, datasets:[{label:'完成次數', data:monthData, backgroundColor:monthColors, borderRadius:8, maxBarThickness:36}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.parsed.y+' 次'}}},
-      scales:{y:{beginAtZero:true,ticks:{precision:0},grid:{color:'rgba(221,213,200,.55)'}},x:{grid:{display:false}}}}
+      scales:{y:{beginAtZero:true,ticks:{precision:0},grid:{color:'rgba(44,66,54,.08)',borderDash:[4,4],drawBorder:false}},x:{grid:{display:false}}}}
   });
 }
 
