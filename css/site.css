@@ -324,6 +324,18 @@ body.site-body{
 }
 .page-card.is-placeholder .page-card-cta{color:var(--mute-2);font-weight:500}
 
+
+.page-grid-single{
+  grid-template-columns:1fr;
+  max-width:720px;
+}
+.page-card-hero{
+  min-height:220px;
+  padding:32px 28px 28px;
+}
+.page-card-hero h2{font-size:clamp(1.35rem,2.4vw,1.7rem)}
+.page-card-hero p{font-size:.95rem;max-width:36rem}
+
 @media(max-width:720px){
   .landing{padding:32px 16px 48px}
   .site-footer{padding:16px}
