@@ -637,6 +637,24 @@ body{
   border:1px dashed var(--s-line);border-radius:16px;background:rgba(250,249,246,.6)
 }
 .chart-empty{position:absolute;inset:12px;display:flex;align-items:center;justify-content:center;margin:0;border:0;background:transparent}
+
+.jobs-table-wrap{margin-top:24px;background:var(--s-card);border:1px solid var(--s-line);border-radius:16px;overflow:hidden}
+.jobs-table-wrap .jobs-head{padding:16px 20px 8px}
+.jobs-table-wrap .jobs-head h2{font-family:var(--font-display);font-size:1.08rem;margin:0 0 4px;color:var(--s-text);font-weight:600}
+.jobs-table-wrap .jobs-head .sub{font-size:.78rem;color:var(--s-muted);margin:0 0 8px}
+.jobs-table{width:100%;border-collapse:collapse;font-size:.88rem}
+.jobs-table th,.jobs-table td{text-align:left;padding:12px 20px;border-top:1px solid var(--s-line);vertical-align:top}
+.jobs-table th{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--s-muted);font-weight:700;border-top:0;padding-top:8px;padding-bottom:8px}
+.jobs-table td.num{font-variant-numeric:tabular-nums;font-weight:600;color:var(--s-text);text-align:right}
+.jobs-table th.num{text-align:right}
+.jobs-table .job-name{font-weight:600;color:var(--s-text)}
+.jobs-table .job-meta{font-size:.78rem;color:var(--s-muted);margin-top:2px}
+.stats-scope-pill{
+  display:inline-flex;align-items:center;gap:6px;margin:0 0 12px;
+  padding:6px 12px;border-radius:999px;font-size:.75rem;font-weight:700;
+  letter-spacing:.04em;background:#1A3A2B;color:#FAF9F6;
+}
+
 @media (prefers-reduced-motion: reduce){
   .view-tab,.kpi,.chart-card{transition:none !important}
 }
@@ -1523,6 +1541,21 @@ function partBStats(projects){
   };
 }
 
+
+function partBStatsByProject(projects){
+  const list=Array.isArray(projects)?projects:[];
+  return list.map(project=>{
+    const st=partBStats([project]);
+    return {
+      id:project.id||'',
+      name:project.name||'未命名項目',
+      jobNo:project.jobNo||'',
+      code:project.code||'',
+      total:st.total
+    };
+  }).sort((a,b)=>b.total-a.total || String(a.name).localeCompare(String(b.name),'zh-HK'));
+}
+
 function destroyStatsCharts(){
   try{ if(yearChart){ yearChart.destroy(); yearChart=null; } }catch(_){}
   try{ if(monthChart){ monthChart.destroy(); monthChart=null; } }catch(_){}
@@ -1539,6 +1572,7 @@ function renderStatsView(){
     return;
   }
   const st=partBStats(all);
+  const byProj=partBStatsByProject(all);
   const now=new Date();
   const yNow=String(now.getFullYear());
   const mNow=now.getMonth()+1;
@@ -1578,8 +1612,9 @@ function renderStatsView(){
     <div class="stats-shell">
       <div class="stats-hero-inline">
         <div class="eyebrow">TS8 · Analytics</div>
-        <h2>Part B 統計</h2>
-        <p>合計全部 job／項目的 Part B 完成量；月趨勢睇整體走勢，右側對比選定年份各月。</p>
+        <div class="stats-scope-pill">範圍：全部 ${byProj.length} 個項目／job</div>
+        <h2>Part B 統計（全站）</h2>
+        <p>合計全部 job 的完成量（唔跟左邊揀邊個項目）。下面有各項目明細；圖表係整體走勢。</p>
       </div>
       <div class="stats-toolbar">
         <div class="field"><label>年份</label><select id="statsYearSelect" aria-label="選擇年份">${yearOpts}</select></div>
@@ -1601,6 +1636,23 @@ function renderStatsView(){
           <div class="chart-wrap bar-h" id="monthWrap"><canvas id="monthChart" aria-label="${esc(selectedYear)} 年各月完成次數"></canvas></div>
         </div>
       </div>
+      <div class="jobs-table-wrap">
+        <div class="jobs-head">
+          <h2>各項目明細</h2>
+          <p class="sub">每個 job 的 Part B 完成次數（已完結或已有完整 PDF）</p>
+        </div>
+        <table class="jobs-table" aria-label="各項目 Part B 完成次數">
+          <thead><tr><th>項目</th><th>Job No</th><th class="num">完成次數</th></tr></thead>
+          <tbody>
+            ${byProj.map(r=>`<tr>
+              <td><div class="job-name">${esc(r.name)}</div>${r.code?`<div class="job-meta">${esc(r.code)}</div>`:''}</td>
+              <td>${esc(r.jobNo||'—')}</td>
+              <td class="num">${r.total}</td>
+            </tr>`).join('')||`<tr><td colspan="3">尚無項目</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+
       <p class="stats-note">${esc(metaLine)}</p>
     </div>`;
 
