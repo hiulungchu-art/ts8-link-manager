@@ -1159,7 +1159,7 @@ function render(){
   renderSidebar();
   if(mainView==='stats'){
     ensureChartJs().then(()=>renderStatsView()).catch(()=>renderStatsView());
-  } else renderCaseView();
+  } else renderCasesView();
   const at=(db.meta&&db.meta.updatedAt)||'';
   const meta=$('footMeta');
   if(meta){
