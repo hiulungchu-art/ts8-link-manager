@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TS8 連結管理 · 工作頁面集</title>
 <link rel="stylesheet" href="./css/site.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&display=swap');
 
@@ -1566,6 +1565,23 @@ function partBStatsByProject(projects){
   }).sort((a,b)=>b.total-a.total || String(a.name).localeCompare(String(b.name),'zh-HK'));
 }
 
+
+function ensureChartJs(){
+  return new Promise((resolve,reject)=>{
+    if(typeof Chart!=='undefined'){ resolve(); return; }
+    if(window._chartJsLoading){ window._chartJsLoading.then(resolve,reject); return; }
+    window._chartJsLoading=new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
+      s.async=true;
+      s.onload=()=>res();
+      s.onerror=()=>rej(new Error('Chart.js load failed'));
+      document.head.appendChild(s);
+    });
+    window._chartJsLoading.then(resolve,reject);
+  });
+}
+
 function destroyStatsCharts(){
   try{ if(yearChart){ yearChart.destroy(); yearChart=null; } }catch(_){}
   try{ if(monthChart){ monthChart.destroy(); monthChart=null; } }catch(_){}
@@ -1770,8 +1786,9 @@ function syncViewTabs(){
 function render(){
   renderSidebar();
   syncViewTabs();
-  if(mainView==='stats'){ renderStatsView(); }
-  else { destroyStatsCharts(); renderMain(); }
+  if(mainView==='stats'){
+    ensureChartJs().then(()=>renderStatsView()).catch(()=>renderStatsView());
+  } else { destroyStatsCharts(); renderMain(); }
   const at=(db.meta&&db.meta.updatedAt)||'';
   const meta=$('syncMeta');
   if(meta && at){
@@ -2194,7 +2211,7 @@ render();
       await pushShared(true);
     }
   }catch(_){}
-  const POLL_MS=5000;
+  const POLL_MS=30000;
   setInterval(()=>{
     if(document.hidden) return;
     if($('modal') && $('modal').classList.contains('show')) return;

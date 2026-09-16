@@ -6,7 +6,6 @@
 <meta http-equiv="Cache-Control" content="no-cache">
 <title>FSI 暫停管理 · 工作頁面集</title>
 <link rel="stylesheet" href="./css/site.css?v=20260914fsi7">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="./config.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&display=swap');
@@ -1056,6 +1055,23 @@ function renderCasesView(){
   renderJobDetail(c);
 }
 
+
+function ensureChartJs(){
+  return new Promise((resolve,reject)=>{
+    if(typeof Chart!=='undefined'){ resolve(); return; }
+    if(window._chartJsLoading){ window._chartJsLoading.then(resolve,reject); return; }
+    window._chartJsLoading=new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
+      s.async=true;
+      s.onload=()=>res();
+      s.onerror=()=>rej(new Error('Chart.js load failed'));
+      document.head.appendChild(s);
+    });
+    window._chartJsLoading.then(resolve,reject);
+  });
+}
+
 function destroyCharts(){
   [deptChart,fsiChart,statusChart].forEach(c=>{ try{c&&c.destroy();}catch(_){} });
   deptChart=fsiChart=statusChart=null;
@@ -1141,8 +1157,9 @@ function render(){
   syncViewTabs();
   destroyCharts();
   renderSidebar();
-  if(mainView==='stats') renderStatsView();
-  else renderCasesView();
+  if(mainView==='stats'){
+    ensureChartJs().then(()=>renderStatsView()).catch(()=>renderStatsView());
+  } else renderCaseView();
   const at=(db.meta&&db.meta.updatedAt)||'';
   const meta=$('footMeta');
   if(meta){
@@ -1634,7 +1651,15 @@ if(nav&&btn) btn.addEventListener('click',()=>{
     if(!cases().length) await ensureSeeded();
   }
   render();
-  setInterval(()=>pullShared(true), 5000);
+  const POLL_MS=30000;
+  setInterval(()=>{
+    if(document.hidden) return;
+    if(_pushBusy||_pullBusy) return;
+    pullShared(true);
+  }, POLL_MS);
+  document.addEventListener('visibilitychange', ()=>{
+    if(!document.hidden) pullShared(true);
+  });
 })();
 })();
 </script>
