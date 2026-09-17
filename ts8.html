@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TS8 連結管理 · 工作頁面集</title>
-<link rel="stylesheet" href="./css/site.css?v=20260917move1">
+<link rel="stylesheet" href="./css/site.css?v=20260917lazy1">
 <style>
 :root {
   /* Soft editorial — forest ink + warm cream + celadon */
@@ -1450,6 +1450,33 @@ function renderTile(title, type, link, scope, opts){
   </div>`;
 }
 
+function renderDayBodyHtml(d, scope){
+  return `${d.notes?`<div class="hint" style="margin:10px 0 14px">${esc(d.notes)}</div>`:''}
+          <div class="day-slots">
+            ${renderTile('B1 連結','b1',findPrimary(d.links,'b1'),scope)}
+            ${renderTile('B2 連結','b2',findPrimary(d.links,'b2'),scope)}
+            ${renderTile('完整 PDF（B2 完成後）','pdf_b2',findPrimary(d.links,'pdf_b2'),scope,{hint:'做完 B2 先有'})}
+          </div>`;
+}
+
+function ensureDayBody(card){
+  if(!card) return;
+  let body=card.querySelector('.day-body');
+  if(!body){
+    body=document.createElement('div');
+    body.className='day-body';
+    card.appendChild(body);
+  }
+  const lazy=body.getAttribute('data-lazy')==='1' || !body.innerHTML.trim();
+  if(!lazy) return;
+  const id=card.getAttribute('data-day-id');
+  if(!id) return;
+  const sc=findScope(id);
+  if(!sc.day) return;
+  body.innerHTML=renderDayBodyHtml(sc.day, id);
+  body.removeAttribute('data-lazy');
+}
+
 function renderSidebar(){
   const list=$('projList');
   const items=db.projects.filter(projectMatches);
@@ -1577,14 +1604,9 @@ function renderMain(){
           </span>
           <button class="btn btn-ghost btn-sm" data-act="edit-day" data-paid="${esc(pa.id)}" data-did="${esc(d.id)}">編輯</button>
         </div>
-        <div class="day-body">
-          ${d.notes?`<div class="hint" style="margin:10px 0 14px">${esc(d.notes)}</div>`:''}
-          <div class="day-slots">
-            ${renderTile('B1 連結','b1',findPrimary(d.links,'b1'),scope)}
-            ${renderTile('B2 連結','b2',findPrimary(d.links,'b2'),scope)}
-            ${renderTile('完整 PDF（B2 完成後）','pdf_b2',findPrimary(d.links,'pdf_b2'),scope,{hint:'做完 B2 先有'})}
-          </div>
-        </div>
+        ${open
+          ? `<div class="day-body">${renderDayBodyHtml(d, scope)}</div>`
+          : `<div class="day-body" data-lazy="1"></div>`}
       </div>`;
     }).join('');
     html+=`</div>`;
@@ -2254,6 +2276,8 @@ $('content').addEventListener('click',e=>{
     const id=t.getAttribute('data-day-id');
     const card=document.querySelector('.day-card[data-day-id="'+CSS.escape(id)+'"]');
     if(!card) return;
+    const willOpen=!card.classList.contains('is-open');
+    if(willOpen) ensureDayBody(card);
     const open=card.classList.toggle('is-open');
     if(open) openDayIds.add(id); else openDayIds.delete(id);
     saveOpenSet(OPEN_DAYS_KEY, openDayIds);
@@ -2272,6 +2296,7 @@ $('content').addEventListener('click',e=>{
   if(act==='expand-days'){
     const paid=t.getAttribute('data-paid');
     document.querySelectorAll('#dayList .day-card').forEach(card=>{
+      ensureDayBody(card);
       card.classList.add('is-open');
       openDayIds.add(card.getAttribute('data-day-id'));
     });
