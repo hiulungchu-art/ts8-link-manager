@@ -7,6 +7,9 @@
 <title>FSI 暫停管理 · 工作頁面集</title>
 <link rel="stylesheet" href="./css/site.css?v=20260914fsi7">
 <script src="./config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="./js/firestore-sync.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&display=swap');
 :root{
@@ -247,7 +250,7 @@ body.has-site-chrome .app{min-height:calc(100vh - var(--nav-h))}
     </div>
     <div class="content" id="content"></div>
     <div class="foot-bar">
-      <span><span class="sync-dot" id="syncDot"></span><span id="syncText">自動同步中</span></span>
+      <span><span class="sync-dot" id="syncDot"></span><span id="syncText">即時同步中</span></span>
       <span id="footMeta"></span>
     </div>
   </section>
@@ -563,6 +566,11 @@ function touchMeta(){
 function save(){
   touchMeta();
   saveLocalOnly();
+  if(window.TS8FirestoreSync && TS8FirestoreSync.enabled()){
+    setSyncText('即時同步中');
+    TS8FirestoreSync.schedulePush();
+    return;
+  }
   setSyncText('自動同步中');
   if(!UPLOAD_WEBAPP_URL) return;
   clearTimeout(_pushTimer);
@@ -691,7 +699,11 @@ async function ensureSeeded(){
     };
     touchMeta();
     saveLocalOnly();
-    await pushShared(true);
+    if(window.TS8FirestoreSync && TS8FirestoreSync.enabled() && TS8FirestoreSync.isStarted()){
+      await TS8FirestoreSync.pushNow();
+    } else {
+      await pushShared(true);
+    }
     _seedDone=true;
     toast('已載入種子資料（'+mapped.length+' 宗）');
   }catch(err){
@@ -1640,6 +1652,35 @@ if(nav&&btn) btn.addEventListener('click',()=>{
 (async function init(){
   loadLocal();
   render();
+  if(window.TS8FirestoreSync && TS8FirestoreSync.enabled()){
+    try{
+      await TS8FirestoreSync.start({
+        getDb:()=>db,
+        migrateDb,
+        setStatus:setSyncText,
+        fetchLegacyDb:async ()=>{
+          try{ return await fetchSharedDb(); }catch(e){ console.warn(e); return null; }
+        },
+        onRemote:(shared)=>{
+          const applied=applyCloudDb(shared);
+          if(selectedCaseId && !findCase(selectedCaseId)) selectedCaseId=null;
+          if(applied.changed) render();
+        }
+      });
+      if(!cases().length) await ensureSeeded();
+    }catch(err){
+      console.warn('Firestore start failed, falling back', err);
+      setSyncText('同步失敗');
+      try{
+        const pulled=await pullShared(true);
+        if((pulled && pulled.shared && !cases().length) || !cases().length) await ensureSeeded();
+      }catch(_){
+        if(!cases().length) await ensureSeeded();
+      }
+    }
+    render();
+    return; // no 30s Apps Script poll when Firestore is on
+  }
   try{
     const pulled=await pullShared(true);
     if(pulled && pulled.shared){

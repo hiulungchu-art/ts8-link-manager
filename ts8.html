@@ -865,7 +865,7 @@ textarea{min-height:72px;resize:vertical}
       <div class="empty"><div class="hint-lg">選擇左側項目開始。<br>Part A 與隔離日的 B1／B2 連結及 PDF 會顯示於此。</div></div>
     </div>
     <div class="foot-bar">
-      <span><span class="sync-dot" id="syncDot"></span><span id="syncText">自動同步中</span></span>
+      <span><span class="sync-dot" id="syncDot"></span><span id="syncText">即時同步中</span></span>
       <span id="syncMeta"></span>
     </div>
   </section>
@@ -875,6 +875,9 @@ textarea{min-height:72px;resize:vertical}
 <div class="toast" id="toast"></div>
 
 <script src="./config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="./js/firestore-sync.js"></script>
 <script src="./js/t.js"></script>
 <script>
 (function(){
@@ -1090,6 +1093,13 @@ function save(){
   if(!db.meta) db.meta={};
   db.meta.updatedAt=new Date().toISOString();
   saveLocalOnly();
+  if(window.TS8FirestoreSync && TS8FirestoreSync.enabled()){
+    db.meta.rev=(db.meta.rev|0)+1;
+    saveLocalOnly();
+    setSyncText('即時同步中');
+    TS8FirestoreSync.schedulePush();
+    return;
+  }
   setSyncText('自動同步中');
   if(!UPLOAD_WEBAPP_URL) return;
   clearTimeout(_pushTimer);
@@ -2204,6 +2214,30 @@ ensureSelectedPartA();
 render();
 
 (async function bootSync(){
+  if(window.TS8FirestoreSync && TS8FirestoreSync.enabled()){
+    try{
+      await TS8FirestoreSync.start({
+        getDb:()=>db,
+        migrateDb,
+        setStatus:setSyncText,
+        fetchLegacyDb:async ()=>{
+          try{ return await fetchSharedDb(); }catch(e){ console.warn(e); return null; }
+        },
+        onRemote:(shared)=>{
+          const applied=applyCloudDb(shared);
+          if(!selectedProjectId || !db.projects.find(p=>p.id===selectedProjectId)){
+            selectedProjectId=db.projects[0]?db.projects[0].id:null;
+          }
+          ensureSelectedPartA();
+          if(applied.changed) render();
+        }
+      });
+    }catch(err){
+      console.warn('Firestore start failed, falling back', err);
+      setSyncText('同步失敗');
+    }
+    return; // no 30s Apps Script poll when Firestore is on
+  }
   await pullShared(true);
   try{
     const cloud=await fetchSharedDb();
