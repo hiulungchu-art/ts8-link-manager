@@ -56,7 +56,7 @@ body.site-body{
     radial-gradient(ellipse 60% 50% at 70% 100%, rgba(58,110,140,.1), transparent 55%),
     radial-gradient(ellipse 50% 40% at 0% 80%, rgba(107,91,138,.08), transparent 50%),
     url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
-  background-attachment: fixed;
+  background-attachment: scroll;
   display:flex;
   flex-direction:column;
 }
@@ -72,10 +72,8 @@ body.site-body{
   justify-content:space-between;
   gap:16px;
   padding:0 28px;
-  background:rgba(250,247,241,.82);
-  backdrop-filter:blur(14px) saturate(1.2);
-  -webkit-backdrop-filter:blur(14px) saturate(1.2);
-  border-bottom:1px solid rgba(221,213,200,.75);
+  background:rgba(250,247,241,.96);
+  border-bottom:1px solid rgba(221,213,200,.85);
   box-shadow:0 1px 0 rgba(255,255,255,.5);
 }
 .site-brand{
@@ -185,8 +183,7 @@ body.site-body{
     align-items:stretch;
     gap:2px;
     padding:10px 12px 14px;
-    background:rgba(250,247,241,.96);
-    backdrop-filter:blur(14px);
+    background:rgba(250,247,241,.98);
     border-bottom:1px solid var(--line);
     box-shadow:var(--shadow);
   }

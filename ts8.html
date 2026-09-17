@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TS8 連結管理 · 工作頁面集</title>
-<link rel="stylesheet" href="./css/site.css">
+<link rel="stylesheet" href="./css/site.css?v=20260917ui1">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&display=swap');
 
@@ -64,7 +64,7 @@ body{
     radial-gradient(ellipse 60% 50% at 70% 100%, rgba(58,110,140,.1), transparent 55%),
     radial-gradient(ellipse 50% 40% at 0% 80%, rgba(107,91,138,.08), transparent 50%),
     url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
-  background-attachment: fixed;
+  background-attachment: scroll;
 }
 
 .app{display:grid;grid-template-columns:var(--side) 1fr;min-height:calc(100vh - var(--nav-h, 64px));flex:1}
@@ -199,10 +199,8 @@ body{
   background:transparent;
 }
 .topbar{
-  background:rgba(250,247,241,.55);
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
-  border-bottom:1px solid rgba(221,213,200,.65);
+  background:rgba(250,247,241,.94);
+  border-bottom:1px solid rgba(221,213,200,.75);
   padding:18px 36px;
   display:flex;
   flex-wrap:wrap;
@@ -805,8 +803,7 @@ textarea{min-height:72px;resize:vertical}
   align-items:center;
   border-top:1px solid rgba(221,213,200,.65);
   letter-spacing:.02em;
-  background:rgba(250,247,241,.4);
-  backdrop-filter:blur(8px);
+  background:rgba(250,247,241,.92);
 }
 .sync-dot{
   display:inline-block;
@@ -1112,15 +1109,42 @@ function parseUpdatedAt(iso){
   return Number.isFinite(n)?n:0;
 }
 /** Last-write-wins: never union-merge (union resurrects deletes across browsers). */
+/** Cheap sync signature — avoids double JSON.stringify of the full db on every remote echo. */
+function dbSyncSig(d){
+  if(!d) return '';
+  const m=d.meta||{};
+  const projects=Array.isArray(d.projects)?d.projects:[];
+  let partAs=0, days=0, links=0;
+  for(let i=0;i<projects.length;i++){
+    const pas=projects[i].partAs||[];
+    partAs+=pas.length;
+    for(let j=0;j<pas.length;j++){
+      const pa=pas[j];
+      links+=(pa.links||[]).length;
+      const ds=pa.days||[];
+      days+=ds.length;
+      for(let k=0;k<ds.length;k++) links+=(ds[k].links||[]).length;
+    }
+  }
+  const fsi=d.fsi||{};
+  const cases=Array.isArray(fsi.cases)?fsi.cases.length:0;
+  const fm=fsi.meta||{};
+  return (m.updatedAt||'')+'|'+(m.rev|0)+'|'+projects.length+'|'+partAs+'|'+days+'|'+links+'|'+cases+'|'+(fm.updatedAt||'')+'|'+(fm.rev|0);
+}
 function applyCloudDb(shared){
   if(!shared||!Array.isArray(shared.projects)) return {changed:false};
-  const before=JSON.stringify(db);
+  const before=dbSyncSig(db);
+  if(before && before===dbSyncSig(shared)){
+    const at=(shared.meta&&shared.meta.updatedAt)||'';
+    if(at) _lastCloudUpdatedAt=at;
+    return {changed:false};
+  }
   db=migrateDb(shared);
   if(!db.meta) db.meta={};
   saveLocalOnly();
   const at=(db.meta&&db.meta.updatedAt)||'';
   if(at) _lastCloudUpdatedAt=at;
-  return {changed: before!==JSON.stringify(db)};
+  return {changed: before!==dbSyncSig(db)};
 }
 function cloudIsNewer(shared, local){
   const s=parseUpdatedAt(shared&&shared.meta&&shared.meta.updatedAt);
@@ -2109,7 +2133,20 @@ window.addEventListener('hashchange',()=>{
   if(next!==mainView){ mainView=next; render(); }
 });
 $('btnEditProject').onclick=()=>{if(selectedProjectId) openModal({kind:'project',id:selectedProjectId})};
-$('globalSearch').addEventListener('input',e=>{searchQ=e.target.value;render()});
+(function(){
+  const gs=$('globalSearch'); if(!gs) return;
+  let t=null;
+  gs.addEventListener('input',e=>{
+    const val=e.target.value;
+    clearTimeout(t);
+    t=setTimeout(()=>{
+      searchQ=val;
+      renderSidebar();
+      const n=$('globalSearch');
+      if(n){ n.focus(); try{ n.setSelectionRange(n.value.length,n.value.length); }catch(_){} }
+    }, 140);
+  });
+})();
 
 $('content').addEventListener('input',e=>{
   const id=e.target && e.target.id;
