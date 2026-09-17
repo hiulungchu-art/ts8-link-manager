@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TS8 連結管理 · 工作頁面集</title>
-<link rel="stylesheet" href="./css/site.css?v=20260917ui1">
+<link rel="stylesheet" href="./css/site.css?v=20260917ui2">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&display=swap');
 
@@ -262,8 +262,7 @@ body{
 @media(max-width:700px){.content{padding:18px 16px 16px}.topbar{padding:14px 16px}}
 
 .empty{
-  background:var(--paper-glass);
-  backdrop-filter:blur(8px);
+  background:var(--paper);
   border:1px dashed var(--line);
   border-radius:var(--radius);
   padding:60px 28px;
@@ -318,8 +317,7 @@ body{
 
 /* —— Header card —— */
 .header-card{
-  background:linear-gradient(145deg, rgba(255,252,247,.95) 0%, rgba(247,250,247,.88) 100%);
-  backdrop-filter:blur(10px);
+  background:linear-gradient(145deg, #FFFCF7 0%, #F7FAF7 100%);
   border-radius:var(--radius);
   padding:30px 30px 26px;
   box-shadow:var(--shadow);
@@ -662,14 +660,13 @@ body{
 .hint{font-size:.75rem;color:var(--mute)}
 .modal-bg{
   position:fixed;inset:0;
-  background:rgba(15,22,18,.5);
+  background:rgba(15,22,18,.68);
   display:none;
   align-items:flex-start;
   justify-content:center;
   padding:48px 14px;
   z-index:50;
   overflow:auto;
-  backdrop-filter:blur(6px);
 }
 .modal-bg.show{display:flex}
 .modal{
