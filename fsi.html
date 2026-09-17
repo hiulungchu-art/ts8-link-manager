@@ -5,18 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache">
 <title>FSI 暫停管理 · 工作頁面集</title>
-<link rel="stylesheet" href="./css/site.css?v=20260917ui2">
+<link rel="stylesheet" href="./css/site.css?v=20260917perf1">
 <script src="./config.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-<script src="./js/firestore-sync.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&display=swap');
 :root{
   --ink:#0F1612;--ink-2:#16201A;--cream:#F3EEE4;--cream-2:#EAE3D6;--paper:#FAF7F1;--line:#DDD5C8;--line-soft:#E8E1D4;
   --text:#1E2622;--mute:#6A736C;--accent:#5C8A72;--accent-d:#3F6B56;--accent-glow:rgba(92,138,114,.22);
   --ok:#2F7A55;--okb:#E6F4EC;--warn:#9A6B2F;--warnb:#F8F0E4;--info:#3A6E8C;--infob:#E8F1F6;--danger:#A33B3B;--dangerb:#FBEAEA;
-  --font-display:"Noto Serif TC",serif;--font-body:"Noto Sans TC","PingFang TC",sans-serif;--font-ui:"Instrument Sans","Noto Sans TC",sans-serif;
+  --font-display:"Songti TC","PingFang TC","Hiragino Mincho ProN","Noto Serif TC","Noto Serif",serif;--font-body:"PingFang TC","Hiragino Sans CNS","Noto Sans TC",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;--font-ui:"PingFang TC","Hiragino Sans CNS","Noto Sans TC",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   --radius:18px;--shadow:0 1px 2px rgba(15,22,18,.04),0 10px 28px rgba(15,22,18,.06);--side:280px;--nav-h:64px;
 }
 *{box-sizing:border-box}
@@ -554,7 +550,51 @@ function loadLocal(){
   }catch(_){}
   db=migrateDb({projects:[], meta:{}, fsi:{cases:[], meta:{}}});
 }
-function saveLocalOnly(){ try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(_){} }
+function firestoreConfigured(){
+  const f=CFG.FIREBASE;
+  return !!(f && f.apiKey && f.projectId);
+}
+function loadScriptOnce(src){
+  return new Promise((resolve,reject)=>{
+    const existing=document.querySelector('script[data-ts8-src="'+src+'"]');
+    if(existing){
+      if(existing.getAttribute('data-loaded')==='1') return resolve();
+      existing.addEventListener('load',()=>resolve());
+      existing.addEventListener('error',()=>reject(new Error('腳本載入失敗')));
+      return;
+    }
+    const s=document.createElement('script');
+    s.src=src;
+    s.async=true;
+    s.setAttribute('data-ts8-src',src);
+    s.onload=()=>{ s.setAttribute('data-loaded','1'); resolve(); };
+    s.onerror=()=>reject(new Error('腳本載入失敗: '+src));
+    document.head.appendChild(s);
+  });
+}
+async function ensureFirestoreReady(){
+  if(window.TS8FirestoreSync && window.firebase && firebase.firestore) return TS8FirestoreSync.enabled();
+  if(!firestoreConfigured()) return false;
+  await loadScriptOnce('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js');
+  await loadScriptOnce('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js');
+  await loadScriptOnce('./js/firestore-sync.js');
+  return !!(window.TS8FirestoreSync && TS8FirestoreSync.enabled());
+}
+let _localSaveTimer=null;
+let _pendingFsPush=false;
+function saveLocalOnlyNow(){ try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(_){} }
+function saveLocalOnly(){
+  if(firestoreConfigured()){
+    clearTimeout(_localSaveTimer);
+    _localSaveTimer=setTimeout(saveLocalOnlyNow, 300);
+    return;
+  }
+  saveLocalOnlyNow();
+}
+function flushLocalSave(){
+  if(_localSaveTimer){ clearTimeout(_localSaveTimer); _localSaveTimer=null; }
+  saveLocalOnlyNow();
+}
 function touchMeta(){
   db.meta=db.meta||{};
   db.meta.updatedAt=new Date().toISOString();
@@ -565,12 +605,17 @@ function touchMeta(){
 }
 function save(){
   touchMeta();
-  saveLocalOnly();
-  if(window.TS8FirestoreSync && TS8FirestoreSync.enabled()){
+  if(firestoreConfigured()){
+    saveLocalOnly();
     setSyncText('即時同步中');
-    TS8FirestoreSync.schedulePush();
+    if(window.TS8FirestoreSync && TS8FirestoreSync.isStarted()){
+      TS8FirestoreSync.schedulePush();
+    } else {
+      _pendingFsPush=true;
+    }
     return;
   }
+  saveLocalOnly();
   setSyncText('自動同步中');
   if(!UPLOAD_WEBAPP_URL) return;
   clearTimeout(_pushTimer);
@@ -610,6 +655,20 @@ function dbSyncSig(d){
   const cases=Array.isArray(fsi.cases)?fsi.cases.length:0;
   const fm=fsi.meta||{};
   return (m.updatedAt||'')+'|'+(m.rev|0)+'|'+projects.length+'|'+partAs+'|'+days+'|'+links+'|'+cases+'|'+(fm.updatedAt||'')+'|'+(fm.rev|0);
+}
+function selectedCaseSig(){
+  const c=selectedCaseId?findCase(selectedCaseId):null;
+  if(!c) return '';
+  try{ return c.id+'|'+JSON.stringify(c); }catch(_){ return String(c.id||''); }
+}
+function updateSyncMetaBar(){
+  const at=(db.meta&&db.meta.updatedAt)||'';
+  const meta=$('footMeta');
+  if(!meta) return;
+  if(at){
+    try{ meta.textContent='上次更新 '+new Date(at).toLocaleString('zh-HK',{timeZone:'Asia/Hong_Kong'}); }
+    catch{ meta.textContent=''; }
+  } else meta.textContent='FSI · 共用同步';
 }
 function applyCloudDb(shared){
   if(!shared||!Array.isArray(shared.projects)) return {changed:false};
@@ -1167,7 +1226,7 @@ function renderStatsView(){
   bindMainActions();
   if(typeof Chart==='undefined') return;
   Chart.defaults.color='#6A736C';
-  Chart.defaults.font.family='"Noto Sans TC","PingFang TC",sans-serif';
+  Chart.defaults.font.family='"PingFang TC","Hiragino Sans CNS","Noto Sans TC",sans-serif';
   destroyCharts();
   const deptLabels=Object.keys(sum.byDept);
   const el1=$('deptChart'), el2=$('fsiChart'), el3=$('statusChart');
@@ -1679,8 +1738,34 @@ if(nav&&btn) btn.addEventListener('click',()=>{
 (async function init(){
   loadLocal();
   render();
-  if(window.TS8FirestoreSync && TS8FirestoreSync.enabled()){
+
+  async function bootLegacy(){
     try{
+      const pulled=await pullShared(true);
+      if(pulled && pulled.shared){
+        if(!cases().length) await ensureSeeded();
+      } else if(!cases().length){
+        await ensureSeeded();
+      }
+    }catch(_){
+      if(!cases().length) await ensureSeeded();
+    }
+    render();
+    const POLL_MS=30000;
+    setInterval(()=>{
+      if(document.hidden) return;
+      if(_pushBusy||_pullBusy) return;
+      pullShared(true);
+    }, POLL_MS);
+    document.addEventListener('visibilitychange', ()=>{
+      if(!document.hidden) pullShared(true);
+    });
+  }
+
+  async function bootFirestore(){
+    try{
+      const ok=await ensureFirestoreReady();
+      if(!ok){ await bootLegacy(); return; }
       await TS8FirestoreSync.start({
         getDb:()=>db,
         migrateDb,
@@ -1689,11 +1774,25 @@ if(nav&&btn) btn.addEventListener('click',()=>{
           try{ return await fetchSharedDb(); }catch(e){ console.warn(e); return null; }
         },
         onRemote:(shared)=>{
+          const beforeId=selectedCaseId;
+          const beforeSig=selectedCaseSig();
           const applied=applyCloudDb(shared);
           if(selectedCaseId && !findCase(selectedCaseId)) selectedCaseId=null;
-          if(applied.changed) render();
+          if(!applied.changed) return;
+          const afterSig=selectedCaseSig();
+          if(selectedCaseId===beforeId && beforeSig && beforeSig===afterSig){
+            renderSidebar();
+            updateSyncMetaBar();
+          } else {
+            render();
+          }
         }
       });
+      if(_pendingFsPush){
+        _pendingFsPush=false;
+        flushLocalSave();
+        TS8FirestoreSync.schedulePush();
+      }
       if(!cases().length) await ensureSeeded();
     }catch(err){
       console.warn('Firestore start failed, falling back', err);
@@ -1706,29 +1805,17 @@ if(nav&&btn) btn.addEventListener('click',()=>{
       }
     }
     render();
-    return; // no 30s Apps Script poll when Firestore is on
   }
-  try{
-    const pulled=await pullShared(true);
-    if(pulled && pulled.shared){
-      if(!cases().length) await ensureSeeded();
-    } else if(!cases().length){
-      await ensureSeeded();
-    }
-  }catch(_){
-    if(!cases().length) await ensureSeeded();
+
+  if(firestoreConfigured()){
+    const run=()=>{ bootFirestore(); };
+    if(typeof requestIdleCallback==='function') requestIdleCallback(run,{timeout:1500});
+    else setTimeout(run,0);
+    return;
   }
-  render();
-  const POLL_MS=30000;
-  setInterval(()=>{
-    if(document.hidden) return;
-    if(_pushBusy||_pullBusy) return;
-    pullShared(true);
-  }, POLL_MS);
-  document.addEventListener('visibilitychange', ()=>{
-    if(!document.hidden) pullShared(true);
-  });
+  await bootLegacy();
 })();
+window.addEventListener('beforeunload', ()=>{ try{ flushLocalSave(); }catch(_){} });
 })();
 </script>
 <script src="./js/t.js"></script>

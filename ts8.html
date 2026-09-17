@@ -4,10 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TS8 連結管理 · 工作頁面集</title>
-<link rel="stylesheet" href="./css/site.css?v=20260917ui2">
+<link rel="stylesheet" href="./css/site.css?v=20260917perf1">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&display=swap');
-
 :root {
   /* Soft editorial — forest ink + warm cream + celadon */
   --ink: #0F1612;
@@ -45,9 +43,9 @@
   --side: 280px;
   --radius: 18px;
   --radius-sm: 12px;
-  --font-display: "Noto Serif TC", "Noto Serif", "Songti TC", serif;
-  --font-body: "Noto Sans TC", "PingFang TC", "Hiragino Sans CNS", sans-serif;
-  --font-ui: "Instrument Sans", "Noto Sans TC", "PingFang TC", sans-serif;
+  --font-display: "Songti TC", "PingFang TC", "Hiragino Mincho ProN", "Noto Serif TC", "Noto Serif", serif;
+  --font-body: "PingFang TC", "Hiragino Sans CNS", "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-ui: "PingFang TC", "Hiragino Sans CNS", "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 *{box-sizing:border-box;margin:0;padding:0}
@@ -869,9 +867,6 @@ textarea{min-height:72px;resize:vertical}
 <div class="toast" id="toast"></div>
 
 <script src="./config.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-<script src="./js/firestore-sync.js"></script>
 <script src="./js/t.js"></script>
 <script>
 (function(){
@@ -1081,19 +1076,67 @@ function load(){
     db=migrateDb(JSON.parse(JSON.stringify(SEED)));
   }
 }
-function saveLocalOnly(){localStorage.setItem(KEY,JSON.stringify(db))}
+function firestoreConfigured(){
+  const f=CFG.FIREBASE;
+  return !!(f && f.apiKey && f.projectId);
+}
+function loadScriptOnce(src){
+  return new Promise((resolve,reject)=>{
+    const existing=document.querySelector('script[data-ts8-src="'+src+'"]');
+    if(existing){
+      if(existing.getAttribute('data-loaded')==='1') return resolve();
+      existing.addEventListener('load',()=>resolve());
+      existing.addEventListener('error',()=>reject(new Error('腳本載入失敗')));
+      return;
+    }
+    const s=document.createElement('script');
+    s.src=src;
+    s.async=true;
+    s.setAttribute('data-ts8-src',src);
+    s.onload=()=>{ s.setAttribute('data-loaded','1'); resolve(); };
+    s.onerror=()=>reject(new Error('腳本載入失敗: '+src));
+    document.head.appendChild(s);
+  });
+}
+async function ensureFirestoreReady(){
+  if(window.TS8FirestoreSync && window.firebase && firebase.firestore) return TS8FirestoreSync.enabled();
+  if(!firestoreConfigured()) return false;
+  await loadScriptOnce('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js');
+  await loadScriptOnce('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js');
+  await loadScriptOnce('./js/firestore-sync.js');
+  return !!(window.TS8FirestoreSync && TS8FirestoreSync.enabled());
+}
+let _localSaveTimer=null;
+let _pendingFsPush=false;
+function saveLocalOnlyNow(){ try{ localStorage.setItem(KEY,JSON.stringify(db)); }catch(_){} }
+function saveLocalOnly(){
+  if(firestoreConfigured()){
+    clearTimeout(_localSaveTimer);
+    _localSaveTimer=setTimeout(saveLocalOnlyNow, 300);
+    return;
+  }
+  saveLocalOnlyNow();
+}
+function flushLocalSave(){
+  if(_localSaveTimer){ clearTimeout(_localSaveTimer); _localSaveTimer=null; }
+  saveLocalOnlyNow();
+}
 let _pushTimer=null;
 function save(){
   if(!db.meta) db.meta={};
   db.meta.updatedAt=new Date().toISOString();
-  saveLocalOnly();
-  if(window.TS8FirestoreSync && TS8FirestoreSync.enabled()){
+  if(firestoreConfigured()){
     db.meta.rev=(db.meta.rev|0)+1;
     saveLocalOnly();
     setSyncText('即時同步中');
-    TS8FirestoreSync.schedulePush();
+    if(window.TS8FirestoreSync && TS8FirestoreSync.isStarted()){
+      TS8FirestoreSync.schedulePush();
+    } else {
+      _pendingFsPush=true;
+    }
     return;
   }
+  saveLocalOnly();
   setSyncText('自動同步中');
   if(!UPLOAD_WEBAPP_URL) return;
   clearTimeout(_pushTimer);
@@ -1127,6 +1170,19 @@ function dbSyncSig(d){
   const cases=Array.isArray(fsi.cases)?fsi.cases.length:0;
   const fm=fsi.meta||{};
   return (m.updatedAt||'')+'|'+(m.rev|0)+'|'+projects.length+'|'+partAs+'|'+days+'|'+links+'|'+cases+'|'+(fm.updatedAt||'')+'|'+(fm.rev|0);
+}
+function selectedProjectSig(){
+  const p=db.projects.find(x=>x.id===selectedProjectId);
+  if(!p) return '';
+  try{ return p.id+'|'+JSON.stringify(p); }catch(_){ return String(p.id||''); }
+}
+function updateSyncMetaBar(){
+  const at=(db.meta&&db.meta.updatedAt)||'';
+  const meta=$('syncMeta');
+  if(meta && at){
+    try{ meta.textContent='上次更新 '+new Date(at).toLocaleString('zh-HK',{timeZone:'Asia/Hong_Kong'}); }
+    catch{ meta.textContent=''; }
+  }
 }
 function applyCloudDb(shared){
   if(!shared||!Array.isArray(shared.projects)) return {changed:false};
@@ -1724,7 +1780,7 @@ function renderStatsView(){
 
   Chart.defaults.color='#5C6B61';
   Chart.defaults.borderColor='rgba(220,224,217,.9)';
-  Chart.defaults.font.family='"Noto Sans TC","PingFang TC",sans-serif';
+  Chart.defaults.font.family='"PingFang TC","Hiragino Sans CNS","Noto Sans TC",sans-serif';
 
   // trend months
   let trendMonths=st.months.slice();
@@ -2248,8 +2304,29 @@ ensureSelectedPartA();
 render();
 
 (async function bootSync(){
-  if(window.TS8FirestoreSync && TS8FirestoreSync.enabled()){
+  async function bootLegacy(){
+    await pullShared(true);
     try{
+      const cloud=await fetchSharedDb();
+      if(parseUpdatedAt(db.meta&&db.meta.updatedAt) > parseUpdatedAt(cloud.meta&&cloud.meta.updatedAt)){
+        await pushShared(true);
+      }
+    }catch(_){}
+    const POLL_MS=30000;
+    setInterval(()=>{
+      if(document.hidden) return;
+      if($('modal') && $('modal').classList.contains('show')) return;
+      if(_pushBusy||_pullBusy) return;
+      pullShared(true);
+    }, POLL_MS);
+    document.addEventListener('visibilitychange', ()=>{
+      if(!document.hidden) pullShared(true);
+    });
+  }
+  async function bootFirestore(){
+    try{
+      const ok=await ensureFirestoreReady();
+      if(!ok){ await bootLegacy(); return; }
       await TS8FirestoreSync.start({
         getDb:()=>db,
         migrateDb,
@@ -2258,38 +2335,43 @@ render();
           try{ return await fetchSharedDb(); }catch(e){ console.warn(e); return null; }
         },
         onRemote:(shared)=>{
+          const beforeId=selectedProjectId;
+          const beforeSig=selectedProjectSig();
           const applied=applyCloudDb(shared);
           if(!selectedProjectId || !db.projects.find(p=>p.id===selectedProjectId)){
             selectedProjectId=db.projects[0]?db.projects[0].id:null;
           }
           ensureSelectedPartA();
-          if(applied.changed) render();
+          if(!applied.changed) return;
+          const afterSig=selectedProjectSig();
+          if(selectedProjectId===beforeId && beforeSig && beforeSig===afterSig){
+            renderSidebar();
+            updateSyncMetaBar();
+          } else {
+            render();
+          }
         }
       });
+      if(_pendingFsPush){
+        _pendingFsPush=false;
+        flushLocalSave();
+        TS8FirestoreSync.schedulePush();
+      }
     }catch(err){
       console.warn('Firestore start failed, falling back', err);
       setSyncText('同步失敗');
+      await bootLegacy();
     }
-    return; // no 30s Apps Script poll when Firestore is on
   }
-  await pullShared(true);
-  try{
-    const cloud=await fetchSharedDb();
-    if(parseUpdatedAt(db.meta&&db.meta.updatedAt) > parseUpdatedAt(cloud.meta&&cloud.meta.updatedAt)){
-      await pushShared(true);
-    }
-  }catch(_){}
-  const POLL_MS=30000;
-  setInterval(()=>{
-    if(document.hidden) return;
-    if($('modal') && $('modal').classList.contains('show')) return;
-    if(_pushBusy||_pullBusy) return;
-    pullShared(true);
-  }, POLL_MS);
-  document.addEventListener('visibilitychange', ()=>{
-    if(!document.hidden) pullShared(true);
-  });
+  if(firestoreConfigured()){
+    const run=()=>{ bootFirestore(); };
+    if(typeof requestIdleCallback==='function') requestIdleCallback(run,{timeout:1500});
+    else setTimeout(run,0);
+    return;
+  }
+  await bootLegacy();
 })();
+window.addEventListener('beforeunload', ()=>{ try{ flushLocalSave(); }catch(_){} });
 })();
 </script>
 

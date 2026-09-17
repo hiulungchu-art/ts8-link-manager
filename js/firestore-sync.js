@@ -20,6 +20,7 @@
   var applyingRemote = false;
   var lastLocalWriteAt = '';
   var unsubs = [];
+  var remoteRaf = null;
   var cacheProjects = new Map();
   var cacheCases = new Map();
   var cacheSync = null;
@@ -143,6 +144,15 @@
     });
     lastPushedCases = nextC;
     lastPushedSyncJson = stableJson(syncDoc);
+  }
+
+
+  function scheduleEmitRemote() {
+    if (remoteRaf != null) return;
+    remoteRaf = requestAnimationFrame(function () {
+      remoteRaf = null;
+      emitRemoteIfReady();
+    });
   }
 
   function emitRemoteIfReady() {
@@ -356,7 +366,7 @@
         cacheProjects.set(doc.id, Object.assign({}, data, { id: doc.id }));
       });
       ready.projects = true;
-      emitRemoteIfReady();
+      scheduleEmitRemote();
     }, function (err) {
       console.warn('[TS8FirestoreSync] projects listen', err);
       setStatus('同步失敗');
@@ -369,7 +379,7 @@
         cacheCases.set(doc.id, Object.assign({}, data, { id: doc.id }));
       });
       ready.cases = true;
-      emitRemoteIfReady();
+      scheduleEmitRemote();
     }, function (err) {
       console.warn('[TS8FirestoreSync] fsi_cases listen', err);
       setStatus('同步失敗');
@@ -378,7 +388,7 @@
     unsubs.push(fs.doc('meta/sync').onSnapshot(function (snap) {
       cacheSync = snap.exists ? (snap.data() || {}) : {};
       ready.sync = true;
-      emitRemoteIfReady();
+      scheduleEmitRemote();
     }, function (err) {
       console.warn('[TS8FirestoreSync] meta/sync listen', err);
       setStatus('同步失敗');
@@ -404,6 +414,7 @@
   function stop() {
     clearTimeout(pushTimer);
     pushTimer = null;
+    if (remoteRaf != null) { try { cancelAnimationFrame(remoteRaf); } catch (_) {} remoteRaf = null; }
     unsubs.forEach(function (u) { try { u(); } catch (_) {} });
     unsubs = [];
     started = false;
