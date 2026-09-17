@@ -1201,7 +1201,14 @@ function updateSyncMetaBar(){
   }
 }
 function applyCloudDb(shared){
-  if(!shared||!Array.isArray(shared.projects)) return {changed:false};
+  if(!shared) return {changed:false};
+  // Page-scoped sync: preserve local FSI when remote payload omits/blanks it
+  if(!shared.fsi || typeof shared.fsi!=='object'){
+    shared=Object.assign({}, shared, {fsi: (db&&db.fsi)||{cases:[],meta:{}}});
+  } else if(!Array.isArray(shared.fsi.cases) && db && db.fsi && Array.isArray(db.fsi.cases)){
+    shared=Object.assign({}, shared, {fsi: Object.assign({}, shared.fsi, {cases: db.fsi.cases})});
+  }
+  if(!Array.isArray(shared.projects)) return {changed:false};
   const before=dbSyncSig(db);
   if(before && before===dbSyncSig(shared)){
     const at=(shared.meta&&shared.meta.updatedAt)||'';
@@ -2344,6 +2351,7 @@ render();
       const ok=await ensureFirestoreReady();
       if(!ok){ await bootLegacy(); return; }
       await TS8FirestoreSync.start({
+        scope:'projects',
         getDb:()=>db,
         migrateDb,
         setStatus:setSyncText,

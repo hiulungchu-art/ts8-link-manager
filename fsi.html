@@ -671,7 +671,10 @@ function updateSyncMetaBar(){
   } else meta.textContent='FSI · 共用同步';
 }
 function applyCloudDb(shared){
-  if(!shared||!Array.isArray(shared.projects)) return {changed:false};
+  if(!shared) return {changed:false};
+  // Page-scoped sync: FSI migrateDb expects projects[]; keep local/empty without cloud overwrite
+  shared=Object.assign({}, shared);
+  shared.projects = Array.isArray(shared.projects) ? shared.projects : ((db&&Array.isArray(db.projects))?db.projects:[]);
   const before=dbSyncSig(db);
   if(before && before===dbSyncSig(shared)){
     const at=(shared.meta&&shared.meta.updatedAt)||'';
@@ -1767,6 +1770,7 @@ if(nav&&btn) btn.addEventListener('click',()=>{
       const ok=await ensureFirestoreReady();
       if(!ok){ await bootLegacy(); return; }
       await TS8FirestoreSync.start({
+        scope:'fsi',
         getDb:()=>db,
         migrateDb,
         setStatus:setSyncText,

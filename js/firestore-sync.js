@@ -3,6 +3,11 @@
  * Collections: projects/{id}, fsi_cases/{id}, meta/sync {updatedAt, rev, appMeta?, fsiMeta?}
  * Keeps in-memory db shape { projects, meta, fsi:{ cases, meta } }.
  * Pushes are incremental: only changed/deleted docs + meta when needed.
+ *
+ * start({ scope: 'projects' | 'fsi' | 'all' }) — default 'all'.
+ *   projects: listen/write projects + meta/sync (appMeta); keep local fsi without listening.
+ *   fsi:      listen/write fsi_cases + meta/sync (fsiMeta); keep local projects without listening.
+ *   all:      listen/write both collections (legacy / safety default).
  */
 (function (global) {
   'use strict';
@@ -15,6 +20,8 @@
   var fsDb = null;
   var started = false;
   var opts = null;
+  /** @type {'projects'|'fsi'|'all'} */
+  var scope = 'all';
   var pushTimer = null;
   var writing = false;
   var applyingRemote = false;
@@ -41,6 +48,19 @@
 
   function setStatus(t) {
     if (opts && typeof opts.setStatus === 'function') opts.setStatus(t);
+  }
+
+  function wantsProjects() {
+    return scope === 'all' || scope === 'projects';
+  }
+
+  function wantsFsi() {
+    return scope === 'all' || scope === 'fsi';
+  }
+
+  function normalizeScope(s) {
+    if (s === 'projects' || s === 'fsi' || s === 'all') return s;
+    return 'all';
   }
 
   function stripUndefined(value) {
@@ -79,8 +99,17 @@
     return raw;
   }
 
+  /** Scope-aware emptiness: only the collections this page owns. */
   async function isEmpty() {
     var fs = initFs();
+    if (scope === 'projects') {
+      var p = await fs.collection('projects').limit(1).get();
+      return p.empty;
+    }
+    if (scope === 'fsi') {
+      var c = await fs.collection('fsi_cases').limit(1).get();
+      return c.empty;
+    }
     var results = await Promise.all([
       fs.collection('projects').limit(1).get(),
       fs.collection('fsi_cases').limit(1).get(),
@@ -90,18 +119,39 @@
   }
 
   function assembleDb() {
+    var local = getDb() || {};
     var sync = cacheSync || {};
     var appMeta = sync.appMeta && typeof sync.appMeta === 'object' ? sync.appMeta : {};
-    var fsiMeta = sync.fsiMeta && typeof sync.fsiMeta === 'object' ? sync.fsiMeta : {};
+    var fsiMetaFromSync = sync.fsiMeta && typeof sync.fsiMeta === 'object' ? sync.fsiMeta : {};
     var meta = Object.assign({}, appMeta, {
       updatedAt: sync.updatedAt || appMeta.updatedAt || '',
       rev: sync.rev != null ? sync.rev : (appMeta.rev || 0)
     });
+
+    var projects;
+    if (wantsProjects()) {
+      projects = Array.from(cacheProjects.values());
+    } else {
+      projects = Array.isArray(local.projects) ? local.projects : [];
+    }
+
+    var cases;
+    var fsiMeta;
+    if (wantsFsi()) {
+      cases = Array.from(cacheCases.values());
+      fsiMeta = fsiMetaFromSync;
+    } else {
+      // projects scope: keep whatever local had for FSI (do not blank from empty cache)
+      var localFsi = local.fsi && typeof local.fsi === 'object' ? local.fsi : {};
+      cases = Array.isArray(localFsi.cases) ? localFsi.cases : [];
+      fsiMeta = localFsi.meta && typeof localFsi.meta === 'object' ? localFsi.meta : {};
+    }
+
     return {
-      projects: Array.from(cacheProjects.values()),
+      projects: projects,
       meta: meta,
       fsi: {
-        cases: Array.from(cacheCases.values()),
+        cases: cases,
         meta: fsiMeta
       }
     };
@@ -116,36 +166,70 @@
     });
   }
 
+  /**
+   * Build meta/sync payload for the active scope without wiping the other side's fields.
+   * projects → write appMeta + top-level clocks; preserve existing fsiMeta.
+   * fsi      → write fsiMeta + top-level clocks; preserve existing appMeta.
+   * all      → write both.
+   */
+  function buildSyncDocForScope(meta, fsiMeta) {
+    var existing = cacheSync && typeof cacheSync === 'object' ? cacheSync : {};
+    if (scope === 'projects') {
+      return stripUndefined({
+        updatedAt: meta.updatedAt,
+        rev: meta.rev | 0,
+        appMeta: meta,
+        fsiMeta: (existing.fsiMeta && typeof existing.fsiMeta === 'object') ? existing.fsiMeta : (fsiMeta || {})
+      });
+    }
+    if (scope === 'fsi') {
+      return stripUndefined({
+        updatedAt: meta.updatedAt,
+        rev: meta.rev | 0,
+        appMeta: (existing.appMeta && typeof existing.appMeta === 'object') ? existing.appMeta : {},
+        fsiMeta: fsiMeta
+      });
+    }
+    return buildSyncDoc(meta, fsiMeta);
+  }
+
   function markLastPushedFromCaches() {
-    var nextP = new Map();
-    cacheProjects.forEach(function (v, id) {
-      nextP.set(id, stableJson(Object.assign({}, v, { id: id })));
-    });
-    lastPushedProjects = nextP;
-    var nextC = new Map();
-    cacheCases.forEach(function (v, id) {
-      nextC.set(id, stableJson(Object.assign({}, v, { id: id })));
-    });
-    lastPushedCases = nextC;
+    if (wantsProjects()) {
+      var nextP = new Map();
+      cacheProjects.forEach(function (v, id) {
+        nextP.set(id, stableJson(Object.assign({}, v, { id: id })));
+      });
+      lastPushedProjects = nextP;
+    }
+    if (wantsFsi()) {
+      var nextC = new Map();
+      cacheCases.forEach(function (v, id) {
+        nextC.set(id, stableJson(Object.assign({}, v, { id: id })));
+      });
+      lastPushedCases = nextC;
+    }
     if (cacheSync && typeof cacheSync === 'object') {
       lastPushedSyncJson = stableJson(cacheSync);
     }
   }
 
   function markLastPushedFromWrite(localP, localC, syncDoc) {
-    var nextP = new Map();
-    Object.keys(localP).forEach(function (id) {
-      nextP.set(id, localP[id].json);
-    });
-    lastPushedProjects = nextP;
-    var nextC = new Map();
-    Object.keys(localC).forEach(function (id) {
-      nextC.set(id, localC[id].json);
-    });
-    lastPushedCases = nextC;
+    if (wantsProjects() && localP) {
+      var nextP = new Map();
+      Object.keys(localP).forEach(function (id) {
+        nextP.set(id, localP[id].json);
+      });
+      lastPushedProjects = nextP;
+    }
+    if (wantsFsi() && localC) {
+      var nextC = new Map();
+      Object.keys(localC).forEach(function (id) {
+        nextC.set(id, localC[id].json);
+      });
+      lastPushedCases = nextC;
+    }
     lastPushedSyncJson = stableJson(syncDoc);
   }
-
 
   function scheduleEmitRemote() {
     if (remoteRaf != null) return;
@@ -194,8 +278,8 @@
 
   /**
    * Incremental push: only set changed docs, delete removed ids, update meta/sync when needed.
-   * Uses in-memory lastPushed* / listener caches — no collection-wide .get() on every save.
-   * forceFull=true: write every local doc (migration / empty DB bootstrap).
+   * Scoped: only diffs the collections owned by the current scope.
+   * forceFull=true: write every local doc in scope (migration / empty DB bootstrap).
    */
   async function writeDb(fullDb, forceFull) {
     var fs = initFs();
@@ -210,61 +294,67 @@
 
     var localP = {};
     var localC = {};
-    projects.forEach(function (p) {
-      if (!p || !p.id) return;
-      var payload = stripUndefined(Object.assign({}, p, { id: p.id }));
-      localP[p.id] = { payload: payload, json: stableJson(payload) };
-    });
-    cases.forEach(function (c) {
-      if (!c || !c.id) return;
-      var payload = stripUndefined(Object.assign({}, c, { id: c.id }));
-      localC[c.id] = { payload: payload, json: stableJson(payload) };
-    });
+    if (wantsProjects()) {
+      projects.forEach(function (p) {
+        if (!p || !p.id) return;
+        var payload = stripUndefined(Object.assign({}, p, { id: p.id }));
+        localP[p.id] = { payload: payload, json: stableJson(payload) };
+      });
+    }
+    if (wantsFsi()) {
+      cases.forEach(function (c) {
+        if (!c || !c.id) return;
+        var payload = stripUndefined(Object.assign({}, c, { id: c.id }));
+        localC[c.id] = { payload: payload, json: stableJson(payload) };
+      });
+    }
 
     var ops = [];
     var docsChanged = false;
 
-    Object.keys(localP).forEach(function (id) {
-      var entry = localP[id];
-      if (!forceFull && lastPushedProjects.get(id) === entry.json) return;
-      docsChanged = true;
-      ops.push(function (batch) {
-        batch.set(fs.collection('projects').doc(id), entry.payload);
+    if (wantsProjects()) {
+      Object.keys(localP).forEach(function (id) {
+        var entry = localP[id];
+        if (!forceFull && lastPushedProjects.get(id) === entry.json) return;
+        docsChanged = true;
+        ops.push(function (batch) {
+          batch.set(fs.collection('projects').doc(id), entry.payload);
+        });
       });
-    });
-    Object.keys(localC).forEach(function (id) {
-      var entry = localC[id];
-      if (!forceFull && lastPushedCases.get(id) === entry.json) return;
-      docsChanged = true;
-      ops.push(function (batch) {
-        batch.set(fs.collection('fsi_cases').doc(id), entry.payload);
+      var knownP = new Set();
+      lastPushedProjects.forEach(function (_v, id) { knownP.add(id); });
+      cacheProjects.forEach(function (_v, id) { knownP.add(id); });
+      knownP.forEach(function (id) {
+        if (localP[id]) return;
+        docsChanged = true;
+        ops.push(function (batch) {
+          batch.delete(fs.collection('projects').doc(id));
+        });
       });
-    });
+    }
 
-    // Known remote ids from last push + live listener caches (no .get()).
-    var knownP = new Set();
-    lastPushedProjects.forEach(function (_v, id) { knownP.add(id); });
-    cacheProjects.forEach(function (_v, id) { knownP.add(id); });
-    knownP.forEach(function (id) {
-      if (localP[id]) return;
-      docsChanged = true;
-      ops.push(function (batch) {
-        batch.delete(fs.collection('projects').doc(id));
+    if (wantsFsi()) {
+      Object.keys(localC).forEach(function (id) {
+        var entry = localC[id];
+        if (!forceFull && lastPushedCases.get(id) === entry.json) return;
+        docsChanged = true;
+        ops.push(function (batch) {
+          batch.set(fs.collection('fsi_cases').doc(id), entry.payload);
+        });
       });
-    });
-
-    var knownC = new Set();
-    lastPushedCases.forEach(function (_v, id) { knownC.add(id); });
-    cacheCases.forEach(function (_v, id) { knownC.add(id); });
-    knownC.forEach(function (id) {
-      if (localC[id]) return;
-      docsChanged = true;
-      ops.push(function (batch) {
-        batch.delete(fs.collection('fsi_cases').doc(id));
+      var knownC = new Set();
+      lastPushedCases.forEach(function (_v, id) { knownC.add(id); });
+      cacheCases.forEach(function (_v, id) { knownC.add(id); });
+      knownC.forEach(function (id) {
+        if (localC[id]) return;
+        docsChanged = true;
+        ops.push(function (batch) {
+          batch.delete(fs.collection('fsi_cases').doc(id));
+        });
       });
-    });
+    }
 
-    var syncDoc = buildSyncDoc(meta, fsiMeta);
+    var syncDoc = buildSyncDocForScope(meta, fsiMeta);
     var syncJson = stableJson(syncDoc);
     var syncNeeded = forceFull || docsChanged || syncJson !== lastPushedSyncJson;
     if (syncNeeded) {
@@ -285,18 +375,22 @@
       await runBatches(ops);
       markLastPushedFromWrite(localP, localC, syncDoc);
       // Align listener caches optimistically so deletes/diffs stay correct before snapshots.
-      Object.keys(localP).forEach(function (id) {
-        cacheProjects.set(id, Object.assign({}, localP[id].payload, { id: id }));
-      });
-      Array.from(cacheProjects.keys()).forEach(function (id) {
-        if (!localP[id]) cacheProjects.delete(id);
-      });
-      Object.keys(localC).forEach(function (id) {
-        cacheCases.set(id, Object.assign({}, localC[id].payload, { id: id }));
-      });
-      Array.from(cacheCases.keys()).forEach(function (id) {
-        if (!localC[id]) cacheCases.delete(id);
-      });
+      if (wantsProjects()) {
+        Object.keys(localP).forEach(function (id) {
+          cacheProjects.set(id, Object.assign({}, localP[id].payload, { id: id }));
+        });
+        Array.from(cacheProjects.keys()).forEach(function (id) {
+          if (!localP[id]) cacheProjects.delete(id);
+        });
+      }
+      if (wantsFsi()) {
+        Object.keys(localC).forEach(function (id) {
+          cacheCases.set(id, Object.assign({}, localC[id].payload, { id: id }));
+        });
+        Array.from(cacheCases.keys()).forEach(function (id) {
+          if (!localC[id]) cacheCases.delete(id);
+        });
+      }
       cacheSync = syncDoc;
       setStatus('已同步');
       return true;
@@ -336,16 +430,30 @@
     return null;
   }
 
+  /** Prefetch meta/sync so scoped migration can preserve the other side's meta fields. */
+  async function prefetchSyncMeta() {
+    try {
+      var snap = await initFs().doc('meta/sync').get();
+      if (snap.exists) cacheSync = snap.data() || {};
+    } catch (err) {
+      console.warn('[TS8FirestoreSync] prefetch meta/sync', err);
+    }
+  }
+
   async function migrateOnceFromLegacy() {
     setStatus('即時同步中');
+    if (scope !== 'all') {
+      await prefetchSyncMeta();
+    }
     var legacy = await fetchLegacy();
     if (!legacy) legacy = getDb();
     legacy = migrate(legacy);
     var ok = await writeDb(legacy, true);
     if (ok && opts && typeof opts.onRemote === 'function') {
-      // Ensure in-memory db matches what we migrated (without waiting for snapshot).
+      // Prefer assembled scoped db so the other domain's local data is not blanked.
+      var assembled = migrate(assembleDb());
       applyingRemote = true;
-      try { opts.onRemote(legacy); } finally { applyingRemote = false; }
+      try { opts.onRemote(assembled); } finally { applyingRemote = false; }
     }
     return ok;
   }
@@ -354,36 +462,45 @@
     var fs = initFs();
     unsubs.forEach(function (u) { try { u(); } catch (_) {} });
     unsubs = [];
-    ready = { projects: false, cases: false, sync: false };
-    cacheProjects = new Map();
-    cacheCases = new Map();
+    // Collections we do not subscribe to are marked ready immediately.
+    ready = {
+      projects: !wantsProjects(),
+      cases: !wantsFsi(),
+      sync: false
+    };
+    if (wantsProjects()) cacheProjects = new Map();
+    if (wantsFsi()) cacheCases = new Map();
     cacheSync = null;
 
-    unsubs.push(fs.collection('projects').onSnapshot(function (snap) {
-      cacheProjects = new Map();
-      snap.forEach(function (doc) {
-        var data = doc.data() || {};
-        cacheProjects.set(doc.id, Object.assign({}, data, { id: doc.id }));
-      });
-      ready.projects = true;
-      scheduleEmitRemote();
-    }, function (err) {
-      console.warn('[TS8FirestoreSync] projects listen', err);
-      setStatus('同步失敗');
-    }));
+    if (wantsProjects()) {
+      unsubs.push(fs.collection('projects').onSnapshot(function (snap) {
+        cacheProjects = new Map();
+        snap.forEach(function (doc) {
+          var data = doc.data() || {};
+          cacheProjects.set(doc.id, Object.assign({}, data, { id: doc.id }));
+        });
+        ready.projects = true;
+        scheduleEmitRemote();
+      }, function (err) {
+        console.warn('[TS8FirestoreSync] projects listen', err);
+        setStatus('同步失敗');
+      }));
+    }
 
-    unsubs.push(fs.collection('fsi_cases').onSnapshot(function (snap) {
-      cacheCases = new Map();
-      snap.forEach(function (doc) {
-        var data = doc.data() || {};
-        cacheCases.set(doc.id, Object.assign({}, data, { id: doc.id }));
-      });
-      ready.cases = true;
-      scheduleEmitRemote();
-    }, function (err) {
-      console.warn('[TS8FirestoreSync] fsi_cases listen', err);
-      setStatus('同步失敗');
-    }));
+    if (wantsFsi()) {
+      unsubs.push(fs.collection('fsi_cases').onSnapshot(function (snap) {
+        cacheCases = new Map();
+        snap.forEach(function (doc) {
+          var data = doc.data() || {};
+          cacheCases.set(doc.id, Object.assign({}, data, { id: doc.id }));
+        });
+        ready.cases = true;
+        scheduleEmitRemote();
+      }, function (err) {
+        console.warn('[TS8FirestoreSync] fsi_cases listen', err);
+        setStatus('同步失敗');
+      }));
+    }
 
     unsubs.push(fs.doc('meta/sync').onSnapshot(function (snap) {
       cacheSync = snap.exists ? (snap.data() || {}) : {};
@@ -397,7 +514,8 @@
 
   async function start(options) {
     opts = options || {};
-    if (!enabled()) return { enabled: false, migrated: false };
+    scope = normalizeScope(opts.scope);
+    if (!enabled()) return { enabled: false, migrated: false, scope: scope };
     initFs();
     setStatus('即時同步中');
     var empty = await isEmpty();
@@ -408,7 +526,7 @@
     listen();
     started = true;
     if (!empty) setStatus('即時同步中');
-    return { enabled: true, migrated: !!migrated, wasEmpty: empty };
+    return { enabled: true, migrated: !!migrated, wasEmpty: empty, scope: scope };
   }
 
   function stop() {
@@ -426,6 +544,7 @@
     stop: stop,
     schedulePush: schedulePush,
     pushNow: pushNow,
-    isStarted: function () { return started; }
+    isStarted: function () { return started; },
+    getScope: function () { return scope; }
   };
 })(typeof window !== 'undefined' ? window : this);
