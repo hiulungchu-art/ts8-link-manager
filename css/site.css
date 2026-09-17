@@ -260,7 +260,7 @@ body.site-body{
   box-shadow:var(--shadow);
   text-decoration:none;
   color:inherit;
-  transition:transform .18s ease, box-shadow .18s ease, border-color .18s;
+  transition:border-color .15s, background .15s;
   min-height:168px;
   position:relative;
   overflow:hidden;
@@ -273,10 +273,11 @@ body.site-body{
   background:linear-gradient(180deg, var(--accent), rgba(196,138,90,.7));
   opacity:.85;
 }
-.page-card:hover{
-  transform:translateY(-3px);
-  box-shadow:var(--shadow-hover);
-  border-color:rgba(92,138,114,.35);
+@media (hover: hover) and (pointer: fine){
+  .page-card:hover{
+    border-color:rgba(92,138,114,.35);
+    background:var(--paper);
+  }
 }
 .page-card.is-placeholder{
   opacity:.62;

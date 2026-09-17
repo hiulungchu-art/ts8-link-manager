@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TS8 連結管理 · 工作頁面集</title>
-<link rel="stylesheet" href="./css/site.css?v=20260917perf1">
+<link rel="stylesheet" href="./css/site.css?v=20260917move1">
 <style>
 :root {
   /* Soft editorial — forest ink + warm cream + celadon */
@@ -165,7 +165,9 @@ body{
   color:rgba(228,235,230,.7);
   transition:background .15s,border-color .15s,color .15s;
 }
-.proj-item:hover{background:rgba(255,255,255,.05);color:#fff}
+@media (hover: hover) and (pointer: fine){
+  .proj-item:hover{background:rgba(255,255,255,.05);color:#fff}
+}
 .proj-item.active{
   background:rgba(92,138,114,.2);
   border-left-color:var(--accent);
@@ -231,26 +233,27 @@ body{
   align-items:center;
   gap:6px;
   white-space:nowrap;
-  transition:background .15s,border-color .15s,color .15s,box-shadow .15s,transform .12s;
+  transition:background .15s,border-color .15s,color .15s;
 }
 .btn-primary{
   background:linear-gradient(180deg, #6A987C 0%, var(--accent) 100%);
   color:#fff;
   box-shadow:0 1px 2px rgba(63,107,86,.25), inset 0 1px 0 rgba(255,255,255,.18);
 }
-.btn-primary:hover{
-  background:linear-gradient(180deg, var(--accent) 0%, var(--accent-d) 100%);
-  box-shadow:0 4px 14px rgba(63,107,86,.28);
-}
 .btn-ghost{
   background:var(--paper);
   border:1px solid var(--line);
   color:var(--text);
 }
-.btn-ghost:hover{
-  border-color:rgba(92,138,114,.45);
-  color:var(--accent-d);
-  background:var(--accent-l);
+@media (hover: hover) and (pointer: fine){
+  .btn-primary:hover{
+    background:linear-gradient(180deg, var(--accent) 0%, var(--accent-d) 100%);
+  }
+  .btn-ghost:hover{
+    border-color:rgba(92,138,114,.45);
+    color:var(--accent-d);
+    background:var(--accent-l);
+  }
 }
 .btn-danger{background:var(--danger);color:#fff;border-radius:11px}
 .btn-sm{padding:6px 12px;font-size:.74rem;font-weight:600;border-radius:9px}
@@ -289,12 +292,7 @@ body{
   font-weight:600;
   cursor:pointer;
   color:var(--mute);
-  transition:all .18s;
-}
-.pa-tab:hover{
-  background:var(--paper);
-  color:var(--accent-d);
-  border-color:rgba(92,138,114,.25);
+  transition:background .15s,border-color .15s,color .15s;
 }
 .pa-tab.active{
   background:var(--paper);
@@ -308,9 +306,16 @@ body{
   background:transparent;
   color:var(--accent);
 }
-.pa-tab-add:hover{
-  background:var(--accent-l);
-  border-color:var(--accent);
+@media (hover: hover) and (pointer: fine){
+  .pa-tab:hover{
+    background:var(--paper);
+    color:var(--accent-d);
+    border-color:rgba(92,138,114,.25);
+  }
+  .pa-tab-add:hover{
+    background:var(--accent-l);
+    border-color:var(--accent);
+  }
 }
 
 /* —— Header card —— */
@@ -411,21 +416,23 @@ body{
   flex-direction:column;
   gap:8px;
   min-height:152px;
-  transition:border-color .18s,box-shadow .18s,transform .18s,background .18s;
-}
-.tile:hover{
-  border-color:rgba(92,138,114,.35);
-  box-shadow:var(--shadow-hover);
-  transform:translateY(-2px);
+  transition:border-color .15s,background .15s;
+  contain:layout style paint;
 }
 .tile.empty-slot{
   border-style:dashed;
   background:rgba(243,238,228,.45);
   box-shadow:none;
 }
-.tile.empty-slot:hover{
-  background:var(--paper);
-  box-shadow:var(--shadow);
+@media (hover: hover) and (pointer: fine){
+  .tile:hover{
+    border-color:rgba(92,138,114,.35);
+    background:var(--white);
+  }
+  .tile.empty-slot:hover{
+    background:var(--paper);
+    border-color:rgba(92,138,114,.35);
+  }
 }
 .tile .tile-eyebrow{
   font-family:var(--font-ui);
@@ -487,10 +494,14 @@ body{
   box-shadow:var(--shadow);
   margin-bottom:12px;
   border-left:3px solid var(--accent);
-  transition:box-shadow .18s, border-color .18s;
   overflow:hidden;
+  content-visibility:auto;
+  contain:content;
+  contain-intrinsic-size:auto 160px;
 }
-.day-card:hover{box-shadow:var(--shadow-lg)}
+@media (hover: hover) and (pointer: fine){
+  .day-card:hover{border-color:rgba(92,138,114,.45)}
+}
 .day-card.is-hidden{display:none}
 .day-card .day-head{
   display:flex;
@@ -652,7 +663,7 @@ body{
 .stats-hero-inline .eyebrow{color:#1B4332}
 
 @media (prefers-reduced-motion: reduce){
-  .view-tab,.kpi,.chart-card{transition:none !important}
+  .view-tab,.kpi,.chart-card,.tile,.day-card,.btn,.proj-item,.pa-tab,.dropzone{transition:none !important}
 }
 
 .hint{font-size:.75rem;color:var(--mute)}
@@ -747,13 +758,18 @@ textarea{min-height:72px;resize:vertical}
   text-align:center;
   background:var(--cream);
   cursor:pointer;
-  transition:border-color .15s,background .15s,box-shadow .15s;
+  transition:border-color .15s,background .15s;
   user-select:none;
 }
-.dropzone:hover,.dropzone.dragover{
+.dropzone.dragover{
   border-color:var(--accent);
   background:var(--accent-l);
-  box-shadow:0 0 0 3px var(--accent-soft);
+}
+@media (hover: hover) and (pointer: fine){
+  .dropzone:hover{
+    border-color:var(--accent);
+    background:var(--accent-l);
+  }
 }
 .dropzone .dz-icon{font-size:1.8rem;margin-bottom:8px}
 .dropzone .dz-title{
