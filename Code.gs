@@ -1,5 +1,11 @@
+/**
+ * Source update only. Do not deploy this Apps Script until Google sign-in
+ * works and EDITOR_EMAILS / ADMIN_KEY are set in Script Properties.
+ * The previously committed upload secret is rejected and is not stored here.
+ * New Drive files are not shared as "anyone with the link".
+ */
 const FOLDER_ID = '1FRJX-pH2gV_6bkv2HM9dt5S00Lmv_o2u';
-const UPLOAD_SECRET = 'ts8-upload-2026';
+const LEAKED_UPLOAD_SECRET_SHA256 = '4c3610af07a24a81964e956752c1e95737cd97c2ba3811e16f0950da705dcbe2';
 const DB_FILE_NAME = 'ts8-shared-data.json';
 const AUDIT_FILE_NAME = 'ts8-audit-private.json';
 const MAX_B64 = 12000000;
@@ -15,14 +21,8 @@ function json_(obj) {
 function getOrCreateDbFile_() {
   var folder = DriveApp.getFolderById(FOLDER_ID);
   var it = folder.getFilesByName(DB_FILE_NAME);
-  if (it.hasNext()) {
-    var existing = it.next();
-    try { existing.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (e) {}
-    return existing;
-  }
-  var f = folder.createFile(DB_FILE_NAME, '{"projects":[],"meta":{}}', MimeType.PLAIN_TEXT);
-  f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  return f;
+  if (it.hasNext()) return it.next();
+  return folder.createFile(DB_FILE_NAME, '{"projects":[],"meta":{}}', MimeType.PLAIN_TEXT);
 }
 
 function readDb_() {
@@ -140,7 +140,48 @@ function adminPass_() {
 }
 
 function tokenSecret_() {
-  return adminKey_() || adminPass_() || UPLOAD_SECRET;
+  return adminKey_() || adminPass_() || '';
+}
+
+function sha256Hex_(text) {
+  var bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(text || ''), Utilities.Charset.UTF_8);
+  var out = '';
+  for (var i = 0; i < bytes.length; i++) {
+    var v = bytes[i];
+    if (v < 0) v += 256;
+    var hex = v.toString(16);
+    if (hex.length < 2) hex = '0' + hex;
+    out += hex;
+  }
+  return out;
+}
+
+function editorEmails_() {
+  var list = ADMIN_EMAILS.slice();
+  var extra = prop_('EDITOR_EMAILS');
+  if (extra) {
+    extra.split(/[,;\s]+/).forEach(function (item) {
+      if (item) list.push(item);
+    });
+  }
+  return list;
+}
+
+function isEditorEmail_(email) {
+  var e = normalizeEmail_(email);
+  var list = editorEmails_();
+  for (var i = 0; i < list.length; i++) {
+    if (normalizeEmail_(list[i]) === e) return true;
+  }
+  return false;
+}
+
+function requireEditor_(data) {
+  if (data && data.secret && sha256Hex_(data.secret) === LEAKED_UPLOAD_SECRET_SHA256) return null;
+  if (!data || !data.idToken) return null;
+  var tok = verifyGoogleIdToken_(data.idToken);
+  if (!tok || !isEditorEmail_(tok.email)) return null;
+  return normalizeEmail_(tok.email);
 }
 
 function bytesToWebSafe_(bytes) {
@@ -310,9 +351,7 @@ function doGet(e) {
       return serveAdmin_(e);
     }
     if (op === 'db') {
-      var file = getOrCreateDbFile_();
-      return ContentService.createTextOutput(file.getBlob().getDataAsString() || '{"projects":[]}')
-        .setMimeType(ContentService.MimeType.JSON);
+      return json_({ ok:false, error:'unauthorized' });
     }
     return json_({ ok:true, service:'TS8 sync', ops:['db','saveDb','upload','ping','adminLogs'], lww:true });
   } catch (err) {
@@ -328,7 +367,15 @@ function doPost(e) {
     }
 
     var data = JSON.parse(e.postData.contents);
-    if (!data || data.secret !== UPLOAD_SECRET) {
+    if (data && data.op === 'adminLogs') {
+      var adminEmail = requireAdminFromPost_(data);
+      if (!adminEmail && data.t && verifyAdminToken_(data.t)) adminEmail = 'RSJOP';
+      if (!adminEmail) return json_({ ok:false, error:'forbidden' });
+      var audit = readAudit_();
+      return json_({ ok:true, email: adminEmail, events: audit.events || [] });
+    }
+    var editor = requireEditor_(data);
+    if (!editor) {
       return json_({ ok:false, error:'unauthorized' });
     }
 
@@ -342,14 +389,6 @@ function doPost(e) {
         ua: String(data.ua || '').slice(0, 180)
       });
       return json_({ ok:true });
-    }
-
-    if (data.op === 'adminLogs') {
-      var adminEmail = requireAdminFromPost_(data);
-      if (!adminEmail && data.t && verifyAdminToken_(data.t)) adminEmail = 'RSJOP';
-      if (!adminEmail) return json_({ ok:false, error:'forbidden' });
-      var audit = readAudit_();
-      return json_({ ok:true, email: adminEmail, events: audit.events || [] });
     }
 
     if (data.op === 'saveDb') {
@@ -368,7 +407,6 @@ function doPost(e) {
         return json_({ ok:false, error:'stale', current: current });
       }
       f.setContent(JSON.stringify(data.db));
-      try { f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (e2) {}
       appendAudit_({
         t: new Date().toISOString(),
         kind: 'edit',
@@ -396,7 +434,6 @@ function doPost(e) {
     var blob = Utilities.newBlob(bytes, mime, safe);
     var folder = DriveApp.getFolderById(FOLDER_ID);
     var file = folder.createFile(blob);
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
     appendAudit_({
       t: new Date().toISOString(),
       kind: 'upload',

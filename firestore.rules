@@ -1,0 +1,34 @@
+rules_version = '2';
+// Proposed rules only. Do not deploy until Google sign-in is enabled and
+// the editor list below is the real one. This file is not applied automatically.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null
+        && request.auth.token.email_verified == true;
+    }
+
+    // Replace this list before production deploy. An empty allow-all of any
+    // verified user is intentionally NOT used here: unsigned reads and writes
+    // are denied, and only these emails can pass once the rules are deployed.
+    function allowedEmail() {
+      return signedIn() && request.auth.token.email.lower() in [
+        'hlung.chu@connect.polyu.hk',
+        'hiulungchu@gmail.com'
+      ];
+    }
+
+    match /projects/{id} {
+      allow read, write: if allowedEmail();
+    }
+    match /fsi_cases/{id} {
+      allow read, write: if allowedEmail();
+    }
+    match /meta/{id} {
+      allow read, write: if allowedEmail();
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

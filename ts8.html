@@ -64,10 +64,25 @@ body{
   background-attachment: scroll;
 }
 
-.app{display:grid;grid-template-columns:var(--side) 1fr;min-height:calc(100vh - var(--nav-h, 64px));flex:1}
+.app{display:grid;grid-template-columns:var(--side) 1fr;min-height:calc(100vh - var(--nav-h, 64px));flex:1;min-width:0}
+.main,.content,.sidebar,.tile,.day-card,.header-card{min-width:0}
+.proj-item .name,.crumb,.header-card h2,.day-sub,.tile-url,.tile-title,.proj-picker-name,code{overflow-wrap:anywhere}
 @media(max-width:900px){
+  html,body.site-body{overflow-x:hidden}
   .app{grid-template-columns:1fr}
-  .sidebar{position:sticky;top:0;z-index:5;max-height:44vh;overflow:auto;border-right:none;border-bottom:1px solid rgba(255,255,255,.06)}
+  .sidebar{
+    position:sticky;
+    top:var(--nav-h,64px);
+    z-index:6;
+    max-height:none;
+    overflow:visible;
+    border-right:none;
+    border-bottom:1px solid rgba(255,255,255,.06);
+  }
+  .side-head{padding:14px 16px 10px}
+  .side-head p{display:none}
+  .proj-picker-toggle{display:flex}
+  .sidebar:not(.is-picker-open) .proj-list{display:none}
 }
 
 /* —— Sidebar —— */
@@ -138,16 +153,39 @@ body{
 }
 .side-tools input::placeholder{color:rgba(255,255,255,.35)}
 .side-tools input:focus{
-  outline:none;
   border-color:rgba(92,138,114,.7);
   background:rgba(255,255,255,.08);
   box-shadow:0 0 0 3px var(--accent-glow);
 }
+.side-tools input:focus-visible{outline:2px solid #F3EEE4;outline-offset:2px}
 .side-tools .btn-primary{
   width:100%;
   justify-content:center;
   border-radius:12px;
   padding:11px 14px;
+}
+.proj-picker-toggle{
+  display:none;
+  width:calc(100% - 32px);
+  margin:12px 16px 0;
+  align-items:center;
+  gap:10px;
+  text-align:left;
+  background:rgba(255,255,255,.06);
+  color:#F7FBF8;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;
+  padding:10px 12px;
+  font:inherit;
+  cursor:pointer;
+}
+.proj-picker-kicker{display:block;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(228,235,230,.62)}
+.proj-picker-name{display:block;font-weight:600;line-height:1.35}
+.proj-picker-chevron{flex:0 0 auto}
+.sidebar.is-picker-open .proj-picker-chevron{display:inline-block;transform:rotate(90deg)}
+@media (max-width:900px){
+  .proj-picker-toggle{display:flex}
+  .sidebar:not(.is-picker-open) .proj-list{display:none}
 }
 .proj-list{flex:1;overflow:auto;padding:12px 10px 20px}
 .proj-item{
@@ -235,9 +273,9 @@ body{
   transition:background .15s,border-color .15s,color .15s;
 }
 .btn-primary{
-  background:linear-gradient(180deg, #6A987C 0%, var(--accent) 100%);
+  background:#1B4332;
   color:#fff;
-  box-shadow:0 1px 2px rgba(63,107,86,.25), inset 0 1px 0 rgba(255,255,255,.18);
+  box-shadow:0 1px 2px rgba(27,67,50,.28), inset 0 1px 0 rgba(255,255,255,.16);
 }
 .btn-ghost{
   background:var(--paper);
@@ -246,7 +284,7 @@ body{
 }
 @media (hover: hover) and (pointer: fine){
   .btn-primary:hover{
-    background:linear-gradient(180deg, var(--accent) 0%, var(--accent-d) 100%);
+    background:#24543C;
   }
   .btn-ghost:hover{
     border-color:rgba(92,138,114,.45);
@@ -257,6 +295,14 @@ body{
 .btn-danger{background:var(--danger);color:#fff;border-radius:11px}
 .btn-sm{padding:6px 12px;font-size:.74rem;font-weight:600;border-radius:9px}
 .btn:disabled{opacity:.55;cursor:not-allowed}
+.btn:focus-visible,.pa-tab:focus-visible,.proj-item:focus-visible,a:focus-visible,.day-toggle:focus-visible,.section-toggle:focus-visible,.proj-picker-toggle:focus-visible{
+  outline:2px solid #1B4332;
+  outline-offset:2px;
+}
+.sidebar :focus-visible{outline-color:#F3EEE4}
+.sr-only{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+}
 
 .content{padding:30px 36px 24px;overflow:auto;flex:1}
 @media(max-width:700px){.content{padding:18px 16px 16px}.topbar{padding:14px 16px}}
@@ -484,6 +530,10 @@ body{
   background:var(--paper);font:inherit;font-size:.85rem;color:var(--ink);
 }
 .day-toolbar .day-toolbar-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+@media(max-width:400px){
+  .day-toolbar .field{min-width:0;flex-basis:100%}
+  .tile-actions,.topbar{flex-wrap:wrap}
+}
 .day-count{font-size:.78rem;color:var(--mute);margin:0 0 12px}
 .day-card{
   background:var(--paper);
@@ -502,11 +552,49 @@ body{
 .day-card .day-head{
   display:flex;
   flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
+  padding:8px 12px 8px 8px;
+}
+.day-toggle{
+  flex:1 1 180px;
+  min-width:0;
+  display:flex;
+  flex-wrap:wrap;
   gap:10px;
   align-items:center;
-  padding:14px 18px;
+  border:0;
+  background:transparent;
+  color:inherit;
+  font:inherit;
+  text-align:left;
+  padding:6px 8px;
   cursor:pointer;
-  user-select:none;
+  border-radius:12px;
+}
+.section-toggle{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  width:100%;
+  border:0;
+  background:transparent;
+  color:inherit;
+  font:inherit;
+  text-align:left;
+  padding:4px 0;
+  cursor:pointer;
+}
+.section-toggle .section-title{margin:0;flex:1}
+.is-search-hit{box-shadow:inset 0 0 0 2px #1B4332}
+.search-hit-banner,.day-empty-note{
+  margin:0 0 14px;
+  padding:12px 14px;
+  border-radius:12px;
+  background:#E7F1EB;
+  color:#143528;
+  font-size:.86rem;
+  line-height:1.5;
 }
 .day-card.is-open .day-head{
   margin-bottom:0;
@@ -538,9 +626,8 @@ body{
 @media(max-width:900px){.day-slots{grid-template-columns:1fr}}
 .day-slots .tile{min-height:136px;padding:18px 16px}
 .section-collapsible .section-head{
-  display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;margin-bottom:10px;
+  display:flex;align-items:center;gap:8px;margin-bottom:10px;
 }
-.section-collapsible .section-head .section-title{margin:0;flex:1}
 .section-collapsible:not(.is-open) .section-body{display:none}
 .section-collapsible .sec-chevron{
   color:var(--mute);font-size:.85rem;transition:transform .18s;
@@ -597,9 +684,12 @@ body{
 .stats-toolbar label{display:block;font-size:.68rem;color:var(--s-muted);font-weight:700;margin-bottom:6px;letter-spacing:.08em;text-transform:uppercase}
 .stats-toolbar select{
   width:100%;min-height:44px;padding:8px 2px;border:0;border-bottom:1px solid var(--s-line);
-  border-radius:0;background:transparent;font:inherit;font-size:.95rem;color:var(--s-text);outline:none;
+  border-radius:0;background:transparent;font:inherit;font-size:.95rem;color:var(--s-text);
 }
 .stats-toolbar select:focus{border-bottom-color:var(--s-line-chart)}
+.stats-toolbar select:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:2px solid #1B4332;outline-offset:2px;
+}
 .kpi-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:24px}
 @media(max-width:1023px){.kpi-row{grid-template-columns:1fr 1fr}}
 @media(max-width:767px){.kpi-row{grid-template-columns:1fr}}
@@ -722,9 +812,10 @@ input,select,textarea{
   transition:border-color .15s,box-shadow .15s;
 }
 input:focus,select:focus,textarea:focus{
-  outline:none;
-  border-color:var(--accent);
-  box-shadow:0 0 0 3px var(--accent-soft);
+  outline:2px solid #1B4332;
+  outline-offset:1px;
+  border-color:#1B4332;
+  box-shadow:0 0 0 3px rgba(27,67,50,.18);
 }
 textarea{min-height:72px;resize:vertical}
 
@@ -821,6 +912,10 @@ textarea{min-height:72px;resize:vertical}
   vertical-align:middle;
   animation:pulse 2s ease infinite;
 }
+.sync-dot.is-pending{background:#9A6B2F}
+.sync-dot.is-fail{background:#7A2A2A}
+.sync-dot.is-local{background:#5C6B61}
+#conflictDialog{z-index:90}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
 /* Desktop shell: the project list and the day list scroll on their own.
@@ -887,17 +982,25 @@ textarea{min-height:72px;resize:vertical}
       <p>項目 → Part A → 隔離日</p>
     </div>
     <div class="side-tools">
-      <input type="search" id="globalSearch" placeholder="搜尋項目 / Part A / 連結…" autocomplete="off">
-      <button class="btn btn-primary" id="btnNewProject">＋ 新項目</button>
+      <label class="sr-only" for="globalSearch">搜尋項目、Part A、Part B ID 或連結</label>
+      <input type="search" id="globalSearch" placeholder="搜尋項目 / Part A / 連結…" autocomplete="off" aria-label="搜尋項目、Part A、Part B ID 或連結">
+      <button class="btn btn-primary" id="btnNewProject" type="button">＋ 新項目</button>
     </div>
+    <button type="button" class="proj-picker-toggle" id="projPickerToggle" aria-expanded="false" aria-controls="projList">
+      <span>
+        <span class="proj-picker-kicker">目前項目</span>
+        <span class="proj-picker-name" id="projPickerName">未選擇項目</span>
+      </span>
+      <span class="proj-picker-chevron" aria-hidden="true">▸</span>
+    </button>
     <div class="proj-list" id="projList"></div>
   </aside>
 
   <section class="main">
     <div class="topbar">
       <div class="view-tabs" id="viewTabs">
-        <button type="button" class="view-tab active" data-view="links">連結管理</button>
-        <button type="button" class="view-tab" data-view="stats">Part B 統計</button>
+        <button type="button" class="view-tab active" data-view="links" id="tabLinks">連結管理</button>
+        <button type="button" class="view-tab" data-view="stats" id="tabStats">Part B 統計</button>
       </div>
       <div class="crumb" id="crumb">請選擇或建立項目</div>
       <button class="btn btn-ghost" id="btnEditProject" style="display:none">編輯項目</button>
@@ -906,26 +1009,39 @@ textarea{min-height:72px;resize:vertical}
       <div class="empty"><div class="hint-lg">選擇左側項目開始。<br>Part A 與隔離日的 B1／B2 連結及 PDF 會顯示於此。</div></div>
     </div>
     <div class="foot-bar">
-      <span><span class="sync-dot" id="syncDot"></span><span id="syncText">即時同步中</span></span>
+      <span><span class="sync-dot is-local" id="syncDot" aria-hidden="true"></span><span id="syncText" role="status" aria-live="polite">已儲存於此裝置</span></span>
       <span id="syncMeta"></span>
+      <button type="button" class="btn btn-ghost btn-sm" id="btnSignIn">登入以上傳 PDF</button>
     </div>
   </section>
 </div>
 
 <div class="modal-bg" id="modal"></div>
-<div class="toast" id="toast"></div>
+<div class="modal-bg" id="conflictDialog" role="alertdialog" aria-modal="true" aria-hidden="true" aria-labelledby="conflictTitle" aria-describedby="conflictBody">
+  <div class="modal">
+    <header><h3 id="conflictTitle">尚未同步的內容已保留</h3></header>
+    <div class="body" id="conflictBody"></div>
+    <div class="foot"><button type="button" class="btn btn-primary" id="conflictClose">知道了</button></div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="./config.js"></script>
-<script src="./js/t.js"></script>
+<script src="./js/sync-merge.js?v=20261123sync1"></script>
+<script src="./js/ts8-guards.js?v=20261123sync1"></script>
+<script src="./js/access.js?v=20261123sync1"></script>
+<script src="./js/t.js?v=20261123sync1"></script>
 <script>
 (function(){
 const KEY='ts8_project_link_manager_v6';
 const KEY_V5='ts8_project_link_manager_v5';
 const CFG=(typeof window!=='undefined'&&window.TS8_CONFIG)||{};
-const DRIVE_FOLDER_ID=CFG.DRIVE_FOLDER_ID||'1FRJX-pH2gV_6bkv2HM9dt5S00Lmv_o2u';
 const UPLOAD_WEBAPP_URL=CFG.UPLOAD_WEBAPP_URL||'';
-const UPLOAD_SECRET=CFG.UPLOAD_SECRET||'';
 const SYNC_URL=UPLOAD_WEBAPP_URL;
+const FB_APP='https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js';
+const FB_FS='https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js';
+const FB_AUTH='https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js';
+function legacySyncAllowed(){ return CFG.ALLOW_LEGACY_SYNC===true && !firestoreConfigured(); }
 function clientMeta(){
   try{
     var k='ts8_cid';
@@ -949,52 +1065,8 @@ const DAY_STATUS=['未開始','B1進行中','B1已提交','B2進行中','已完�
 const PART_STATUS=['草稿','審核中','已完成','擱置'];
 
 const SEED={
-  projects:[{
-    id:'p-blk-a-podium',
-    name:'Multi-function Area at Blk A Podium',
-    code:'',
-    jobNo:'J26159',
-    pm:'Regina Chan',
-    notes:'Blk A Podium 多用途場地 · TS8 消防工程',
-    createdAt:'2026-09-09',
-    partAs:[{
-      id:'pa-1',
-      label:'Part A #1',
-      eformId:'',
-      docNo:'CFSO-TS8-2026-0011',
-      status:'草稿',
-      notes:'',
-      links:[
-        {
-          id:'l-parta-pdf-001',
-          type:'pdf_parta',
-          label:'CFSO-TS8-2026-0011 Part A',
-          url:'https://drive.google.com/file/d/17d5bAVWCNG9pMkEKw4G8pz-Zoz07gRHC/view',
-          notes:'',
-          driveFileId:'17d5bAVWCNG9pMkEKw4G8pz-Zoz07gRHC',
-          sourceEmailId:''
-        }
-      ],
-      days:[
-        {
-          id:'d-20260909', date:'2026-09-09', label:'隔離日', partBSubmissionId:'', status:'未開始', notes:'',
-          links:[{id:'l1',type:'b1',label:'B1',url:'https://www.jotform.com/draft/01a0895170b870008b9179eb9c8073f82b6c',notes:'',driveFileId:'',sourceEmailId:''}]
-        },
-        {
-          id:'d-20260910', date:'2026-09-10', label:'隔離日', partBSubmissionId:'', status:'未開始', notes:'',
-          links:[{id:'l2',type:'b1',label:'B1',url:'https://www.jotform.com/draft/01a0895335d8700088bb4d006d7a18d0210a',notes:'',driveFileId:'',sourceEmailId:''}]
-        },
-        {
-          id:'d-20260911', date:'2026-09-11', label:'隔離日', partBSubmissionId:'', status:'未開始', notes:'',
-          links:[
-            {id:'l3',type:'b1',label:'B1',url:'https://www.jotform.com/draft/01a0893349f8700083cff7c5ddbdf42aac49',notes:'',driveFileId:'',sourceEmailId:''},
-            {id:'l4',type:'b2',label:'B2',url:'https://www.jotform.com/edit/6648191196608964059',notes:'',driveFileId:'',sourceEmailId:''}
-          ]
-        }
-      ]
-    }]
-  }],
-  meta:{ updatedAt:'2026-09-11T04:00:00.000Z', driveFolderName:'TS8 PDFs', driveFolderId:DRIVE_FOLDER_ID },
+  projects:[],
+  meta:{ updatedAt:'', rev:0 },
   fsi:{ cases:[], meta:{} }
 };
 
@@ -1006,6 +1078,21 @@ let mainView=(location.hash==='#stats')?'stats':'links';
 let statsYearFilter='';
 let yearChart=null, monthChart=null;
 let modalMode=null;
+let searchHits=[];
+let uploadBusy=false;
+let modalReturnFocus=null;
+let conflictReturnFocus=null;
+let transport='local';
+let syncConfirmed=false;
+let syncFailed=false;
+let flushTimer=null;
+let flushPromise=null;
+let flushAgain=false;
+let sdkRetryTimer=null;
+let bootingSync=false;
+let retryDelay=2000;
+let chartState='idle';
+let statsGen=0;
 let dayFilterQ='';
 let dayFilterStatus='';
 let dayFilterFrom='';
@@ -1150,9 +1237,9 @@ function loadScriptOnce(src){
 async function ensureFirestoreReady(){
   if(window.TS8FirestoreSync && window.firebase && firebase.firestore) return TS8FirestoreSync.enabled();
   if(!firestoreConfigured()) return false;
-  await loadScriptOnce('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js');
-  await loadScriptOnce('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js');
-  await loadScriptOnce('./js/firestore-sync.js');
+  await loadScriptOnce(FB_APP);
+  await loadScriptOnce(FB_FS);
+  await loadScriptOnce('./js/firestore-sync.js?v=20261123sync1');
   return !!(window.TS8FirestoreSync && TS8FirestoreSync.enabled());
 }
 let _localSaveTimer=null;
@@ -1170,26 +1257,155 @@ function flushLocalSave(){
   if(_localSaveTimer){ clearTimeout(_localSaveTimer); _localSaveTimer=null; }
   saveLocalOnlyNow();
 }
-let _pushTimer=null;
-function save(){
+const QUEUE_KEY='ts8_sync_queue_v1';
+const syncSession=TS8SyncMerge.createSyncSession({
+  getProjects:()=>db.projects,
+  setProjects:(projects)=>{ db.projects=projects; }
+});
+function persistSyncSession(){
+  try{ localStorage.setItem(QUEUE_KEY, JSON.stringify(syncSession.snapshot())); }catch(_){}
+  saveLocalOnlyNow();
+}
+function restoreSyncSession(){
+  let data=null;
+  try{ data=JSON.parse(localStorage.getItem(QUEUE_KEY)||'null'); }catch(_){}
+  syncSession.restore(data);
+}
+function refreshSyncStatus(){
+  const label=TS8SyncMerge.syncLabel({
+    transport:transport,
+    pending:syncSession.pending(),
+    confirmed:syncConfirmed && !syncSession.pending(),
+    failed:syncFailed && syncSession.pending()
+  });
+  setSyncText(label);
+}
+function showConflicts(list){
+  const items=(list||[]).filter(Boolean);
+  if(!items.length) return;
+  const body=$('conflictBody');
+  const dlg=$('conflictDialog');
+  if(!body||!dlg) return;
+  body.innerHTML='<p>此欄位在其他裝置已更改，已保留你尚未同步的內容。</p><ul>'
+    +items.map(item=>'<li>'+esc((item.path||'')+' · '+(item.fieldLabel||item.field||''))+'</li>').join('')
+    +'</ul>';
+  conflictReturnFocus=document.activeElement;
+  dlg.classList.add('show');
+  dlg.setAttribute('aria-hidden','false');
+  const close=$('conflictClose');
+  if(close) close.focus();
+}
+function closeConflict(){
+  const dlg=$('conflictDialog');
+  if(dlg){
+    dlg.classList.remove('show');
+    dlg.setAttribute('aria-hidden','true');
+  }
+  const back=conflictReturnFocus;
+  conflictReturnFocus=null;
+  if(back && typeof back.focus==='function') back.focus();
+}
+function acceptServer(shared){
+  let beforeProjects='';
+  try{ beforeProjects=JSON.stringify(db.projects||[]); }catch(_){}
+  const fsi=db.fsi;
+  const localUpdated=(db.meta&&db.meta.updatedAt)||'';
+  const serverUpdated=(shared&&shared.meta&&shared.meta.updatedAt)||'';
+  const result=syncSession.acceptRemote((shared&&shared.projects)||[], serverUpdated, localUpdated);
+  db.fsi=fsi&&typeof fsi==='object'?fsi:{cases:[],meta:{}};
   if(!db.meta) db.meta={};
-  db.meta.updatedAt=new Date().toISOString();
-  if(firestoreConfigured()){
-    db.meta.rev=(db.meta.rev|0)+1;
-    saveLocalOnly();
-    setSyncText('即時同步中');
-    if(window.TS8FirestoreSync && TS8FirestoreSync.isStarted()){
-      TS8FirestoreSync.schedulePush();
-    } else {
-      _pendingFsPush=true;
-    }
+  if(!syncSession.pending() && shared && shared.meta){
+    db.meta=Object.assign({}, db.meta, shared.meta);
+    syncConfirmed=transport==='firestore';
+    syncFailed=false;
+  }else{
+    syncConfirmed=false;
+  }
+  persistSyncSession();
+  if(result.conflicts && result.conflicts.length) showConflicts(result.conflicts);
+  refreshSyncStatus();
+  let afterProjects='';
+  try{ afterProjects=JSON.stringify(db.projects||[]); }catch(_){}
+  return {changed: beforeProjects!==afterProjects, conflicts: result.conflicts||[], pending: !!result.pending};
+}
+function scheduleFlush(delay){
+  clearTimeout(flushTimer);
+  flushTimer=setTimeout(()=>{ flushSync(); }, delay==null?280:delay);
+}
+function scheduleRetry(){
+  scheduleFlush(retryDelay);
+  retryDelay=Math.min(retryDelay*2, 30000);
+}
+async function flushSync(){
+  if(transport!=='firestore' || !window.TS8FirestoreSync || !TS8FirestoreSync.isStarted()){
+    refreshSyncStatus();
+    return false;
+  }
+  if(flushPromise){ flushAgain=true; return flushPromise; }
+  flushPromise=(async ()=>{
+    let ok=true;
+    do{
+      flushAgain=false;
+      if(!syncSession.pending()){
+        syncFailed=false;
+        retryDelay=2000;
+        refreshSyncStatus();
+        break;
+      }
+      const intent=syncSession.buildWrites();
+      let result=null;
+      try{
+        result=await TS8FirestoreSync.writeExplicit(intent);
+      }catch(err){
+        console.warn(err);
+        result={ok:false, written:[], conflicts:[]};
+      }
+      if(!result || result.ok!==true){
+        syncFailed=true;
+        syncConfirmed=false;
+        ok=false;
+        refreshSyncStatus();
+        scheduleRetry();
+        break;
+      }
+      if(result.conflicts && result.conflicts.length) showConflicts(result.conflicts);
+      syncSession.acknowledge(intent.sentSeq, result.written||[]);
+      if(!syncSession.pending()){
+        syncConfirmed=true;
+        syncFailed=false;
+        retryDelay=2000;
+      }
+      persistSyncSession();
+      refreshSyncStatus();
+    }while(flushAgain || (syncSession.pending() && !syncFailed));
+    return ok;
+  })();
+  try{ return await flushPromise; }
+  finally{
+    flushPromise=null;
+    if(flushAgain) scheduleFlush(0);
+  }
+}
+function save(){
+  if(!TS8Access.canWriteWorkData()){
+    toast('需要登入並有權限先可以修改', true);
     return;
   }
-  saveLocalOnly();
-  setSyncText('自動同步中');
-  if(!UPLOAD_WEBAPP_URL) return;
-  clearTimeout(_pushTimer);
-  _pushTimer=setTimeout(()=>{ pushShared(true); },800);
+  if(!db.meta) db.meta={};
+  db.meta.updatedAt=new Date().toISOString();
+  db.meta.rev=(db.meta.rev|0)+1;
+  const added=syncSession.capture();
+  if(added){
+    syncConfirmed=false;
+    syncFailed=false;
+  }
+  persistSyncSession();
+  refreshSyncStatus();
+  if(transport==='firestore') scheduleFlush();
+  else if(legacySyncAllowed()){
+    clearTimeout(flushTimer);
+    flushTimer=setTimeout(()=>{ pushShared(true); },800);
+  }
 }
 
 function parseUpdatedAt(iso){
@@ -1290,10 +1506,21 @@ let _lastCloudUpdatedAt='';
 let _pushBusy=false;
 
 function setSyncText(t){
-  const el=$('syncText'); if(el) el.textContent=t;
+  const el=$('syncText');
+  if(el){
+    el.textContent=t;
+    el.setAttribute('data-state', t);
+  }
+  const dot=$('syncDot');
+  if(dot){
+    dot.classList.toggle('is-pending', t==='待同步');
+    dot.classList.toggle('is-fail', t==='同步失敗');
+    dot.classList.toggle('is-local', t==='已儲存於此裝置');
+  }
 }
 
 async function pullShared(silent){
+  if(!legacySyncAllowed()) return null;
   if(_pullBusy) return null;
   _pullBusy=true;
   try{
@@ -1326,6 +1553,7 @@ async function pullShared(silent){
   }finally{ _pullBusy=false; }
 }
 async function pushShared(silent){
+  if(!legacySyncAllowed()) return false;
   if(!SYNC_URL){ return false; }
   if(_pushBusy) return false;
   _pushBusy=true;
@@ -1353,7 +1581,7 @@ async function pushShared(silent){
     const res=await fetch(SYNC_URL,{
       method:'POST',
       headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify(Object.assign({ secret:UPLOAD_SECRET, op:'saveDb', db, baseUpdatedAt:_lastCloudUpdatedAt||'', note:'saveDb' }, clientMeta()))
+      body:JSON.stringify(Object.assign({ op:'saveDb', db, baseUpdatedAt:_lastCloudUpdatedAt||'', note:'saveDb' }, clientMeta()))
     });
     const text=await res.text();
     let data=null;
@@ -1411,43 +1639,61 @@ function projectMatches(p){
 function findPrimary(links, type){
   return (links||[]).find(l=>l.type===type)||null;
 }
-function findScope(scope){
+function findScope(scope, projectId){
+  const p=db.projects.find(x=>x.id===(projectId||selectedProjectId));
+  if(!p || !scope) return {};
   if(scope.startsWith('pa:')){
     const paid=scope.slice(3);
-    const pa=(proj().partAs||[]).find(x=>x.id===paid);
+    const pa=(p.partAs||[]).find(x=>x.id===paid);
     if(pa && !Array.isArray(pa.links)) pa.links=[];
-    return {pa, day:null, links:pa?pa.links:null, paid, did:null};
+    return {project:p, pa, day:null, links:pa?pa.links:null, paid, did:null};
   }
   if(scope.startsWith('day:')){
     const parts=scope.split(':');
     const paid=parts[1];
     const did=parts.slice(2).join(':');
-    const pa=(proj().partAs||[]).find(x=>x.id===paid);
+    const pa=(p.partAs||[]).find(x=>x.id===paid);
     const day=pa?(pa.days||[]).find(d=>d.id===did):null;
     if(day && !Array.isArray(day.links)) day.links=[];
-    return {pa, day, links:day?day.links:null, paid, did};
+    return {project:p, pa, day, links:day?day.links:null, paid, did};
   }
   return {};
 }
+function snapshotPrimary(projectId, scope, type){
+  const sc=findScope(scope, projectId);
+  const link=findPrimary(sc.links, type);
+  return link?TS8SyncMerge.clone(link):null;
+}
+function restorePrimary(target){
+  if(!target) return;
+  const sc=findScope(target.scope, target.projectId);
+  if(!sc.links) return;
+  const kept=sc.links.filter(l=>l.type!==target.type);
+  if(target.previous) kept.push(TS8SyncMerge.clone(target.previous));
+  if(sc.day) sc.day.links=kept;
+  else if(sc.pa) sc.pa.links=kept;
+}
 
-function upsertSlotLink(scope, type, data){
-  const sc=findScope(scope);
+function upsertSlotLink(scope, type, data, projectId){
+  const sc=findScope(scope, projectId);
   if(!sc.links) return null;
+  const safeUrl=data.url!=null?TS8Guards.safeHttpUrl(data.url):'';
   const existing=findPrimary(sc.links, type);
   if(existing){
+    const previousUrl=existing.url;
     Object.assign(existing, data, {type});
+    if(data.url!=null) existing.url=safeUrl||previousUrl;
     return existing;
   }
-  const link={id:uid('l'), type, label:data.label||LINK_LABELS[type]||'', url:data.url||'', notes:data.notes||'', driveFileId:data.driveFileId||'', sourceEmailId:data.sourceEmailId||''};
+  const link={id:uid('l'), type, label:data.label||LINK_LABELS[type]||'', url:safeUrl, notes:data.notes||'', driveFileId:data.driveFileId||'', sourceEmailId:data.sourceEmailId||''};
   sc.links.push(link);
   return link;
 }
-function deleteSlotLink(scope, type, lid){
-  const sc=findScope(scope);
+function deleteSlotLink(scope, type, lid, projectId){
+  const sc=findScope(scope, projectId);
   if(!sc.links) return;
   if(lid) sc.links=sc.links.filter(x=>x.id!==lid);
   else {
-    // remove primary of type
     const primary=findPrimary(sc.links, type);
     if(primary) sc.links=sc.links.filter(x=>x.id!==primary.id);
   }
@@ -1456,29 +1702,35 @@ function deleteSlotLink(scope, type, lid){
 }
 
 function renderTile(title, type, link, scope, opts){
-  const has=!!(link&&link.url);
+  const href=link?TS8Guards.safeHttpUrl(link.url):'';
+  const has=!!href;
   const isPdf=type.startsWith('pdf');
+  const hit=link && searchHits.some(item=>item.linkId && item.linkId===link.id);
   const eyebrowMap={parta:'PART A',pdf_parta:'PDF',b1:'B1',b2:'B2',pdf_b2:'PDF'};
   const eyebrow=eyebrowMap[type]||String(type||'').toUpperCase();
   let actions='';
   if(has){
     actions=`
-      <a class="btn btn-primary btn-sm" href="${esc(link.url)}" target="_blank" rel="noopener">開啟</a>
-      <button class="btn btn-ghost btn-sm" data-act="edit-slot" data-scope="${esc(scope)}" data-type="${esc(type)}" data-lid="${esc(link.id)}">${isPdf?'取代':'編輯'}</button>
-      <button class="btn btn-ghost btn-sm" data-act="del-slot" data-scope="${esc(scope)}" data-type="${esc(type)}" data-lid="${esc(link.id)}">刪除</button>`;
+      <a class="btn btn-primary btn-sm" href="${esc(href)}" target="_blank" rel="noopener">開啟</a>
+      <button type="button" class="btn btn-ghost btn-sm" data-act="edit-slot" data-scope="${esc(scope)}" data-type="${esc(type)}" data-lid="${esc(link.id)}">${isPdf?'取代':'編輯'}</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-act="del-slot" data-scope="${esc(scope)}" data-type="${esc(type)}" data-lid="${esc(link.id)}">刪除</button>`;
+  }else if(link && link.url){
+    actions=`<span class="hint">連結格式不正確，未提供開啟</span>
+      <button type="button" class="btn btn-ghost btn-sm" data-act="edit-slot" data-scope="${esc(scope)}" data-type="${esc(type)}" data-lid="${esc(link.id)}">編輯</button>`;
   }else{
     if(isPdf){
-      actions=`<button class="btn btn-primary btn-sm" data-act="upload-slot" data-scope="${esc(scope)}" data-type="${esc(type)}">上傳 PDF</button>
-        <button class="btn btn-ghost btn-sm" data-act="paste-slot" data-scope="${esc(scope)}" data-type="${esc(type)}">貼上連結</button>`;
+      actions=`<button type="button" class="btn btn-primary btn-sm" data-act="upload-slot" data-scope="${esc(scope)}" data-type="${esc(type)}">上傳 PDF</button>
+        <button type="button" class="btn btn-ghost btn-sm" data-act="paste-slot" data-scope="${esc(scope)}" data-type="${esc(type)}">貼上連結</button>`;
     }else{
-      actions=`<button class="btn btn-primary btn-sm" data-act="paste-slot" data-scope="${esc(scope)}" data-type="${esc(type)}">新增連結</button>`;
+      actions=`<button type="button" class="btn btn-primary btn-sm" data-act="paste-slot" data-scope="${esc(scope)}" data-type="${esc(type)}">新增連結</button>`;
     }
   }
-  return `<div class="tile ${has?'':'empty-slot'}">
+  const shownUrl=href||'';
+  return `<div class="tile ${has?'':'empty-slot'} ${hit?'is-search-hit':''}" ${hit?'data-search-hit="1"':''}>
     <div class="tile-eyebrow">${esc(eyebrow)}</div>
     <div class="tile-title">${esc(title)}</div>
     <div class="tile-status ${has?'has':'miss'}">${has?'已有':'未有'}</div>
-    ${has?`<div class="tile-url" title="${esc(link.url)}">${esc(shortUrl(link.url))}${link.label&&link.label!==title?`<br><span class="hint">${esc(link.label)}</span>`:''}</div>`:`<div class="tile-url hint">${isPdf?'尚未上傳':'尚未加入連結'}</div>`}
+    ${has?`<div class="tile-url" title="${esc(shownUrl)}">${esc(shortUrl(shownUrl))}${link.label&&link.label!==title?`<br><span class="hint">${esc(link.label)}</span>`:''}</div>`:`<div class="tile-url hint">${link&&link.url?'這個連結不是 http 或 https':(isPdf?'尚未上傳':'尚未加入連結')}</div>`}
     <div class="tile-actions">${actions}</div>
   </div>`;
 }
@@ -1512,10 +1764,13 @@ function ensureDayBody(card){
 
 function renderSidebar(){
   const list=$('projList');
+  const nameEl=$('projPickerName');
+  const current=proj();
+  if(nameEl) nameEl.textContent=current?current.name:'未選擇項目';
   const items=db.projects.filter(projectMatches);
   if(!items.length){list.innerHTML=`<div class="hint" style="padding:12px">沒有項目</div>`;return}
   list.innerHTML=items.map(p=>`
-    <button class="proj-item ${p.id===selectedProjectId?'active':''}" data-pid="${esc(p.id)}">
+    <button type="button" class="proj-item ${p.id===selectedProjectId?'active':''}" data-pid="${esc(p.id)}">
       <span class="name">${esc(p.name)}</span>
       <span class="meta">${(p.partAs||[]).length} 個 Part A · ${countDays(p)} 隔離日</span>
     </button>`).join('');
@@ -1526,6 +1781,13 @@ function renderMain(){
 
   const p=proj();
   $('btnEditProject').style.display=p?'inline-flex':'none';
+  if(!TS8Access.canReadWorkData()){
+    $('crumb').textContent='需要登入';
+    $('content').innerHTML=`<div class="empty"><div class="hint-lg">工作資料需要已登入並有權限的帳號。</div>
+      <button type="button" class="btn btn-primary" id="btnSignInMain">登入</button></div>`;
+    const gate=$('btnSignInMain'); if(gate) gate.onclick=()=>signInForUpload();
+    return;
+  }
   if(!p){
     $('crumb').textContent='請選擇或建立項目';
     $('content').innerHTML=`<div class="empty"><div class="hint-lg">選擇左側項目開始。<br>Part A 與隔離日的 B1／B2 連結及 PDF 會顯示於此。</div>
@@ -1537,8 +1799,8 @@ function renderMain(){
   ensureSelectedPartA();
   const pas=p.partAs||[];
   let html=`<div class="pa-tabs">`;
-  html+=pas.map(pa=>`<button class="pa-tab ${pa.id===selectedPartAId?'active':''}" data-act="select-pa" data-paid="${esc(pa.id)}">${esc(pa.label||'Part A')}</button>`).join('');
-  html+=`<button class="pa-tab pa-tab-add" data-act="add-pa">＋ Part A</button></div>`;
+  html+=pas.map(pa=>`<button type="button" class="pa-tab ${pa.id===selectedPartAId?'active':''}" data-act="select-pa" data-paid="${esc(pa.id)}">${esc(pa.label||'Part A')}</button>`).join('');
+  html+=`<button type="button" class="pa-tab pa-tab-add" data-act="add-pa">＋ Part A</button></div>`;
 
   const pa=partA();
   if(!pa){
@@ -1561,8 +1823,8 @@ function renderMain(){
       ${pa.notes?`<div class="hint" style="margin-top:12px">${esc(pa.notes)}</div>`:''}
     </div>
     <div class="header-actions">
-      <button class="btn btn-ghost btn-sm" data-act="edit-pa" data-paid="${esc(pa.id)}">編輯</button>
-      <button class="btn btn-ghost btn-sm" data-act="add-day" data-paid="${esc(pa.id)}">＋ 隔離日</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-act="edit-pa" data-paid="${esc(pa.id)}">編輯</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-act="add-day" data-paid="${esc(pa.id)}">＋ 隔離日</button>
     </div>
   </div></div>`;
 
@@ -1572,12 +1834,17 @@ function renderMain(){
   if(!sessionStorage.getItem(OPEN_SECTIONS_KEY) && !openSectionIds.has(paDocsKey)){
     openSectionIds.add(paDocsKey);
   }
-  html+=`<div class="section section-collapsible ${openSectionIds.has(paDocsKey)?'is-open':''}" data-section="${esc(paDocsKey)}">
-    <div class="section-head" data-act="toggle-section" data-section="${esc(paDocsKey)}">
-      <span class="sec-chevron">▸</span>
-      <div class="section-title">Part A 文件</div>
+  const docsOpen=openSectionIds.has(paDocsKey);
+  const searchBanner=searchBannerHtml(p, pa);
+  if(searchBanner) html+=searchBanner;
+  html+=`<div class="section section-collapsible ${docsOpen?'is-open':''}" data-section="${esc(paDocsKey)}">
+    <div class="section-head">
+      <button type="button" class="section-toggle" data-act="toggle-section" data-section="${esc(paDocsKey)}" aria-expanded="${docsOpen?'true':'false'}" aria-controls="sec-${esc(pa.id)}">
+        <span class="sec-chevron" aria-hidden="true">▸</span>
+        <span class="section-title">Part A 文件</span>
+      </button>
     </div>
-    <div class="section-body">
+    <div class="section-body" id="sec-${esc(pa.id)}">
       <div class="tile-grid">
         ${renderTile('Part A 連結','parta',findPrimary(pa.links,'parta'),scopePa)}
         ${renderTile('Part A PDF','pdf_parta',findPrimary(pa.links,'pdf_parta'),scopePa)}
@@ -1601,16 +1868,17 @@ function renderMain(){
       <button class="btn btn-primary" data-act="add-day" data-paid="${esc(pa.id)}">＋ 新增隔離日</button></div>`;
   }else{
     html+=`<div class="day-toolbar">
-      <div class="field" style="flex:1.4"><label>搜尋</label>
+      <div class="field" style="flex:1.4"><label for="dayFilterQ">搜尋</label>
         <input id="dayFilterQ" type="search" placeholder="日期、標籤、Part B ID…" value="${esc(dayFilterQ)}"></div>
-      <div class="field"><label>狀態</label>
+      <div class="field"><label for="dayFilterStatus">狀態</label>
         <select id="dayFilterStatus">
           <option value="">全部狀態</option>
           ${DAY_STATUS.map(s=>`<option value="${esc(s)}" ${dayFilterStatus===s?'selected':''}>${esc(s)}</option>`).join('')}
         </select></div>
-      <div class="field"><label>由</label><input id="dayFilterFrom" type="date" value="${esc(dayFilterFrom)}"></div>
-      <div class="field"><label>至</label><input id="dayFilterTo" type="date" value="${esc(dayFilterTo)}"></div>
+      <div class="field"><label for="dayFilterFrom">由</label><input id="dayFilterFrom" type="date" value="${esc(dayFilterFrom)}"></div>
+      <div class="field"><label for="dayFilterTo">至</label><input id="dayFilterTo" type="date" value="${esc(dayFilterTo)}"></div>
       <div class="day-toolbar-actions">
+        <button type="button" class="btn btn-ghost btn-sm" data-act="clear-day-filter">清除篩選</button>
         <button type="button" class="btn btn-ghost btn-sm" data-act="expand-days" data-paid="${esc(pa.id)}">全部展開</button>
         <button type="button" class="btn btn-ghost btn-sm" data-act="collapse-days" data-paid="${esc(pa.id)}">全部收合</button>
       </div>
@@ -1623,23 +1891,28 @@ function renderMain(){
       const b1=!!findPrimary(d.links,'b1');
       const b2=!!findPrimary(d.links,'b2');
       const pdf=!!findPrimary(d.links,'pdf_b2');
-      const hay=[d.date,d.label,d.partBSubmissionId,d.status,d.notes].filter(Boolean).join(' ').toLowerCase();
-      return `<div class="day-card ${open?'is-open':''}" data-day-id="${esc(scope)}" data-date="${esc(d.date||'')}" data-status="${esc(d.status||'未開始')}" data-hay="${esc(hay)}">
-        <div class="day-head" data-act="toggle-day" data-day-id="${esc(scope)}">
-          <span class="day-chevron">▸</span>
-          <span class="day-date">${esc(d.date||'—')}</span>
-          ${badgeStatus(d.status||'未開始')}
-          <span class="day-sub">${esc(d.label||'隔離日')}${d.partBSubmissionId?` · Part B：<code>${esc(d.partBSubmissionId)}</code>`:''}</span>
-          <span class="day-dots">
-            <span class="day-dot ${b1?'on':''}">B1</span>
-            <span class="day-dot ${b2?'on':''}">B2</span>
-            <span class="day-dot ${pdf?'on':''}">PDF</span>
-          </span>
-          <button class="btn btn-ghost btn-sm" data-act="edit-day" data-paid="${esc(pa.id)}" data-did="${esc(d.id)}">編輯</button>
+      const linkHay=(d.links||[]).map(l=>[l.label,l.url,l.notes,l.type].join(' ')).join(' ');
+      const hay=[d.date,d.label,d.partBSubmissionId,d.status,d.notes,linkHay].filter(Boolean).join(' ').toLowerCase();
+      const dayHit=searchHits.some(item=>item.projectId===p.id && item.partAId===pa.id && item.dayId===d.id);
+      const bodyId='day-body-'+pa.id+'-'+d.id;
+      return `<div class="day-card ${open?'is-open':''} ${dayHit?'is-search-hit':''}" data-day-id="${esc(scope)}" data-date="${esc(d.date||'')}" data-status="${esc(d.status||'未開始')}" data-hay="${esc(hay)}" ${dayHit?'data-search-hit="1"':''}>
+        <div class="day-head">
+          <button type="button" class="day-toggle" data-act="toggle-day" data-day-id="${esc(scope)}" aria-expanded="${open?'true':'false'}" aria-controls="${esc(bodyId)}">
+            <span class="day-chevron" aria-hidden="true">▸</span>
+            <span class="day-date">${esc(d.date||'—')}</span>
+            ${badgeStatus(d.status||'未開始')}
+            <span class="day-sub">${esc(d.label||'隔離日')}${d.partBSubmissionId?` · Part B：<code>${esc(d.partBSubmissionId)}</code>`:''}</span>
+            <span class="day-dots">
+              <span class="day-dot ${b1?'on':''}">B1</span>
+              <span class="day-dot ${b2?'on':''}">B2</span>
+              <span class="day-dot ${pdf?'on':''}">PDF</span>
+            </span>
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm" data-act="edit-day" data-paid="${esc(pa.id)}" data-did="${esc(d.id)}">編輯</button>
         </div>
         ${open
-          ? `<div class="day-body">${renderDayBodyHtml(d, scope)}</div>`
-          : `<div class="day-body" data-lazy="1"></div>`}
+          ? `<div class="day-body" id="${esc(bodyId)}">${renderDayBodyHtml(d, scope)}</div>`
+          : `<div class="day-body" id="${esc(bodyId)}" data-lazy="1"></div>`}
       </div>`;
     }).join('');
     html+=`</div>`;
@@ -1676,9 +1949,76 @@ function applyDayFilter(){
   const count=$('dayFilterCount');
   if(count){
     const total=cards.length;
-    count.textContent = shown===total
+    const filtering=!!(q||st||from||to);
+    count.textContent = !filtering
       ? `共 ${total} 個隔離日（點列即可展開）`
-      : `顯示 ${shown}／${total} 個隔離日`;
+      : (shown===0 ? '沒有符合的隔離日' : `顯示 ${shown}／${total} 個隔離日`);
+  }
+  let empty=$('dayFilterEmpty');
+  if(shown===0 && cards.length){
+    if(!empty){
+      empty=document.createElement('div');
+      empty.id='dayFilterEmpty';
+      empty.className='day-empty-note';
+      empty.setAttribute('role','status');
+      const list=$('dayList');
+      if(list) list.before(empty);
+    }
+    empty.textContent='沒有符合的隔離日。清除篩選可看到全部。';
+  }else if(empty){
+    empty.remove();
+  }
+}
+
+function searchBannerHtml(project, pa){
+  if(!searchQ.trim() || !searchHits.length) return '';
+  const here=searchHits.filter(item=>item.projectId===project.id && (!pa || item.partAId===pa.id));
+  const hit=here[0]||searchHits[0];
+  if(!hit) return '';
+  const where=[hit.project, hit.partA, hit.date?('隔離日 '+hit.date):'', hit.where, hit.text].filter(Boolean).join(' · ');
+  return `<div class="search-hit-banner" role="status">找到 ${searchHits.length} 處。已跳到：${esc(where)}</div>`;
+}
+function collectSearchHits(q){
+  const needle=String(q||'').trim().toLowerCase();
+  if(!needle) return [];
+  const hits=[];
+  db.projects.forEach(p=>{
+    (p.partAs||[]).forEach(pa=>{
+      (pa.links||[]).forEach(l=>{
+        const bag=[l.url,l.label,l.notes,l.type].join(' ').toLowerCase();
+        if(bag.includes(needle)) hits.push({projectId:p.id,partAId:pa.id,dayId:null,linkId:l.id,where:'Part A 連結',text:l.label||l.url,project:p.name,partA:pa.label||'Part A'});
+      });
+      (pa.days||[]).forEach(d=>{
+        if(String(d.partBSubmissionId||'').toLowerCase().includes(needle)){
+          hits.push({projectId:p.id,partAId:pa.id,dayId:d.id,where:'Part B ID',text:d.partBSubmissionId,project:p.name,partA:pa.label||'Part A',date:d.date});
+        }
+        (d.links||[]).forEach(l=>{
+          const bag=[l.url,l.label,l.notes,l.type].join(' ').toLowerCase();
+          if(bag.includes(needle)) hits.push({projectId:p.id,partAId:pa.id,dayId:d.id,linkId:l.id,where:'連結',text:l.label||l.url,project:p.name,partA:pa.label||'Part A',date:d.date});
+        });
+      });
+    });
+  });
+  return hits;
+}
+function revealSearchHit(hit){
+  if(!hit) return;
+  if(hit.projectId && hit.projectId!==selectedProjectId){
+    selectedProjectId=hit.projectId;
+    selectedPartAId=null;
+    dayFilterQ=''; dayFilterStatus=''; dayFilterFrom=''; dayFilterTo='';
+  }
+  if(hit.partAId){
+    if(hit.partAId!==selectedPartAId){
+      dayFilterQ=''; dayFilterStatus=''; dayFilterFrom=''; dayFilterTo='';
+    }
+    selectedPartAId=hit.partAId;
+    openSectionIds.add('pa-docs:'+hit.partAId);
+    saveOpenSet(OPEN_SECTIONS_KEY, openSectionIds);
+  }
+  if(hit.dayId && hit.partAId){
+    openDayIds.add('day:'+hit.partAId+':'+hit.dayId);
+    saveOpenSet(OPEN_DAYS_KEY, openDayIds);
   }
 }
 
@@ -1764,11 +2104,11 @@ function renderStatsView(){
   }
   const st=partBStats(all);
   const byProj=partBStatsByProject(all);
-  const now=new Date();
-  const yNow=String(now.getFullYear());
-  const mNow=now.getMonth()+1;
-  const ym=yNow+'-'+String(mNow).padStart(2,'0');
-  const prevM = mNow===1 ? ((yNow-1)+'-12') : (yNow+'-'+String(mNow-1).padStart(2,'0'));
+  const hkNow=TS8Guards.hkParts(new Date());
+  const yNow=hkNow.year;
+  const mNow=Number(hkNow.month);
+  const ym=hkNow.ym;
+  const prevM = mNow===1 ? (String(Number(yNow)-1)+'-12') : (yNow+'-'+String(mNow-1).padStart(2,'0'));
   const thisMonth=st.map[ym]||0;
   const lastMonth=st.map[prevM]||0;
   const thisYear=st.yearMap[yNow]||0;
@@ -1794,7 +2134,7 @@ function renderStatsView(){
   const yearOpts=(st.years.length?st.years:[yNow]).map(y=>`<option value="${esc(y)}" ${y===selectedYear?'selected':''}>${esc(y)} 年</option>`).join('');
 
   const metaAt=(db.meta&&db.meta.updatedAt)||'';
-  let metaLine='範圍：全部項目。完成條件：狀態「已完結」或已有完整 PDF。以隔離日日期計。';
+  let metaLine='範圍：全部項目。完成條件：狀態「已完結」或已有完整 PDF。以隔離日日期計。本年、本月以香港時間（Asia/Hong_Kong）計算，不受年份選擇影響。';
   if(metaAt){
     try{ metaLine+=' 資料更新至 '+new Date(metaAt).toLocaleString('zh-HK',{timeZone:'Asia/Hong_Kong'}); }catch(_){}
   }
@@ -1808,24 +2148,12 @@ function renderStatsView(){
         <p>全部 job 合計（唔跟左邊揀邊個項目）。上層睇整體 KPI／圖表，下層「項目明細」逐個 job。</p>
       </div>
       <div class="stats-toolbar">
-        <div class="field"><label>年份</label><select id="statsYearSelect" aria-label="選擇年份">${yearOpts}</select></div>
+        <div class="field"><label for="statsYearSelect">年份（只影響「年內各月」圖）</label><select id="statsYearSelect">${yearOpts}</select></div>
       </div>
       <div class="kpi-row">
-        <div class="kpi"><div class="lab">累計 Part B</div><div class="num">${st.total}</div><div class="delta">全部項目合計</div></div>
-        <div class="kpi"><div class="lab">本年 ${esc(yNow)}</div><div class="num">${thisYear}</div>${deltaHtml(thisYear,lastYear)}</div>
-        <div class="kpi accent"><div class="lab">本月 ${esc(ym)}</div><div class="num">${thisMonth}</div>${deltaHtml(thisMonth,lastMonth)}</div>
-      </div>
-      <div class="chart-grid">
-        <div class="chart-card">
-          <h2>每月趨勢</h2>
-          <div class="sub">折線 · 時間順序</div>
-          <div class="chart-wrap" id="trendWrap"><canvas id="trendChart" aria-label="Part B 每月趨勢圖"></canvas></div>
-        </div>
-        <div class="chart-card">
-          <h2>年內各月</h2>
-          <div class="sub" id="monthSub">柱狀 · ${esc(selectedYear)} 年</div>
-          <div class="chart-wrap bar-h" id="monthWrap"><canvas id="monthChart" aria-label="${esc(selectedYear)} 年各月完成次數"></canvas></div>
-        </div>
+        <div class="kpi"><div class="lab">累計 Part B</div><div class="num" data-kpi="total">${st.total}</div><div class="delta">全部項目合計</div></div>
+        <div class="kpi"><div class="lab">本年 ${esc(yNow)}（香港）</div><div class="num" data-kpi="year">${thisYear}</div>${deltaHtml(thisYear,lastYear)}</div>
+        <div class="kpi accent"><div class="lab">本月 ${esc(ym)}（香港）</div><div class="num" data-kpi="month">${thisMonth}</div>${deltaHtml(thisMonth,lastMonth)}</div>
       </div>
       <div class="jobs-table-wrap">
         <div class="jobs-head">
@@ -1843,6 +2171,18 @@ function renderStatsView(){
           </tbody>
         </table>
       </div>
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h2>每月趨勢</h2>
+          <div class="sub">折線 · 全部年份 · 不受年份選擇影響</div>
+          <div class="chart-wrap" id="trendWrap"><canvas id="trendChart" aria-label="Part B 每月趨勢圖"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h2>年內各月</h2>
+          <div class="sub" id="monthSub">柱狀 · ${esc(selectedYear)} 年 · 受年份選擇影響</div>
+          <div class="chart-wrap bar-h" id="monthWrap"><canvas id="monthChart" aria-label="${esc(selectedYear)} 年各月完成次數"></canvas></div>
+        </div>
+      </div>
 
       <p class="stats-note">${esc(metaLine)}</p>
     </div>`;
@@ -1851,8 +2191,11 @@ function renderStatsView(){
   if(ys) ys.onchange=()=>{ statsYearFilter=ys.value; render(); };
 
   if(typeof Chart==='undefined'){
-    $('trendWrap').innerHTML=`<div class="chart-empty">圖表庫載入失敗，請重新整理。</div>`;
-    $('monthWrap').innerHTML=`<div class="chart-empty">圖表庫載入失敗，請重新整理。</div>`;
+    const msg=chartState==='failed'
+      ? '圖表暫時未能載入，數字與明細仍可使用。'
+      : '圖表載入中。數字與明細可以先看。';
+    $('trendWrap').innerHTML=`<div class="chart-empty">${msg}</div>`;
+    $('monthWrap').innerHTML=`<div class="chart-empty">${msg}</div>`;
     return;
   }
 
@@ -1956,8 +2299,31 @@ function render(){
   renderSidebar();
   syncViewTabs();
   if(mainView==='stats'){
-    ensureChartJs().then(()=>renderStatsView()).catch(()=>renderStatsView());
-  } else { destroyStatsCharts(); renderMain(); }
+    const gen=++statsGen;
+    if(typeof Chart==='undefined' && chartState!=='failed') chartState='loading';
+    renderStatsView();
+    if(typeof Chart==='undefined'){
+      ensureChartJs().then(()=>{
+        if(gen!==statsGen || mainView!=='stats') return;
+        chartState='ready';
+        renderStatsView();
+      }).catch(()=>{
+        if(gen!==statsGen || mainView!=='stats') return;
+        chartState='failed';
+        renderStatsView();
+      });
+    }else{
+      chartState='ready';
+    }
+  } else {
+    statsGen++;
+    destroyStatsCharts();
+    renderMain();
+    const hit=document.querySelector('[data-search-hit="1"]');
+    if(hit && searchQ.trim()){
+      try{ hit.scrollIntoView({block:'nearest'}); }catch(_){}
+    }
+  }
   if(content){
     content.dataset.scrollKey=scrollKey;
     // Project / Part A / tab changes start at the top. Same-view redraws
@@ -1975,6 +2341,16 @@ function render(){
 }
 
 function openModal(cfg){
+  modalReturnFocus=document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  cfg.projectId=cfg.projectId || selectedProjectId;
+  if(cfg.kind==='pdf-upload'){
+    cfg._pin={
+      projectId:cfg.projectId,
+      scope:cfg.scope,
+      type:cfg.type,
+      previous:snapshotPrimary(cfg.projectId, cfg.scope, cfg.type)
+    };
+  }
   modalMode=cfg;
   const bg=$('modal');
   let title='', body='', danger='';
@@ -1983,12 +2359,12 @@ function openModal(cfg){
     const p=cfg.id?db.projects.find(x=>x.id===cfg.id):null;
     title=p?'編輯項目':'新項目';
     body=`<div class="grid">
-      <div class="field span2"><label>項目名稱 <span class="req">*</span></label><input id="m_name" value="${esc(p?p.name:'')}" placeholder="例如：Multi-function Area at Blk A Podium"></div>
-      <div class="field"><label>簡稱／代號</label><input id="m_code" value="${esc(p?p.code||'':'')}"></div>
-      <div class="field"><label>工程號碼</label><input id="m_job" value="${esc(p?p.jobNo||'':'')}" placeholder="J26159"></div>
-      <div class="field"><label>項目經理</label><input id="m_pm" value="${esc(p?p.pm||'':'')}"></div>
-      <div class="field"><label>建立日期</label><input type="date" id="m_created" value="${esc(p?p.createdAt||today():today())}"></div>
-      <div class="field span2"><label>備註</label><textarea id="m_notes">${esc(p?p.notes||'':'')}</textarea></div>
+      <div class="field span2"><label for="m_name">項目名稱 <span class="req">*</span></label><input id="m_name" value="${esc(p?p.name:'')}" placeholder="例如：Multi-function Area at Blk A Podium"></div>
+      <div class="field"><label for="m_code">簡稱／代號</label><input id="m_code" value="${esc(p?p.code||'':'')}"></div>
+      <div class="field"><label for="m_job">工程號碼</label><input id="m_job" value="${esc(p?p.jobNo||'':'')}" placeholder="J26159"></div>
+      <div class="field"><label for="m_pm">項目經理</label><input id="m_pm" value="${esc(p?p.pm||'':'')}"></div>
+      <div class="field"><label for="m_created">建立日期</label><input type="date" id="m_created" value="${esc(p?p.createdAt||today():today())}"></div>
+      <div class="field span2"><label for="m_notes">備註</label><textarea id="m_notes">${esc(p?p.notes||'':'')}</textarea></div>
     </div>`;
     if(p) danger=`<button class="btn btn-danger" id="m_del" style="margin-right:auto">刪除項目</button>`;
   }
@@ -1998,11 +2374,11 @@ function openModal(cfg){
     const pa=cfg.paid?(p.partAs||[]).find(x=>x.id===cfg.paid):null;
     title=pa?'編輯 Part A':'新增 Part A';
     body=`<div class="grid">
-      <div class="field span2"><label>顯示名稱 <span class="req">*</span></label><input id="m_label" value="${esc(pa?pa.label:'Part A #'+((p.partAs||[]).length+1))}"></div>
-      <div class="field"><label>E-Form ID</label><input id="m_eform" value="${esc(pa?pa.eformId||'':'')}"></div>
-      <div class="field"><label>檔案編號</label><input id="m_doc" value="${esc(pa?pa.docNo||'':'')}"></div>
-      <div class="field"><label>狀態</label><select id="m_status">${PART_STATUS.map(s=>`<option ${pa&&pa.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
-      <div class="field span2"><label>備註</label><textarea id="m_notes">${esc(pa?pa.notes||'':'')}</textarea></div>
+      <div class="field span2"><label for="m_label">顯示名稱 <span class="req">*</span></label><input id="m_label" value="${esc(pa?pa.label:'Part A #'+((p.partAs||[]).length+1))}"></div>
+      <div class="field"><label for="m_eform">E-Form ID</label><input id="m_eform" value="${esc(pa?pa.eformId||'':'')}"></div>
+      <div class="field"><label for="m_doc">檔案編號</label><input id="m_doc" value="${esc(pa?pa.docNo||'':'')}"></div>
+      <div class="field"><label for="m_status">狀態</label><select id="m_status">${PART_STATUS.map(s=>`<option ${pa&&pa.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="field span2"><label for="m_notes">備註</label><textarea id="m_notes">${esc(pa?pa.notes||'':'')}</textarea></div>
     </div>`;
     if(pa) danger=`<button class="btn btn-danger" id="m_del" style="margin-right:auto">刪除 Part A</button>`;
   }
@@ -2013,11 +2389,11 @@ function openModal(cfg){
     const d=cfg.did?(pa.days||[]).find(x=>x.id===cfg.did):null;
     title=d?'編輯隔離日':'新增隔離日';
     body=`<div class="grid">
-      <div class="field"><label>日期 <span class="req">*</span></label><input type="date" id="m_date" value="${esc(d?d.date:today())}"></div>
-      <div class="field"><label>狀態</label><select id="m_status">${DAY_STATUS.map(s=>`<option ${d&&d.status===s?'selected':(!d&&s==='未開始'?'selected':'')}>${s}</option>`).join('')}</select></div>
-      <div class="field span2"><label>標籤</label><input id="m_label" value="${esc(d?d.label||'隔離日':'隔離日')}"></div>
-      <div class="field span2"><label>Part B Submission ID</label><input id="m_pbid" value="${esc(d?d.partBSubmissionId||'':'')}"></div>
-      <div class="field span2"><label>備註</label><textarea id="m_notes">${esc(d?d.notes||'':'')}</textarea></div>
+      <div class="field"><label for="m_date">日期 <span class="req">*</span></label><input type="date" id="m_date" value="${esc(d?d.date:today())}"></div>
+      <div class="field"><label for="m_status">狀態</label><select id="m_status">${DAY_STATUS.map(s=>`<option ${d&&d.status===s?'selected':(!d&&s==='未開始'?'selected':'')}>${s}</option>`).join('')}</select></div>
+      <div class="field span2"><label for="m_label">標籤</label><input id="m_label" value="${esc(d?d.label||'隔離日':'隔離日')}"></div>
+      <div class="field span2"><label for="m_pbid">Part B Submission ID</label><input id="m_pbid" value="${esc(d?d.partBSubmissionId||'':'')}"></div>
+      <div class="field span2"><label for="m_notes">備註</label><textarea id="m_notes">${esc(d?d.notes||'':'')}</textarea></div>
     </div>`;
     if(d) danger=`<button class="btn btn-danger" id="m_del" style="margin-right:auto">刪除隔離日</button>`;
   }
@@ -2027,9 +2403,9 @@ function openModal(cfg){
     const existing=cfg.link||null;
     title=(existing?'編輯 ':'新增 ')+(LINK_LABELS[type]||type);
     body=`<div class="grid">
-      <div class="field span2"><label>URL <span class="req">*</span></label><input id="m_url" value="${esc(existing?existing.url||'':'')}" placeholder="https://…" autofocus></div>
-      <div class="field span2"><label>名稱（可選）</label><input id="m_label" value="${esc(existing?existing.label||LINK_LABELS[type]||'':'')}"></div>
-      <div class="field span2"><label>備註</label><textarea id="m_notes">${esc(existing?existing.notes||'':'')}</textarea></div>
+      <div class="field span2"><label for="m_url">URL <span class="req">*</span></label><input id="m_url" value="${esc(existing?existing.url||'':'')}" placeholder="https://…" autofocus></div>
+      <div class="field span2"><label for="m_label">名稱（可選）</label><input id="m_label" value="${esc(existing?existing.label||LINK_LABELS[type]||'':'')}"></div>
+      <div class="field span2"><label for="m_notes">備註</label><textarea id="m_notes">${esc(existing?existing.notes||'':'')}</textarea></div>
     </div>`;
     if(existing) danger=`<button class="btn btn-danger" id="m_del" style="margin-right:auto">刪除</button>`;
   }
@@ -2040,25 +2416,25 @@ function openModal(cfg){
     const setupHint=!UPLOAD_WEBAPP_URL
       ? `<div class="upload-status warn" style="margin-bottom:12px">上傳服務尚未接上，暫未能上傳。</div>` : '';
     body=`${setupHint}<div class="grid">
-      <div class="field span2"><label>名稱（可選）</label><input id="m_label" value="" placeholder="可留空，用檔名"></div>
+      <div class="field span2"><label for="m_label">名稱（可選）</label><input id="m_label" value="" placeholder="可留空，用檔名"></div>
       <div class="field span2">
-        <label>拖曳或選擇 PDF</label>
-        <div class="dropzone" id="m_dropzone" tabindex="0" role="button">
-          <div class="dz-icon">📄</div>
-          <div class="dz-title">將 PDF 拖曳到這裡</div>
-          <div class="dz-sub">或按下方按鈕選擇檔案</div>
+        <label for="m_file">拖曳或選擇 PDF</label>
+        <div class="dropzone" id="m_dropzone" tabindex="0" role="button" aria-label="拖曳一個 PDF 到這裡">
+          <div class="dz-icon" aria-hidden="true">📄</div>
+          <div class="dz-title">將一個 PDF 拖曳到這裡</div>
+          <div class="dz-sub">一次只可以一個檔。或按下方按鈕選擇</div>
         </div>
         <div style="margin-top:10px"><button type="button" class="btn btn-primary btn-sm" id="m_pick">選擇 PDF</button>
-          <input type="file" id="m_file" accept="application/pdf,.pdf" hidden></div>
-        <div class="upload-status ${UPLOAD_WEBAPP_URL?'':'warn'}" id="m_status">${UPLOAD_WEBAPP_URL?'準備就緒':'端點未設定'}</div>
+          <input type="file" id="m_file" accept="application/pdf,.pdf" aria-label="選擇一個 PDF 檔案" hidden></div>
+        <div class="upload-status" id="m_status" role="status" aria-live="polite">Drive：尚未上傳<br>欄位：未更改</div>
       </div>
       <div class="field span2">
         <details class="adv-toggle" id="m_adv">
           <summary>▸ 改為貼上已有 Drive 連結</summary>
           <div class="grid" style="margin-top:8px">
-            <div class="field span2"><label>URL</label><input id="m_url" value="" placeholder="https://drive.google.com/file/d/…/view"></div>
-            <div class="field"><label>Drive File ID</label><input id="m_driveId" value=""></div>
-            <div class="field"><label>備註</label><input id="m_notes" value=""></div>
+            <div class="field span2"><label for="m_url">URL</label><input id="m_url" value="" placeholder="https://drive.google.com/file/d/…/view"></div>
+            <div class="field"><label for="m_driveId">Drive File ID</label><input id="m_driveId" value=""></div>
+            <div class="field"><label for="m_notes">備註</label><input id="m_notes" value=""></div>
           </div>
         </details>
       </div>
@@ -2067,21 +2443,35 @@ function openModal(cfg){
 
   const saveLabel = cfg.kind==='pdf-upload' ? '儲存連結' : '儲存';
   const saveHidden = cfg.kind==='pdf-upload' ? ' style="display:none"' : '';
-  bg.innerHTML=`<div class="modal"><header><h3>${title}</h3></header><div class="body">${body}</div>
-    <div class="foot">${danger}<button class="btn btn-ghost" id="m_cancel">取消</button><button class="btn btn-primary" id="m_save"${saveHidden}>${saveLabel}</button></div></div>`;
+  bg.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><header><h3 id="modalTitle">${title}</h3></header><div class="body">${body}</div>
+    <div class="foot">${danger}<button type="button" class="btn btn-ghost" id="m_cancel">取消</button><button type="button" class="btn btn-primary" id="m_save"${saveHidden}>${saveLabel}</button></div></div>`;
   bg.classList.add('show');
   $('m_cancel').onclick=closeModal;
   bg.onclick=e=>{if(e.target===bg) closeModal()};
   $('m_save').onclick=saveModal;
   const del=$('m_del'); if(del) del.onclick=deleteModal;
   if(cfg.kind==='pdf-upload') wirePdfUploadModal(cfg);
-  if(cfg.kind==='url'){ const u=$('m_url'); if(u) setTimeout(()=>u.focus(),50); }
+  const dialog=bg.querySelector('.modal');
+  const first=dialog && dialog.querySelector('input:not([type="hidden"]),select,textarea,button');
+  if(first) first.focus();
 }
 
-function setUploadStatus(msg, cls){
+function setUploadReport(parts){
   const el=$('m_status'); if(!el) return;
-  el.className='upload-status'+(cls?' '+cls:'');
-  el.textContent=msg;
+  el.className='upload-status';
+  el.replaceChildren();
+  const drive=document.createElement('div');
+  drive.textContent=parts.drive||'';
+  const field=document.createElement('div');
+  field.textContent=parts.field||'';
+  el.append(drive, field);
+}
+function setUploadDisabled(disabled){
+  ['m_pick','m_file','m_save'].forEach(id=>{
+    const el=$(id); if(el) el.disabled=!!disabled;
+  });
+  const dz=$('m_dropzone');
+  if(dz) dz.setAttribute('aria-disabled', disabled?'true':'false');
 }
 function fileToBase64(file){
   return new Promise((resolve,reject)=>{
@@ -2092,56 +2482,69 @@ function fileToBase64(file){
   });
 }
 async function uploadPdfToDrive(file){
+  const auth=await TS8Access.assertUploadAllowed();
   if(!UPLOAD_WEBAPP_URL) throw new Error('上傳端點尚未設定');
   const base64=await fileToBase64(file);
   const res=await fetch(UPLOAD_WEBAPP_URL,{
     method:'POST',
     headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body:JSON.stringify(Object.assign({ secret:UPLOAD_SECRET, filename:file.name, mimeType:file.type||'application/pdf', base64, folderId:DRIVE_FOLDER_ID }, clientMeta()))
+    body:JSON.stringify(Object.assign({ op:'upload', idToken:auth.idToken, filename:file.name, mimeType:file.type||'application/pdf', base64 }, clientMeta()))
   });
   const text=await res.text();
   let data;
   try{ data=JSON.parse(text); }catch{ throw new Error('伺服器回應無效'); }
   if(!res.ok || !data || !data.ok) throw new Error((data&&(data.error||data.message))||('上傳失敗'));
   const id=data.id||data.fileId||'';
-  const url=data.url||data.webViewLink||(id?('https://drive.google.com/file/d/'+id+'/view'):'');
+  const url=TS8Guards.safeHttpUrl(data.url||data.webViewLink||(id?('https://drive.google.com/file/d/'+id+'/view'):''));
   if(!url) throw new Error('回應缺少檔案連結');
   return {id,url,name:data.name||file.name};
 }
 async function handlePdfFiles(files, cfg){
-  const list=[...files].filter(f=>{
-    const n=(f.name||'').toLowerCase();
-    return f.type==='application/pdf' || n.endsWith('.pdf');
-  });
-  if(!list.length){ setUploadStatus('請選擇 PDF','err'); toast('請選擇 PDF', true); return; }
-  if(!UPLOAD_WEBAPP_URL){ setUploadStatus('上傳端點尚未接上','warn'); toast('上傳端點尚未接上', true); return; }
-  const labelBase=$('m_label')?$('m_label').value.trim():'';
-  let ok=0, fail=0;
-  for(let i=0;i<list.length;i++){
-    const file=list[i];
-    setUploadStatus(`上傳中（${i+1}/${list.length}）：${file.name}`,'busy');
+  const verdict=TS8Guards.validatePdfFiles(files);
+  if(!verdict.ok){
+    setUploadReport({drive:verdict.message, field:'欄位：未更改'});
+    toast(verdict.message, true);
+    return;
+  }
+  if(uploadBusy) return;
+  const target=cfg._pin || {projectId:cfg.projectId||selectedProjectId, scope:cfg.scope, type:cfg.type, previous:snapshotPrimary(cfg.projectId||selectedProjectId, cfg.scope, cfg.type)};
+  uploadBusy=true;
+  setUploadDisabled(true);
+  try{
+    setUploadReport({drive:'Drive：上傳中', field:'欄位：尚未寫入'});
+    let uploaded;
     try{
-      const result=await uploadPdfToDrive(file);
-      upsertSlotLink(cfg.scope, cfg.type, {
-        label: labelBase || result.name || file.name,
-        url: result.url,
-        driveFileId: result.id,
-        notes:''
-      });
-      ok++;
+      uploaded=await uploadPdfToDrive(verdict.file);
     }catch(err){
       console.warn(err);
-      fail++;
-      setUploadStatus('錯誤：'+(err&&err.message?err.message:String(err)),'err');
+      setUploadReport({drive:'Drive：上傳失敗', field:'欄位：未更改，仍是原本的連結'});
       toast(err&&err.message?err.message:'上傳失敗', true);
+      return;
     }
-  }
-  if(ok){
-    save();
-    setUploadStatus(fail?`完成 ${ok} 個，失敗 ${fail} 個`:`完成 — 已上傳`,'ok');
-    toast('PDF 已上傳');
-    render();
-    if(!fail) setTimeout(()=>closeModal(), 600);
+    try{
+      if(window.TS8_TEST_FIELD_SYNC==='fail') throw new Error('欄位同步失敗');
+      const labelBase=$('m_label')?$('m_label').value.trim():'';
+      upsertSlotLink(target.scope, target.type, {
+        label: labelBase || uploaded.name || verdict.file.name,
+        url: uploaded.url,
+        driveFileId: uploaded.id,
+        notes:''
+      }, target.projectId);
+      save();
+      const field=syncSession.pending()?'欄位：待同步':'欄位：已寫入';
+      setUploadReport({drive:'Drive：已上傳', field:field});
+      toast('PDF 已上傳');
+      render();
+    }catch(err){
+      console.warn(err);
+      restorePrimary(target);
+      setUploadReport({drive:'Drive：已上傳', field:'欄位：寫入失敗，已保留原本的連結'});
+      toast('欄位未能更新，已保留原本的連結', true);
+      render();
+    }
+  }finally{
+    uploadBusy=false;
+    setUploadDisabled(false);
   }
 }
 function wirePdfUploadModal(cfg){
@@ -2165,7 +2568,41 @@ function wirePdfUploadModal(cfg){
   }
 }
 
-function closeModal(){$('modal').classList.remove('show');modalMode=null}
+function focusReturnTarget(node){
+  if(!node || typeof node.focus!=='function') return;
+  if(node.isConnected){ node.focus(); return; }
+  const act=node.getAttribute ? node.getAttribute('data-act') : '';
+  const did=node.getAttribute ? node.getAttribute('data-did') : '';
+  const paid=node.getAttribute ? node.getAttribute('data-paid') : '';
+  let next=null;
+  if(act==='edit-day' && did) next=document.querySelector('[data-act="edit-day"][data-did="'+CSS.escape(did)+'"]');
+  else if(act==='edit-pa' && paid) next=document.querySelector('[data-act="edit-pa"][data-paid="'+CSS.escape(paid)+'"]');
+  else if(act==='edit-slot' && node.getAttribute('data-lid')) next=document.querySelector('[data-act="edit-slot"][data-lid="'+CSS.escape(node.getAttribute('data-lid'))+'"]');
+  else if(node.id) next=document.getElementById(node.id);
+  if(next) next.focus();
+}
+function closeModal(){
+  const bg=$('modal');
+  if(bg) bg.classList.remove('show');
+  modalMode=null;
+  const back=modalReturnFocus;
+  modalReturnFocus=null;
+  if(back && back.isConnected && typeof back.focus==='function') back.focus();
+  return back;
+}
+function focusableIn(root){
+  if(!root) return [];
+  return [...root.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]):not([hidden]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')]
+    .filter(el=>!el.hasAttribute('hidden') && el.getAttribute('aria-hidden')!=='true');
+}
+function trapTab(event, root){
+  const items=focusableIn(root);
+  if(!items.length){ event.preventDefault(); return; }
+  const first=items[0];
+  const last=items[items.length-1];
+  if(event.shiftKey && document.activeElement===first){ event.preventDefault(); last.focus(); }
+  else if(!event.shiftKey && document.activeElement===last){ event.preventDefault(); first.focus(); }
+}
 
 function saveModal(){
   const cfg=modalMode; if(!cfg) return;
@@ -2203,28 +2640,31 @@ function saveModal(){
     toast('已儲存隔離日');
   }
   if(cfg.kind==='url'){
-    const url=$('m_url').value.trim(); if(!url){toast('請填 URL', true);return}
+    const url=TS8Guards.safeHttpUrl($('m_url').value.trim());
+    if(!url){toast('請填 http 或 https 連結', true);return}
     upsertSlotLink(cfg.scope, cfg.type, {
       label: $('m_label').value.trim()||LINK_LABELS[cfg.type]||'',
       url,
       notes: $('m_notes').value.trim(),
       driveFileId: (cfg.link&&cfg.link.driveFileId)||'',
       sourceEmailId: (cfg.link&&cfg.link.sourceEmailId)||''
-    });
+    }, cfg.projectId);
     toast('已儲存');
   }
   if(cfg.kind==='pdf-upload'){
-    const url=$('m_url')?$('m_url').value.trim():'';
-    if(!url){toast('請先上傳 PDF，或貼上 Drive 連結', true);return}
+    const url=TS8Guards.safeHttpUrl($('m_url')?$('m_url').value.trim():'');
+    if(!url){toast('請貼上 http 或 https 連結', true);return}
     upsertSlotLink(cfg.scope, cfg.type, {
       label: $('m_label').value.trim()||LINK_LABELS[cfg.type]||'',
       url,
       notes: ($('m_notes')&&$('m_notes').value.trim())||'',
       driveFileId: ($('m_driveId')&&$('m_driveId').value.trim())||''
-    });
+    }, cfg.projectId);
     toast('已儲存');
   }
+  const back=modalReturnFocus;
   save(); closeModal(); render();
+  focusReturnTarget(back);
 }
 
 function deleteModal(){
@@ -2247,7 +2687,10 @@ function deleteModal(){
     if(!confirm('刪除此連結？')) return;
     deleteSlotLink(cfg.scope, cfg.type, cfg.lid);
   }
-  save(); closeModal(); render(); toast('已刪除');
+  const back=modalReturnFocus;
+  save(); closeModal(); render();
+  focusReturnTarget(back);
+  toast('已刪除');
 }
 
 /* events */
@@ -2255,9 +2698,27 @@ $('projList').addEventListener('click',e=>{
   const b=e.target.closest('[data-pid]'); if(!b) return;
   selectedProjectId=b.getAttribute('data-pid');
   selectedPartAId=null;
+  dayFilterQ=''; dayFilterStatus=''; dayFilterFrom=''; dayFilterTo='';
   ensureSelectedPartA();
+  const side=document.querySelector('.sidebar');
+  if(side && window.matchMedia('(max-width: 900px)').matches){
+    side.classList.remove('is-picker-open');
+    const toggle=$('projPickerToggle');
+    if(toggle) toggle.setAttribute('aria-expanded','false');
+  }
   render();
 });
+const projPickerToggle=$('projPickerToggle');
+if(projPickerToggle){
+  projPickerToggle.addEventListener('click', ()=>{
+    const side=document.querySelector('.sidebar');
+    if(!side) return;
+    const open=side.classList.toggle('is-picker-open');
+    projPickerToggle.setAttribute('aria-expanded', open?'true':'false');
+  });
+}
+const btnSignIn=$('btnSignIn');
+if(btnSignIn) btnSignIn.addEventListener('click', ()=>{ signInForUpload(); });
 $('btnNewProject').onclick=()=>openModal({kind:'project'});
 const viewTabs=$('viewTabs');
 if(viewTabs){
@@ -2282,7 +2743,9 @@ $('btnEditProject').onclick=()=>{if(selectedProjectId) openModal({kind:'project'
     clearTimeout(t);
     t=setTimeout(()=>{
       searchQ=val;
-      renderSidebar();
+      searchHits=collectSearchHits(val);
+      if(searchHits[0]) revealSearchHit(searchHits[0]);
+      if(mainView==='links') render(); else renderSidebar();
       const n=$('globalSearch');
       if(n){ n.focus(); try{ n.setSelectionRange(n.value.length,n.value.length); }catch(_){} }
     }, 140);
@@ -2314,33 +2777,43 @@ $('content').addEventListener('click',e=>{
     e.stopPropagation();
   }
   if(act==='toggle-day'){
-    // ignore nested controls (edit etc.) — otherwise head toggle steals the click
-    if(e.target.closest('button')) return;
     const id=t.getAttribute('data-day-id');
     const card=document.querySelector('.day-card[data-day-id="'+CSS.escape(id)+'"]');
     if(!card) return;
     const willOpen=!card.classList.contains('is-open');
     if(willOpen) ensureDayBody(card);
     const open=card.classList.toggle('is-open');
+    t.setAttribute('aria-expanded', open?'true':'false');
     if(open) openDayIds.add(id); else openDayIds.delete(id);
     saveOpenSet(OPEN_DAYS_KEY, openDayIds);
     return;
   }
   if(act==='toggle-section'){
-    if(e.target.closest('button')) return;
     const id=t.getAttribute('data-section');
     const sec=document.querySelector('.section-collapsible[data-section="'+CSS.escape(id)+'"]');
     if(!sec) return;
     const open=sec.classList.toggle('is-open');
+    t.setAttribute('aria-expanded', open?'true':'false');
     if(open) openSectionIds.add(id); else openSectionIds.delete(id);
     saveOpenSet(OPEN_SECTIONS_KEY, openSectionIds);
     return;
   }
+  if(act==='clear-day-filter'){
+    dayFilterQ=''; dayFilterStatus=''; dayFilterFrom=''; dayFilterTo='';
+    const q=$('dayFilterQ'); if(q) q.value='';
+    const st=$('dayFilterStatus'); if(st) st.value='';
+    const from=$('dayFilterFrom'); if(from) from.value='';
+    const to=$('dayFilterTo'); if(to) to.value='';
+    applyDayFilter();
+    if(q) q.focus();
+    return;
+  }
   if(act==='expand-days'){
-    const paid=t.getAttribute('data-paid');
     document.querySelectorAll('#dayList .day-card').forEach(card=>{
       ensureDayBody(card);
       card.classList.add('is-open');
+      const toggle=card.querySelector('.day-toggle');
+      if(toggle) toggle.setAttribute('aria-expanded','true');
       openDayIds.add(card.getAttribute('data-day-id'));
     });
     saveOpenSet(OPEN_DAYS_KEY, openDayIds);
@@ -2349,6 +2822,8 @@ $('content').addEventListener('click',e=>{
   if(act==='collapse-days'){
     document.querySelectorAll('#dayList .day-card').forEach(card=>{
       card.classList.remove('is-open');
+      const toggle=card.querySelector('.day-toggle');
+      if(toggle) toggle.setAttribute('aria-expanded','false');
       openDayIds.delete(card.getAttribute('data-day-id'));
     });
     saveOpenSet(OPEN_DAYS_KEY, openDayIds);
@@ -2387,15 +2862,64 @@ $('content').addEventListener('click',e=>{
   }
 });
 
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('modal').classList.contains('show')) closeModal()});
+document.addEventListener('keydown',e=>{
+  const conflict=$('conflictDialog');
+  const conflictOpen=!!(conflict && conflict.classList.contains('show'));
+  const modalOpen=$('modal').classList.contains('show');
+  if(e.key==='Escape'){
+    if(conflictOpen){ e.preventDefault(); closeConflict(); return; }
+    if(modalOpen){ e.preventDefault(); closeModal(); return; }
+  }
+  if(e.key!=='Tab') return;
+  const root=conflictOpen ? conflict.querySelector('.modal') : (modalOpen ? $('modal').querySelector('.modal') : null);
+  if(root) trapTab(e, root);
+});
+const conflictCloseBtn=$('conflictClose');
+if(conflictCloseBtn) conflictCloseBtn.onclick=closeConflict;
 
 load();
+restoreSyncSession();
 selectedProjectId=db.projects[0]?db.projects[0].id:null;
 ensureSelectedPartA();
 render();
+refreshSyncStatus();
 
+function forgetFailedFirebaseScripts(){
+  document.querySelectorAll('script[data-ts8-src]').forEach(node=>{
+    const src=node.getAttribute('data-ts8-src')||'';
+    if(src.indexOf('firebasejs')===-1) return;
+    if(node.getAttribute('data-loaded')!=='1') node.remove();
+  });
+}
+async function signInForUpload(){
+  try{
+    if(window.TS8_TEST_SESSION){
+      refreshSignInLabel();
+      toast('已使用測試登入');
+      render();
+      return;
+    }
+    await loadScriptOnce(FB_APP);
+    await loadScriptOnce(FB_AUTH);
+    if(!firebase.apps.length) firebase.initializeApp(CFG.FIREBASE);
+    const provider=new firebase.auth.GoogleAuthProvider();
+    await firebase.auth().signInWithPopup(provider);
+    refreshSignInLabel();
+    toast('已登入');
+    render();
+  }catch(err){
+    toast(err&&err.message?err.message:'登入失敗', true);
+  }
+}
+function refreshSignInLabel(){
+  const btn=$('btnSignIn');
+  if(!btn) return;
+  const s=TS8Access.session();
+  btn.textContent=(s&&s.email)?s.email:'登入以上傳 PDF';
+}
 (async function bootSync(){
   async function bootLegacy(){
+    if(!legacySyncAllowed()) return;
     await pullShared(true);
     try{
       const cloud=await fetchSharedDb();
@@ -2403,38 +2927,46 @@ render();
         await pushShared(true);
       }
     }catch(_){}
-    const POLL_MS=30000;
-    setInterval(()=>{
-      if(document.hidden) return;
-      if($('modal') && $('modal').classList.contains('show')) return;
-      if(_pushBusy||_pullBusy) return;
-      pullShared(true);
-    }, POLL_MS);
-    document.addEventListener('visibilitychange', ()=>{
-      if(!document.hidden) pullShared(true);
-    });
   }
   async function bootFirestore(){
+    if(bootingSync || transport==='firestore') return;
+    bootingSync=true;
     try{
       const ok=await ensureFirestoreReady();
-      if(!ok){ await bootLegacy(); return; }
+      if(!ok) throw new Error('Firebase SDK 未載入');
+      transport='firestore';
       await TS8FirestoreSync.start({
         scope:'projects',
         getDb:()=>db,
         migrateDb,
-        setStatus:setSyncText,
-        fetchLegacyDb:async ()=>{
-          try{ return await fetchSharedDb(); }catch(e){ console.warn(e); return null; }
+        manageStatus:true,
+        allowEmptySeed:false,
+        flushLocal:()=>flushSync(),
+        mergeProject:(entry)=>{
+          const applied=TS8SyncMerge.applyOps(entry.server?[entry.server]:[], entry.ops||[]);
+          const doc=(applied.projects||[]).find(p=>p.id===entry.id) || null;
+          return {doc:doc, conflicts:applied.conflicts||[]};
+        },
+        fetchLegacyDb:async ()=>null,
+        setStatus:(text)=>{
+          if(text==='同步失敗'){
+            syncFailed=true;
+            syncConfirmed=false;
+            refreshSyncStatus();
+          }
         },
         onRemote:(shared)=>{
           const beforeId=selectedProjectId;
           const beforeSig=selectedProjectSig();
-          const applied=applyCloudDb(shared);
+          const applied=acceptServer(shared);
           if(!selectedProjectId || !db.projects.find(p=>p.id===selectedProjectId)){
             selectedProjectId=db.projects[0]?db.projects[0].id:null;
           }
           ensureSelectedPartA();
-          if(!applied.changed) return;
+          if(!applied.changed){
+            updateSyncMetaBar();
+            return;
+          }
           const afterSig=selectedProjectSig();
           if(selectedProjectId===beforeId && beforeSig && beforeSig===afterSig){
             renderSidebar();
@@ -2444,21 +2976,28 @@ render();
           }
         }
       });
-      if(_pendingFsPush){
-        _pendingFsPush=false;
-        flushLocalSave();
-        TS8FirestoreSync.schedulePush();
-      }
+      syncFailed=false;
+      refreshSyncStatus();
+      await flushSync();
     }catch(err){
-      console.warn('Firestore start failed, falling back', err);
-      setSyncText('同步失敗');
-      await bootLegacy();
+      console.warn('Firestore unavailable; edits stay on this device', err);
+      transport='local';
+      syncConfirmed=false;
+      refreshSyncStatus();
+      forgetFailedFirebaseScripts();
+      clearTimeout(sdkRetryTimer);
+      sdkRetryTimer=setTimeout(()=>bootFirestore(), 8000);
+    }finally{
+      bootingSync=false;
     }
   }
+  window.addEventListener('online', ()=>{
+    if(!firestoreConfigured()) return;
+    if(transport!=='firestore') bootFirestore();
+    else if(syncSession.pending()) flushSync();
+  });
   if(firestoreConfigured()){
-    const run=()=>{ bootFirestore(); };
-    if(typeof requestIdleCallback==='function') requestIdleCallback(run,{timeout:1500});
-    else setTimeout(run,0);
+    setTimeout(()=>bootFirestore(), 0);
     return;
   }
   await bootLegacy();

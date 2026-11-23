@@ -7,6 +7,9 @@
 <title>FSI 暫停管理 · 工作頁面集</title>
 <link rel="stylesheet" href="./css/site.css?v=20261123perf1">
 <script src="./config.js"></script>
+<script src="./js/sync-merge.js?v=20261123sync1"></script>
+<script src="./js/ts8-guards.js?v=20261123sync1"></script>
+<script src="./js/access.js?v=20261123sync1"></script>
 <style>
 :root{
   --ink:#0F1612;--ink-2:#16201A;--cream:#F3EEE4;--cream-2:#EAE3D6;--paper:#FAF7F1;--line:#DDD5C8;--line-soft:#E8E1D4;
@@ -247,7 +250,7 @@ body.has-site-chrome .app{min-height:calc(100vh - var(--nav-h))}
     </div>
     <div class="content" id="content"></div>
     <div class="foot-bar">
-      <span><span class="sync-dot" id="syncDot"></span><span id="syncText">即時同步中</span></span>
+      <span><span class="sync-dot" id="syncDot" aria-hidden="true"></span><span id="syncText" role="status" aria-live="polite">已儲存於此裝置</span></span>
       <span id="footMeta"></span>
     </div>
   </section>
@@ -267,9 +270,8 @@ body.has-site-chrome .app{min-height:calc(100vh - var(--nav-h))}
 const KEY='ts8_project_link_manager_v6';
 const CFG=(typeof window!=='undefined'&&window.TS8_CONFIG)||{};
 const UPLOAD_WEBAPP_URL=CFG.UPLOAD_WEBAPP_URL||'';
-const UPLOAD_SECRET=CFG.UPLOAD_SECRET||'';
-const DRIVE_FOLDER_ID=CFG.DRIVE_FOLDER_ID||'';
 const SYNC_URL=UPLOAD_WEBAPP_URL;
+function legacySyncAllowed(){ return CFG.ALLOW_LEGACY_SYNC===true && !firestoreConfigured(); }
 const SEED_URL='./data/fsi-suspension-20251219.json?v=1';
 const MAX_DAYS=14;
 const OPEN_SECTIONS_KEY='fsi_open_sections_v2';
@@ -282,6 +284,9 @@ let openSectionIds=loadOpenSet(OPEN_SECTIONS_KEY);
 let deptChart=null, fsiChart=null, statusChart=null;
 let _pushTimer=null, _pullBusy=false, _pushBusy=false, _lastCloudUpdatedAt='';
 let _seedDone=false;
+let fsiDirty=false;
+let fsiSawRemote=false;
+let fsiBaseCases=[];
 let modalState=null;
 
 const $=id=>document.getElementById(id);
@@ -321,7 +326,23 @@ function toast(msg, err){
   el.textContent=msg; el.classList.toggle('err', !!err); el.classList.add('show');
   clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove('show'), 2800);
 }
-function setSyncText(t){ const el=$('syncText'); if(el) el.textContent=t; }
+function setSyncText(t){
+  const label=({
+    '同步失敗':'同步失敗',
+    '已同步':'已同步',
+    '待同步':'待同步',
+    '即時同步中':'待同步',
+    '自動同步中':'待同步',
+    '自動同步中（稍後重試）':'同步失敗',
+    '自動同步中（離線）':'已儲存於此裝置',
+    '已儲存於此裝置':'已儲存於此裝置'
+  })[t] || '已儲存於此裝置';
+  const el=$('syncText');
+  if(el){
+    el.textContent=label;
+    el.setAttribute('data-state', label);
+  }
+}
 
 function loadOpenSet(key){
   try{
@@ -578,7 +599,7 @@ async function ensureFirestoreReady(){
   if(!firestoreConfigured()) return false;
   await loadScriptOnce('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js');
   await loadScriptOnce('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js');
-  await loadScriptOnce('./js/firestore-sync.js');
+  await loadScriptOnce('./js/firestore-sync.js?v=20261123sync1');
   return !!(window.TS8FirestoreSync && TS8FirestoreSync.enabled());
 }
 let _localSaveTimer=null;
@@ -606,21 +627,43 @@ function touchMeta(){
 }
 function save(){
   touchMeta();
+  saveLocalOnlyNow();
   if(firestoreConfigured()){
-    saveLocalOnly();
-    setSyncText('即時同步中');
-    if(window.TS8FirestoreSync && TS8FirestoreSync.isStarted()){
+    fsiDirty=true;
+    setSyncText('待同步');
+    if(window.TS8FirestoreSync && TS8FirestoreSync.isStarted() && fsiSawRemote){
       TS8FirestoreSync.schedulePush();
     } else {
       _pendingFsPush=true;
     }
     return;
   }
-  saveLocalOnly();
-  setSyncText('自動同步中');
+  if(!legacySyncAllowed()){
+    setSyncText('已儲存於此裝置');
+    return;
+  }
+  setSyncText('待同步');
   if(!UPLOAD_WEBAPP_URL) return;
   clearTimeout(_pushTimer);
   _pushTimer=setTimeout(()=>{ pushShared(true); }, 800);
+}
+async function flushFsi(){
+  if(!window.TS8FirestoreSync || !TS8FirestoreSync.isStarted() || !fsiSawRemote){
+    if(fsiDirty) _pendingFsPush=true;
+    setSyncText(fsiDirty?'待同步':'已儲存於此裝置');
+    return false;
+  }
+  setSyncText('待同步');
+  const ok=await TS8FirestoreSync.writeDb(db, false);
+  if(ok){
+    fsiDirty=false;
+    _pendingFsPush=false;
+    fsiBaseCases=TS8SyncMerge.clone(cases());
+    setSyncText('已同步');
+    return true;
+  }
+  setSyncText('同步失敗');
+  return false;
 }
 
 function parseUpdatedAt(iso){
@@ -699,6 +742,7 @@ async function fetchSharedDb(){
   throw new Error('invalid sync payload');
 }
 async function pullShared(silent){
+  if(!legacySyncAllowed()) return null;
   if(_pullBusy) return null;
   _pullBusy=true;
   try{
@@ -726,6 +770,7 @@ async function pullShared(silent){
   }finally{ _pullBusy=false; }
 }
 async function pushShared(silent){
+  if(!legacySyncAllowed()) return false;
   if(!SYNC_URL) return false;
   if(_pushBusy) return false;
   _pushBusy=true;
@@ -746,7 +791,7 @@ async function pushShared(silent){
     const res=await fetch(SYNC_URL,{
       method:'POST',
       headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify(Object.assign({ secret:UPLOAD_SECRET, op:'saveDb', db, baseUpdatedAt:_lastCloudUpdatedAt||'', note:'fsi-saveDb' }, clientMeta()))
+      body:JSON.stringify(Object.assign({ op:'saveDb', db, baseUpdatedAt:_lastCloudUpdatedAt||'', note:'fsi-saveDb' }, clientMeta()))
     });
     const text=await res.text();
     let data=null;
@@ -789,10 +834,13 @@ async function ensureSeeded(){
     };
     touchMeta();
     saveLocalOnly();
-    if(window.TS8FirestoreSync && TS8FirestoreSync.enabled() && TS8FirestoreSync.isStarted()){
-      await TS8FirestoreSync.pushNow();
-    } else {
+    fsiDirty=true;
+    if(window.TS8FirestoreSync && TS8FirestoreSync.isStarted() && fsiSawRemote){
+      await flushFsi();
+    } else if(legacySyncAllowed()){
       await pushShared(true);
+    } else {
+      setSyncText('待同步');
     }
     _seedDone=true;
     toast('已載入種子資料（'+mapped.length+' 宗）');
@@ -811,17 +859,18 @@ function fileToBase64(file){
   });
 }
 async function uploadPdfToDrive(file){
+  const auth=await TS8Access.assertUploadAllowed();
   if(!UPLOAD_WEBAPP_URL) throw new Error('上傳端點尚未設定');
   const base64=await fileToBase64(file);
   const res=await fetch(UPLOAD_WEBAPP_URL,{
     method:'POST',
     headers:{'Content-Type':'text/plain;charset=utf-8'},
     body:JSON.stringify(Object.assign({
-      secret:UPLOAD_SECRET,
+      op:'upload',
+      idToken:auth.idToken,
       filename:file.name,
       mimeType:file.type||'application/pdf',
-      base64,
-      folderId:DRIVE_FOLDER_ID
+      base64
     }, clientMeta()))
   });
   const text=await res.text();
@@ -829,7 +878,8 @@ async function uploadPdfToDrive(file){
   try{ data=JSON.parse(text); }catch{ throw new Error('伺服器回應無效'); }
   if(!res.ok || !data || !data.ok) throw new Error((data&&(data.error||data.message))||('上傳失敗'));
   const id=data.id||data.fileId||'';
-  const url=data.url||data.webViewLink||(id?('https://drive.google.com/file/d/'+id+'/view'):'');
+  const rawUrl=data.url||data.webViewLink||(id?('https://drive.google.com/file/d/'+id+'/view'):'');
+  const url=window.TS8Guards?TS8Guards.safeHttpUrl(rawUrl):'';
   if(!url) throw new Error('回應缺少檔案連結');
   return { driveFileId:id, url, name:data.name||file.name };
 }
@@ -1692,6 +1742,7 @@ function deleteCase(id){
   if(!confirm('刪除此工程？')) return;
   db.fsi.cases=db.fsi.cases.filter(x=>x.id!==id);
   if(selectedCaseId===id) selectedCaseId=null;
+  if(window.TS8FirestoreSync) TS8FirestoreSync.noteDelete('fsi', id);
   save(); render(); toast('已刪除');
 }
 
@@ -1741,9 +1792,11 @@ if(nav&&btn) btn.addEventListener('click',()=>{
 
 (async function init(){
   loadLocal();
+  fsiBaseCases=TS8SyncMerge.clone(cases());
   render();
 
   async function bootLegacy(){
+    if(!legacySyncAllowed()) return;
     try{
       const pulled=await pullShared(true);
       if(pulled && pulled.shared){
@@ -1755,34 +1808,50 @@ if(nav&&btn) btn.addEventListener('click',()=>{
       if(!cases().length) await ensureSeeded();
     }
     render();
-    const POLL_MS=30000;
-    setInterval(()=>{
-      if(document.hidden) return;
-      if(_pushBusy||_pullBusy) return;
-      pullShared(true);
-    }, POLL_MS);
-    document.addEventListener('visibilitychange', ()=>{
-      if(!document.hidden) pullShared(true);
-    });
   }
 
+  let booting=false;
   async function bootFirestore(){
+    if(booting) return;
+    if(window.TS8FirestoreSync && TS8FirestoreSync.isStarted()) return;
+    booting=true;
     try{
       const ok=await ensureFirestoreReady();
-      if(!ok){ await bootLegacy(); return; }
-      await TS8FirestoreSync.start({
+      if(!ok) throw new Error('Firebase SDK 未載入');
+      const info=await TS8FirestoreSync.start({
         scope:'fsi',
         getDb:()=>db,
         migrateDb,
-        setStatus:setSyncText,
-        fetchLegacyDb:async ()=>{
-          try{ return await fetchSharedDb(); }catch(e){ console.warn(e); return null; }
-        },
+        manageStatus:true,
+        allowEmptySeed:false,
+        flushLocal:()=>flushFsi(),
+        fetchLegacyDb:async ()=>null,
+        setStatus:(text)=>{ if(text==='同步失敗') setSyncText('同步失敗'); },
         onRemote:(shared)=>{
+          fsiSawRemote=true;
           const beforeId=selectedCaseId;
           const beforeSig=selectedCaseSig();
-          const applied=applyCloudDb(shared);
+          let next=shared;
+          if(fsiDirty){
+            const merged=TS8SyncMerge.mergeRecords(fsiBaseCases, cases(), (shared.fsi&&shared.fsi.cases)||[]);
+            next=Object.assign({}, shared, {
+              projects:Array.isArray(db.projects)?db.projects:[],
+              fsi:Object.assign({}, shared.fsi||{}, {
+                cases:merged.records,
+                meta:(db.fsi&&db.fsi.meta)||(shared.fsi&&shared.fsi.meta)||{}
+              })
+            });
+            if(merged.conflicts && merged.conflicts.length) toast('尚未同步的內容已保留');
+          }
+          const applied=applyCloudDb(next);
+          if(!fsiDirty) fsiBaseCases=TS8SyncMerge.clone(cases());
           if(selectedCaseId && !findCase(selectedCaseId)) selectedCaseId=null;
+          if(_pendingFsPush){
+            _pendingFsPush=false;
+            flushFsi();
+          } else if(!fsiDirty) {
+            setSyncText('已同步');
+          }
           if(!applied.changed) return;
           const afterSig=selectedCaseSig();
           if(selectedCaseId===beforeId && beforeSig && beforeSig===afterSig){
@@ -1793,29 +1862,29 @@ if(nav&&btn) btn.addEventListener('click',()=>{
           }
         }
       });
-      if(_pendingFsPush){
+      if(info && info.wasEmpty) fsiSawRemote=true;
+      if(info && info.wasEmpty && !cases().length) await ensureSeeded();
+      else if(_pendingFsPush && fsiSawRemote){
         _pendingFsPush=false;
-        flushLocalSave();
-        TS8FirestoreSync.schedulePush();
+        await flushFsi();
       }
-      if(!cases().length) await ensureSeeded();
     }catch(err){
-      console.warn('Firestore start failed, falling back', err);
-      setSyncText('同步失敗');
-      try{
-        const pulled=await pullShared(true);
-        if((pulled && pulled.shared && !cases().length) || !cases().length) await ensureSeeded();
-      }catch(_){
-        if(!cases().length) await ensureSeeded();
-      }
+      console.warn('Firestore unavailable; FSI edits stay on this device', err);
+      document.querySelectorAll('script[data-ts8-src]').forEach(node=>{
+        const src=node.getAttribute('data-ts8-src')||'';
+        if(src.indexOf('firebasejs')===-1) return;
+        if(node.getAttribute('data-loaded')!=='1') node.remove();
+      });
+      setSyncText(fsiDirty?'待同步':'已儲存於此裝置');
+      setTimeout(bootFirestore, 8000);
+    }finally{
+      booting=false;
     }
     render();
   }
 
   if(firestoreConfigured()){
-    const run=()=>{ bootFirestore(); };
-    if(typeof requestIdleCallback==='function') requestIdleCallback(run,{timeout:1500});
-    else setTimeout(run,0);
+    setTimeout(()=>bootFirestore(), 0);
     return;
   }
   await bootLegacy();
@@ -1823,6 +1892,6 @@ if(nav&&btn) btn.addEventListener('click',()=>{
 window.addEventListener('beforeunload', ()=>{ try{ flushLocalSave(); }catch(_){} });
 })();
 </script>
-<script src="./js/t.js"></script>
+<script src="./js/t.js?v=20261123sync1"></script>
 </body>
 </html>

@@ -36,6 +36,9 @@
   var lastPushedProjects = new Map();
   var lastPushedCases = new Map();
   var lastPushedSyncJson = '';
+  /** Deletes are explicit. A doc missing from a local snapshot is not a delete. */
+  var explicitDeletes = { projects: new Set(), fsi: new Set() };
+  var emitRetry = null;
 
   function firebaseCfg() {
     var c = global.TS8_CONFIG && global.TS8_CONFIG.FIREBASE;
@@ -239,17 +242,25 @@
     });
   }
 
+  function statusUnlessPage(text) {
+    if (opts && opts.manageStatus) return;
+    setStatus(text);
+  }
+
   function emitRemoteIfReady() {
     if (!ready.projects || !ready.cases || !ready.sync) return;
     if (applyingRemote || writing) {
-      // Do not refresh lastPushed from caches mid-write (may be stale).
+      // The listener cache is already updated. Retry after the write so a
+      // snapshot that arrived mid-write is not dropped.
+      clearTimeout(emitRetry);
+      emitRetry = setTimeout(scheduleEmitRemote, WRITE_SUPPRESS_MS + 40);
       return;
     }
     var at = cacheSync && cacheSync.updatedAt;
     if (at && lastLocalWriteAt && at === lastLocalWriteAt) {
       // Own-write echo: align baseline, skip onRemote to avoid UI churn.
       markLastPushedFromCaches();
-      setStatus('已同步');
+      statusUnlessPage('已同步');
       return;
     }
     var assembled = migrate(assembleDb());
@@ -257,10 +268,10 @@
     try {
       if (opts && typeof opts.onRemote === 'function') opts.onRemote(assembled);
       markLastPushedFromCaches();
-      setStatus('已同步');
+      statusUnlessPage('已同步');
     } catch (err) {
       console.warn('[TS8FirestoreSync] onRemote failed', err);
-      setStatus('同步失敗');
+      statusUnlessPage('同步失敗');
     } finally {
       applyingRemote = false;
     }
@@ -321,10 +332,7 @@
           batch.set(fs.collection('projects').doc(id), entry.payload);
         });
       });
-      var knownP = new Set();
-      lastPushedProjects.forEach(function (_v, id) { knownP.add(id); });
-      cacheProjects.forEach(function (_v, id) { knownP.add(id); });
-      knownP.forEach(function (id) {
+      explicitDeletes.projects.forEach(function (id) {
         if (localP[id]) return;
         docsChanged = true;
         ops.push(function (batch) {
@@ -342,10 +350,7 @@
           batch.set(fs.collection('fsi_cases').doc(id), entry.payload);
         });
       });
-      var knownC = new Set();
-      lastPushedCases.forEach(function (_v, id) { knownC.add(id); });
-      cacheCases.forEach(function (_v, id) { knownC.add(id); });
-      knownC.forEach(function (id) {
+      explicitDeletes.fsi.forEach(function (id) {
         if (localC[id]) return;
         docsChanged = true;
         ops.push(function (batch) {
@@ -365,49 +370,188 @@
     }
 
     if (!ops.length) {
-      setStatus('已同步');
+      statusUnlessPage('已同步');
       return true;
     }
 
     writing = true;
-    setStatus('即時同步中');
+    statusUnlessPage('待同步');
+    var deletedProjectIds = [];
+    var deletedCaseIds = [];
+    if (wantsProjects()) {
+      explicitDeletes.projects.forEach(function (id) {
+        if (!localP[id]) deletedProjectIds.push(id);
+      });
+    }
+    if (wantsFsi()) {
+      explicitDeletes.fsi.forEach(function (id) {
+        if (!localC[id]) deletedCaseIds.push(id);
+      });
+    }
     try {
       await runBatches(ops);
+      deletedProjectIds.forEach(function (id) { explicitDeletes.projects.delete(id); });
+      deletedCaseIds.forEach(function (id) { explicitDeletes.fsi.delete(id); });
       markLastPushedFromWrite(localP, localC, syncDoc);
-      // Align listener caches optimistically so deletes/diffs stay correct before snapshots.
+      // Update docs we wrote. Never drop a cached id just because this
+      // snapshot did not include it.
       if (wantsProjects()) {
         Object.keys(localP).forEach(function (id) {
           cacheProjects.set(id, Object.assign({}, localP[id].payload, { id: id }));
         });
-        Array.from(cacheProjects.keys()).forEach(function (id) {
-          if (!localP[id]) cacheProjects.delete(id);
+        deletedProjectIds.forEach(function (id) {
+          cacheProjects.delete(id);
+          lastPushedProjects.delete(id);
         });
       }
       if (wantsFsi()) {
         Object.keys(localC).forEach(function (id) {
           cacheCases.set(id, Object.assign({}, localC[id].payload, { id: id }));
         });
-        Array.from(cacheCases.keys()).forEach(function (id) {
-          if (!localC[id]) cacheCases.delete(id);
+        deletedCaseIds.forEach(function (id) {
+          cacheCases.delete(id);
+          lastPushedCases.delete(id);
         });
       }
       cacheSync = syncDoc;
-      setStatus('已同步');
+      statusUnlessPage('已同步');
       return true;
     } catch (err) {
       console.warn('[TS8FirestoreSync] write failed', err);
-      setStatus('同步失敗');
+      statusUnlessPage('同步失敗');
       return false;
     } finally {
       setTimeout(function () { writing = false; }, WRITE_SUPPRESS_MS);
     }
   }
 
+  /**
+   * Write only the project/case ops the page queued. Scope still applies:
+   * a projects page cannot write fsi_cases, and the reverse.
+   * Project docs are merged from the queued ops inside a transaction so a
+   * missing id in the local array is never inferred as a delete.
+   */
+  async function writeExplicit(intent) {
+    var fs = initFs();
+    intent = intent || {};
+    writing = true;
+    statusUnlessPage('待同步');
+    var written = [];
+    var conflicts = [];
+    try {
+      if (wantsProjects()) {
+        var projectDeletes = intent.projectDeletes || [];
+        for (var d = 0; d < projectDeletes.length; d++) {
+          var deleteId = projectDeletes[d];
+          await fs.collection('projects').doc(deleteId).delete();
+          cacheProjects.delete(deleteId);
+          lastPushedProjects.delete(deleteId);
+          explicitDeletes.projects.delete(deleteId);
+          written.push({ id: deleteId, deleted: true, collection: 'projects' });
+        }
+        var projectWrites = intent.projectWrites || [];
+        for (var w = 0; w < projectWrites.length; w++) {
+          await commitMergedDoc(fs, 'projects', projectWrites[w], conflicts, written);
+        }
+      }
+      if (wantsFsi()) {
+        var caseDeletes = intent.caseDeletes || [];
+        for (var c = 0; c < caseDeletes.length; c++) {
+          var caseId = caseDeletes[c];
+          await fs.collection('fsi_cases').doc(caseId).delete();
+          cacheCases.delete(caseId);
+          lastPushedCases.delete(caseId);
+          explicitDeletes.fsi.delete(caseId);
+          written.push({ id: caseId, deleted: true, collection: 'fsi' });
+        }
+        var caseWrites = intent.caseWrites || [];
+        for (var k = 0; k < caseWrites.length; k++) {
+          await commitMergedDoc(fs, 'fsi_cases', caseWrites[k], conflicts, written);
+        }
+      }
+      var data = getDb() || {};
+      var meta = (data.meta && typeof data.meta === 'object') ? data.meta : {};
+      if (!meta.updatedAt) meta.updatedAt = new Date().toISOString();
+      var fsiMeta = (data.fsi && data.fsi.meta && typeof data.fsi.meta === 'object') ? data.fsi.meta : {};
+      var syncDoc = buildSyncDocForScope(meta, fsiMeta);
+      lastLocalWriteAt = syncDoc.updatedAt || '';
+      await fs.doc('meta/sync').set(syncDoc);
+      cacheSync = syncDoc;
+      lastPushedSyncJson = stableJson(syncDoc);
+      if (conflicts.length && opts && typeof opts.onConflicts === 'function') opts.onConflicts(conflicts);
+      return { ok: true, written: written, conflicts: conflicts };
+    } catch (err) {
+      console.warn('[TS8FirestoreSync] explicit write failed', err);
+      statusUnlessPage('同步失敗');
+      return { ok: false, error: err, written: written, conflicts: conflicts };
+    } finally {
+      setTimeout(function () { writing = false; }, WRITE_SUPPRESS_MS);
+    }
+  }
+
+  async function commitMergedDoc(fs, collectionName, entry, conflicts, written) {
+    var ref = fs.collection(collectionName).doc(entry.id);
+    var payloadOut = null;
+    var deleted = false;
+    await fs.runTransaction(function (tx) {
+      return tx.get(ref).then(function (snap) {
+        var server = snap && snap.exists ? Object.assign({ id: entry.id }, snap.data() || {}) : null;
+        var mergedDoc = entry.local || null;
+        var mergedConflicts = [];
+        if (collectionName === 'projects' && opts && typeof opts.mergeProject === 'function') {
+          var merged = opts.mergeProject({ id: entry.id, server: server, local: entry.local, ops: entry.ops || [] });
+          mergedDoc = merged && Object.prototype.hasOwnProperty.call(merged, 'doc') ? merged.doc : merged;
+          mergedConflicts = (merged && merged.conflicts) || [];
+        } else if (collectionName === 'fsi_cases' && opts && typeof opts.mergeCase === 'function') {
+          var mergedCase = opts.mergeCase({ id: entry.id, server: server, local: entry.local, ops: entry.ops || [] });
+          mergedDoc = mergedCase && Object.prototype.hasOwnProperty.call(mergedCase, 'doc') ? mergedCase.doc : mergedCase;
+          mergedConflicts = (mergedCase && mergedCase.conflicts) || [];
+        }
+        mergedConflicts.forEach(function (item) { conflicts.push(item); });
+        if (!mergedDoc) {
+          tx.delete(ref);
+          deleted = true;
+          return;
+        }
+        payloadOut = stripUndefined(Object.assign({}, mergedDoc, { id: entry.id }));
+        tx.set(ref, payloadOut);
+      });
+    });
+    var cache = collectionName === 'projects' ? cacheProjects : cacheCases;
+    var pushed = collectionName === 'projects' ? lastPushedProjects : lastPushedCases;
+    if (deleted || !payloadOut) {
+      cache.delete(entry.id);
+      pushed.delete(entry.id);
+      written.push({ id: entry.id, deleted: true, collection: collectionName === 'projects' ? 'projects' : 'fsi' });
+      return;
+    }
+    var stored = Object.assign({}, payloadOut, { id: entry.id });
+    cache.set(entry.id, stored);
+    pushed.set(entry.id, stableJson(stored));
+    written.push({ id: entry.id, doc: stored, collection: collectionName === 'projects' ? 'projects' : 'fsi' });
+  }
+
+  function noteDelete(kind, id) {
+    if (!id) return;
+    if (kind === 'projects' || kind === 'fsi') explicitDeletes[kind].add(String(id));
+  }
+
+  function noteKeep(kind, id) {
+    if (!id) return;
+    if (kind === 'projects' || kind === 'fsi') explicitDeletes[kind].delete(String(id));
+  }
+
   function schedulePush() {
     if (!enabled() || !started) return;
-    setStatus('即時同步中');
+    statusUnlessPage('待同步');
     clearTimeout(pushTimer);
     pushTimer = setTimeout(function () {
+      if (opts && typeof opts.flushLocal === 'function') {
+        Promise.resolve(opts.flushLocal()).catch(function (err) {
+          console.warn('[TS8FirestoreSync] flushLocal failed', err);
+        });
+        return;
+      }
       writeDb(getDb(), false);
     }, DEBOUNCE_MS);
   }
@@ -415,6 +559,7 @@
   async function pushNow() {
     clearTimeout(pushTimer);
     pushTimer = null;
+    if (opts && typeof opts.flushLocal === 'function') return opts.flushLocal();
     return writeDb(getDb(), false);
   }
 
@@ -441,7 +586,7 @@
   }
 
   async function migrateOnceFromLegacy() {
-    setStatus('即時同步中');
+    statusUnlessPage('待同步');
     if (scope !== 'all') {
       await prefetchSyncMeta();
     }
@@ -517,21 +662,23 @@
     scope = normalizeScope(opts.scope);
     if (!enabled()) return { enabled: false, migrated: false, scope: scope };
     initFs();
-    setStatus('即時同步中');
+    statusUnlessPage('待同步');
     var empty = await isEmpty();
     var migrated = false;
-    if (empty) {
+    if (empty && (!opts || opts.allowEmptySeed !== false)) {
       migrated = await migrateOnceFromLegacy();
     }
     listen();
     started = true;
-    if (!empty) setStatus('即時同步中');
+    if (!empty) statusUnlessPage('待同步');
     return { enabled: true, migrated: !!migrated, wasEmpty: empty, scope: scope };
   }
 
   function stop() {
     clearTimeout(pushTimer);
     pushTimer = null;
+    clearTimeout(emitRetry);
+    emitRetry = null;
     if (remoteRaf != null) { try { cancelAnimationFrame(remoteRaf); } catch (_) {} remoteRaf = null; }
     unsubs.forEach(function (u) { try { u(); } catch (_) {} });
     unsubs = [];
@@ -544,6 +691,10 @@
     stop: stop,
     schedulePush: schedulePush,
     pushNow: pushNow,
+    writeDb: writeDb,
+    writeExplicit: writeExplicit,
+    noteDelete: noteDelete,
+    noteKeep: noteKeep,
     isStarted: function () { return started; },
     getScope: function () { return scope; }
   };
