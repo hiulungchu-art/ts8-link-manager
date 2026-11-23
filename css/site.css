@@ -48,12 +48,14 @@ body.site-body{
   min-height:100vh;
   letter-spacing:.01em;
   background-color:var(--cream);
+  /* Gradients only. An SVG feTurbulence noise tile has no intrinsic size, so the
+     browser rasterizes fractal noise across the whole document and again whenever
+     height changes (expand a day, filter the list, switch projects). */
   background-image:
     radial-gradient(ellipse 90% 70% at 12% -10%, rgba(92,138,114,.22), transparent 55%),
     radial-gradient(ellipse 70% 55% at 95% 8%, rgba(196,138,90,.16), transparent 50%),
     radial-gradient(ellipse 60% 50% at 70% 100%, rgba(58,110,140,.1), transparent 55%),
-    radial-gradient(ellipse 50% 40% at 0% 80%, rgba(107,91,138,.08), transparent 50%),
-    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    radial-gradient(ellipse 50% 40% at 0% 80%, rgba(107,91,138,.08), transparent 50%);
   background-attachment: scroll;
   display:flex;
   flex-direction:column;

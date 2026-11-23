@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TS8 連結管理 · 工作頁面集</title>
-<link rel="stylesheet" href="./css/site.css?v=20260917lazy1">
+<link rel="stylesheet" href="./css/site.css?v=20261123perf1">
 <style>
 :root {
   /* Soft editorial — forest ink + warm cream + celadon */
@@ -60,8 +60,7 @@ body{
     radial-gradient(ellipse 90% 70% at 12% -10%, rgba(92,138,114,.22), transparent 55%),
     radial-gradient(ellipse 70% 55% at 95% 8%, rgba(196,138,90,.16), transparent 50%),
     radial-gradient(ellipse 60% 50% at 70% 100%, rgba(58,110,140,.1), transparent 55%),
-    radial-gradient(ellipse 50% 40% at 0% 80%, rgba(107,91,138,.08), transparent 50%),
-    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    radial-gradient(ellipse 50% 40% at 0% 80%, rgba(107,91,138,.08), transparent 50%);
   background-attachment: scroll;
 }
 
@@ -495,9 +494,6 @@ body{
   margin-bottom:12px;
   border-left:3px solid var(--accent);
   overflow:hidden;
-  content-visibility:auto;
-  contain:content;
-  contain-intrinsic-size:auto 160px;
 }
 @media (hover: hover) and (pointer: fine){
   .day-card:hover{border-color:rgba(92,138,114,.45)}
@@ -826,6 +822,42 @@ textarea{min-height:72px;resize:vertical}
   animation:pulse 2s ease infinite;
 }
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Desktop shell: the project list and the day list scroll on their own.
+   Document scroll was resizing a full-page background on every expand/filter
+   and sliding the sidebar away under the sticky nav. */
+@media (min-width:901px){
+  html, body.site-body{height:100%}
+  body.site-body{overflow:hidden}
+  /* Keep the nav at its real height. A column flex shell would otherwise
+     shrink it down to the brand text when the project list is long. */
+  body.site-body .site-nav{flex:0 0 auto}
+  body.has-site-chrome .app{
+    flex:1 1 auto;
+    height:auto;
+    min-height:0;
+    overflow:hidden;
+  }
+  body.has-site-chrome .sidebar{
+    min-height:0;
+    height:auto;
+    align-self:stretch;
+  }
+  body.has-site-chrome .main{
+    min-height:0;
+    height:auto;
+    overflow:hidden;
+  }
+  body.has-site-chrome .content{
+    min-height:0;
+    overflow:auto;
+    overscroll-behavior:contain;
+  }
+  body.has-site-chrome .proj-list{
+    min-height:0;
+    overscroll-behavior:contain;
+  }
+}
 </style>
 </head>
 <body class="site-body has-site-chrome">
@@ -1917,11 +1949,21 @@ function syncViewTabs(){
 
 
 function render(){
+  const content=$('content');
+  const scrollKey=mainView+'|'+(selectedProjectId||'')+'|'+(selectedPartAId||'');
+  const keepScroll=!!(content && content.dataset.scrollKey===scrollKey);
+  const prevTop=keepScroll ? content.scrollTop : 0;
   renderSidebar();
   syncViewTabs();
   if(mainView==='stats'){
     ensureChartJs().then(()=>renderStatsView()).catch(()=>renderStatsView());
   } else { destroyStatsCharts(); renderMain(); }
+  if(content){
+    content.dataset.scrollKey=scrollKey;
+    // Project / Part A / tab changes start at the top. Same-view redraws
+    // (a remote edit of another job) keep the day list where the user left it.
+    if(content.scrollTop!==prevTop) content.scrollTop=prevTop;
+  }
   const at=(db.meta&&db.meta.updatedAt)||'';
   const meta=$('syncMeta');
   if(meta && at){
