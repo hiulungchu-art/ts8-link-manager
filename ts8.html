@@ -648,6 +648,9 @@ body{
 .jobs-table td.num{font-variant-numeric:tabular-nums;font-weight:700;color:#1B4332;text-align:right}
 .jobs-table th.num{text-align:right}
 .jobs-table tbody tr:last-child td{border-bottom:none}
+.pm-stats .jobs-table tbody th{overflow-wrap:anywhere;font-weight:600}
+.pm-stats .jobs-table tbody tr:last-child th{border-bottom:none}
+.pm-stats .jobs-table .num{width:1%;white-space:nowrap}
 .jobs-table .job-name{font-weight:600;color:var(--s-text,#1A2C22)}
 .jobs-table .job-meta{font-size:.78rem;color:var(--s-muted,#5C6B61);margin-top:2px}
 .stats-scope-pill{
@@ -1725,9 +1728,22 @@ function partBStatsByProject(projects){
       name:project.name||'未命名項目',
       jobNo:project.jobNo||'',
       code:project.code||'',
+      pm:typeof project.pm==='string' ? project.pm : '',
       total:st.total
     };
   }).sort((a,b)=>b.total-a.total || String(a.name).localeCompare(String(b.name),'zh-HK'));
+}
+
+function partBStatsByPm(projectStats){
+  const groups=new Map();
+  for(const project of projectStats){
+    const name=project.pm.trim().replace(/\s+/g,' ');
+    const key=name.toLowerCase();
+    const group=groups.get(key)||{name:name||'未填項目經理',total:0};
+    group.total+=project.total;
+    groups.set(key,group);
+  }
+  return [...groups.values()].sort((a,b)=>b.total-a.total || a.name.localeCompare(b.name,'zh-HK'));
 }
 
 
@@ -1764,6 +1780,7 @@ function renderStatsView(){
   }
   const st=partBStats(all);
   const byProj=partBStatsByProject(all);
+  const byPm=partBStatsByPm(byProj);
   const now=new Date();
   const yNow=String(now.getFullYear());
   const mNow=now.getMonth()+1;
@@ -1805,10 +1822,10 @@ function renderStatsView(){
         <div class="eyebrow">TS8 · Analytics</div>
         <div class="stats-scope-pill">✓ 已合併全部項目 · ${byProj.length} jobs</div>
         <h2>TS8 Part B 綜合統計</h2>
-        <p>全部 job 合計（唔跟左邊揀邊個項目）。上層睇整體 KPI／圖表，下層「項目明細」逐個 job。</p>
+        <p>統計全部項目，下方按項目經理及個別項目列出完成次數。</p>
       </div>
       <div class="stats-toolbar">
-        <div class="field"><label>年份</label><select id="statsYearSelect" aria-label="選擇年份">${yearOpts}</select></div>
+        <div class="field"><label for="statsYearSelect">「年內各月」圖表年份</label><select id="statsYearSelect">${yearOpts}</select></div>
       </div>
       <div class="kpi-row">
         <div class="kpi"><div class="lab">累計 Part B</div><div class="num">${st.total}</div><div class="delta">全部項目合計</div></div>
@@ -1826,6 +1843,21 @@ function renderStatsView(){
           <div class="sub" id="monthSub">柱狀 · ${esc(selectedYear)} 年</div>
           <div class="chart-wrap bar-h" id="monthWrap"><canvas id="monthChart" aria-label="${esc(selectedYear)} 年各月完成次數"></canvas></div>
         </div>
+      </div>
+      <div class="jobs-table-wrap pm-stats">
+        <div class="jobs-head">
+          <h2 id="pmStatsTitle">按項目經理（PM）統計</h2>
+          <p class="sub">按各項目目前登記的 PM 分組，統計所有年份的 Part B 完成次數。</p>
+        </div>
+        <table class="jobs-table" aria-labelledby="pmStatsTitle">
+          <thead><tr><th scope="col">項目經理</th><th scope="col" class="num">累計完成次數</th></tr></thead>
+          <tbody>
+            ${byPm.map(r=>`<tr>
+              <th scope="row">${esc(r.name)}</th>
+              <td class="num">${r.total}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
       </div>
       <div class="jobs-table-wrap">
         <div class="jobs-head">
