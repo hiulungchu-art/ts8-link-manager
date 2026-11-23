@@ -1,0 +1,10 @@
+rules_version = '2';
+// PDFs are stored in Drive, not Firebase Storage. Deny Storage access so a
+// later deploy cannot leave the bucket open. Not deployed from this PR.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
